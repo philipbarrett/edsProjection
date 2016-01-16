@@ -11,10 +11,39 @@
 
 
 #include <RcppArmadillo.h>
+#include <math.h>
+
 // [[Rcpp::depends(RcppArmadillo)]]
 
 using namespace Rcpp ;
 using namespace arma ;
+
+// [[Rcpp::export]]
+arma::mat keep_mat( arma::mat & X, arma::vec keep ){
+// Returns a submatrix of X where the rows are selected if the corresponding
+// entry of the keep vector is 1, and otherwise not.
+  
+  int n_rows = X.n_rows ;
+      // The number of rows of X
+  int n_z = sum( keep ) ;
+      // The number of points to keep
+  mat Z = zeros( n_z, X.n_cols ) ;
+      // Initialize the return matrix
+  int i_z = 0 ;
+      // Counter for rows of z
+  for( int i= 0 ; i < n_rows ; i++ ){
+    // Loops over rows of X
+    if( keep(i) == 1 ){
+      // If i is a keeper, then keep it!
+      Z.row( i_z ) = X.row( i ) ;
+          // Add to Z
+      i_z++ ;
+          // Increment Z
+    }
+  }
+  
+  return Z ;
+}
 
 // [[Rcpp::export]]
 arma::mat pcd_scaling( arma::mat & X ) {
@@ -39,8 +68,8 @@ arma::mat pcd_scaling( arma::mat & X ) {
 }
 
 // [[Rcpp::export]]
-arma::mat p_eps( arma::mat & X, double eps ) {
-// The Basic EDS algorithm for fixed distance epsilon
+arma::mat p_eps( arma::mat & X, arma::vec & eps ) {
+// The EDS algorithm for a vector of fixed distances epsilon
   
   mat X_norm = pcd_scaling( X ) ;
       // The PCD rescaling of X (removes units)
@@ -55,34 +84,109 @@ arma::mat p_eps( arma::mat & X, double eps ) {
   for ( int i = 0 ; i < n_rows - 1 ; i++ ){
     // Loop over rows of X_norm
     if( keep(i) == 1 ){
-      // If the point is not a keeper, no need to looki for nearest neighbours
+      // If the point is not a keeper, no need to look for nearest neighbours
       for( int j = i + 1 ; j < n_rows ; j++ ){
         // Loop over other rows
         dist = norm( X_norm.row(i) - X_norm.row(j), 2 ) ;
             // Compute the Euclidean distance
-        if( dist < eps ) keep(j) = 0 ;
+        if( dist < eps(i) ) keep(j) = 0 ;
             // If the distance is small set the keeping indicator to zero
       }
     }
   }
   
   /** 2. Construct a return matrix with those rows **/
-  int n_z = sum( keep ) ;
-      // The number of points to keep
-  mat Z = zeros( n_z, X.n_cols ) ;
-      // Initialize the return matrix
-  int i_z = 0 ;
-      // Counter for rows of z
-  for( int i= 0 ; i < n_rows ; i++ ){
-    // Loops over rows of X
-    if( keep(i) == 1 ){
-      // If i is a keeper, then keep it!
-      Z.row( i_z ) = X.row( i ) ;
-          // Add to Z
-      i_z++ ;
-          // Increment Z
+  mat Z = keep_mat( X, keep ) ;
+      // Select the appropriate rows of X
+  return Z ;
+}
+
+// [[Rcpp::export]]
+arma::mat p_eps_const( arma::mat & X, double eps ) {
+// The EDS algorithm for fixed epsilon
+
+  vec v_eps = eps * ones( X.n_rows ) ;
+      // Create the constant vector of epsilons
+  return p_eps( X, v_eps ) ;
+}
+
+// [[Rcpp::export]]
+arma::vec normal_kernel_density( arma::mat & X, double h=0 ) {
+// Coputes a normal kernal density given a bandwidth h
+
+  int d = X.n_cols ;
+      // The dimension of the state space
+  int n = X.n_rows ;
+      // The number of data points
+  if( h == 0 )
+    h = pow( n, -1.0 / ( d + 4.0 ) ) ;
+      // Standard setting for the bandwidth
+  mat D2 = zeros( n, n ) ;
+      // The matrix of pairs of square distances
+  double dist2 = 0 ;
+      // Temporary (square) distance placeholder
+      
+  for( int i = 1 ; i < n ; i++ ){
+    // Loop over rows
+    for( int j = 0 ; j < i ; j++ ){
+      // Loop over columns
+      dist2 = pow( norm( X.row(i) - X.row(j), 2 ), 2.0 ) ;
+          // The square distance
+      D2( i, j ) = dist2 ;
+      D2( j, i ) = dist2 ;
+          // Fill in the matrix
     }
   }
   
+  mat expD2 = exp( - D2 / ( 2.0 * h * h ) ) ;
+      // The exponent term
+  double scale_factor = ( n * pow( h, d ) * pow( 2.0 * M_PI, d / 2.0 ) ) ;
+  vec g = sum( expD2, 1 ) / scale_factor ;
+      // The density vector
+      
+  return g ;
+}
+
+// [[Rcpp::export]]
+arma::mat almost_ergodic( arma::mat & X, double delta, double h=0 ){
+// Removes the points with cumulative probability mass less than delta
+  
+  vec g = normal_kernel_density( X, h=0 ) ;
+      // The kernel density
+  double sum_g = sum(g) ;
+      // The sum of the densities
+  uvec indices = sort_index(g);
+      // The sorted indices
+  vec keep = ones( X.n_rows ) ;
+      // The vector of keepers
+  double cumprob = 0 ;
+      // Initialize cumulative probability
+  int i = 0 ;
+      // Initialize the row counter
+  while( cumprob < delta & i < X.n_rows ){
+    cumprob = cumprob + g( indices( i ) ) / sum_g ;
+        // The cumulative probability so far
+    keep( indices( i ) ) = 0 ;
+        // Eliminate this row
+    i++ ;
+        // Increment counter
+        
+//        Rcout << "i = " << i << std::endl ;
+//        Rcout << "cumprob = " << cumprob << std::endl << std::endl ;
+  }
+  mat Z = keep_mat( X, keep ) ;
+      // Remove the omitted rows
   return Z ;
 }
+
+/*** Need to be careful about concatenating the two steps 
+ *    correctly - need to get the pca ordering right 
+ */
+
+
+
+
+  
+ 
+ 
+ */
