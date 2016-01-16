@@ -9,6 +9,10 @@ pcd_scaling <- function(X) {
     .Call('edsProjection_pcd_scaling', PACKAGE = 'edsProjection', X)
 }
 
+eds_keep <- function(X_norm, eps) {
+    .Call('edsProjection_eds_keep', PACKAGE = 'edsProjection', X_norm, eps)
+}
+
 p_eps <- function(X, eps) {
     .Call('edsProjection_p_eps', PACKAGE = 'edsProjection', X, eps)
 }
@@ -21,7 +25,19 @@ normal_kernel_density <- function(X, h = 0) {
     .Call('edsProjection_normal_kernel_density', PACKAGE = 'edsProjection', X, h)
 }
 
+almost_ergodic_indices <- function(X, delta, h = 0) {
+    .Call('edsProjection_almost_ergodic_indices', PACKAGE = 'edsProjection', X, delta, h)
+}
+
 almost_ergodic <- function(X, delta, h = 0) {
     .Call('edsProjection_almost_ergodic', PACKAGE = 'edsProjection', X, delta, h)
+}
+
+p_eps_cheap <- function(X, eps, delta, h = 0) {
+    .Call('edsProjection_p_eps_cheap', PACKAGE = 'edsProjection', X, eps, delta, h)
+}
+
+p_eps_cheap_const <- function(X, eps, delta, h = 0) {
+    .Call('edsProjection_p_eps_cheap_const', PACKAGE = 'edsProjection', X, eps, delta, h)
 }
 

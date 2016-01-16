@@ -68,14 +68,9 @@ arma::mat pcd_scaling( arma::mat & X ) {
 }
 
 // [[Rcpp::export]]
-arma::mat p_eps( arma::mat & X, arma::vec & eps ) {
-// The EDS algorithm for a vector of fixed distances epsilon
-  
-  mat X_norm = pcd_scaling( X ) ;
-      // The PCD rescaling of X (removes units)
-  
-  /** 1. Calculate the rows to retain **/
-  int n_rows = X.n_rows ;
+arma::vec eds_keep( arma::mat & X_norm, arma::vec & eps ){
+// Computes the vector of rows to keep in the EDS algorithm
+  int n_rows = X_norm.n_rows ;
       // The number of rows of X
   vec keep = ones( n_rows ) ;
       // Initiate the loop indicator
@@ -94,10 +89,22 @@ arma::mat p_eps( arma::mat & X, arma::vec & eps ) {
       }
     }
   }
+  return keep ;
+}
+
+// [[Rcpp::export]]
+arma::mat p_eps( arma::mat & X, arma::vec & eps ) {
+// The EDS algorithm for a vector of distances epsilon
+  
+  mat X_norm = pcd_scaling( X ) ;
+      // The PCD rescaling of X (removes units)
+  
+  /** 1. Calculate the rows to retain **/
+  vec keep = eds_keep( X_norm, eps ) ;
   
   /** 2. Construct a return matrix with those rows **/
   mat Z = keep_mat( X, keep ) ;
-      // Select the appropriate rows of X
+  
   return Z ;
 }
 
@@ -148,7 +155,7 @@ arma::vec normal_kernel_density( arma::mat & X, double h=0 ) {
 }
 
 // [[Rcpp::export]]
-arma::mat almost_ergodic( arma::mat & X, double delta, double h=0 ){
+arma::vec almost_ergodic_indices( arma::mat & X, double delta, double h=0 ){
 // Removes the points with cumulative probability mass less than delta
   
   vec g = normal_kernel_density( X, h=0 ) ;
@@ -170,23 +177,53 @@ arma::mat almost_ergodic( arma::mat & X, double delta, double h=0 ){
         // Eliminate this row
     i++ ;
         // Increment counter
-        
-//        Rcout << "i = " << i << std::endl ;
-//        Rcout << "cumprob = " << cumprob << std::endl << std::endl ;
   }
+  return keep ;
+}
+
+// [[Rcpp::export]]
+arma::mat almost_ergodic( arma::mat & X, double delta, double h=0 ){
+// Removes the points with cumulative probability mass less than delta
+  
+  vec keep = almost_ergodic_indices( X, delta, h ) ;
+      // The indices of the retained rows
   mat Z = keep_mat( X, keep ) ;
       // Remove the omitted rows
   return Z ;
 }
 
-/*** Need to be careful about concatenating the two steps 
- *    correctly - need to get the pca ordering right 
- */
+// [[Rcpp::export]]
+arma::mat p_eps_cheap( arma::mat & X, arma::vec & eps, double delta, double h=0 ) {
+// The cheap EDS algorithm with removal of low-probability points
+  
+  mat X_norm = pcd_scaling( X ) ;
+      // The PCD rescaling of X (removes units)
+  
+  /** 1. Calculate the rows to retain **/
+  vec keep = eds_keep( X_norm, eps ) ;
+  
+  /** 2. Construct a PC matrix with those rows **/
+  mat Z_norm = keep_mat( X_norm, keep ) ;
+  mat Z = keep_mat( X, keep ) ;
+  
+  /** 3. Construct a return matrix with those rows **/
+  vec erg_indices = almost_ergodic_indices( Z_norm, delta, h ) ;
+      // The indices of the normalized returned points
+  mat out = keep_mat( Z, erg_indices ) ;
+      // Retain only the indices in the almost-ergodic set
+  
+  return out ;
+}
 
+// [[Rcpp::export]]
+arma::mat p_eps_cheap_const( arma::mat & X, double eps, double delta, double h=0 ) {
+// With constant epsilon
+  vec v_eps = eps * ones( X.n_rows ) ;
+      // Create the constant vector of epsilons
+  return p_eps_cheap( X, v_eps, delta, h ) ;
+}
 
 
 
   
  
- 
- */
