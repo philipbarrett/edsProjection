@@ -41,3 +41,35 @@ p_eps_cheap_const <- function(X, eps, delta, h = 0) {
     .Call('edsProjection_p_eps_cheap_const', PACKAGE = 'edsProjection', X, eps, delta, h)
 }
 
+idx_increment <- function(idx, N, K) {
+    .Call('edsProjection_idx_increment', PACKAGE = 'edsProjection', idx, N, K)
+}
+
+idx_count <- function(N, K) {
+    .Call('edsProjection_idx_count', PACKAGE = 'edsProjection', N, K)
+}
+
+idx_create <- function(N, K) {
+    .Call('edsProjection_idx_create', PACKAGE = 'edsProjection', N, K)
+}
+
+ordinary_create <- function(x, N, K) {
+    .Call('edsProjection_ordinary_create', PACKAGE = 'edsProjection', x, N, K)
+}
+
+cheby_create <- function(x, N, K) {
+    .Call('edsProjection_cheby_create', PACKAGE = 'edsProjection', x, N, K)
+}
+
+basis_cube <- function(X, N, K, cheby = FALSE) {
+    .Call('edsProjection_basis_cube', PACKAGE = 'edsProjection', X, N, K, cheby)
+}
+
+X_rescale <- function(X_in, K) {
+    .Call('edsProjection_X_rescale', PACKAGE = 'edsProjection', X_in, K)
+}
+
+poly_eval <- function(a, X_in, N, rescale = FALSE, cheby = FALSE) {
+    .Call('edsProjection_poly_eval', PACKAGE = 'edsProjection', a, X_in, N, rescale, cheby)
+}
+

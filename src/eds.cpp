@@ -10,13 +10,7 @@
  ***********************************************************************************/
 
 
-#include <RcppArmadillo.h>
-#include <math.h>
-
-// [[Rcpp::depends(RcppArmadillo)]]
-
-using namespace Rcpp ;
-using namespace arma ;
+#include "eds.hpp"
 
 // [[Rcpp::export]]
 arma::mat keep_mat( arma::mat & X, arma::vec keep ){

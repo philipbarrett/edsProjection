@@ -131,3 +131,107 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// idx_increment
+arma::urowvec idx_increment(arma::urowvec idx, int N, int K);
+RcppExport SEXP edsProjection_idx_increment(SEXP idxSEXP, SEXP NSEXP, SEXP KSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::urowvec >::type idx(idxSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    __result = Rcpp::wrap(idx_increment(idx, N, K));
+    return __result;
+END_RCPP
+}
+// idx_count
+int idx_count(int N, int K);
+RcppExport SEXP edsProjection_idx_count(SEXP NSEXP, SEXP KSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    __result = Rcpp::wrap(idx_count(N, K));
+    return __result;
+END_RCPP
+}
+// idx_create
+arma::umat idx_create(int N, int K);
+RcppExport SEXP edsProjection_idx_create(SEXP NSEXP, SEXP KSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    __result = Rcpp::wrap(idx_create(N, K));
+    return __result;
+END_RCPP
+}
+// ordinary_create
+arma::mat ordinary_create(arma::rowvec x, int N, int K);
+RcppExport SEXP edsProjection_ordinary_create(SEXP xSEXP, SEXP NSEXP, SEXP KSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::rowvec >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    __result = Rcpp::wrap(ordinary_create(x, N, K));
+    return __result;
+END_RCPP
+}
+// cheby_create
+arma::mat cheby_create(arma::rowvec x, int N, int K);
+RcppExport SEXP edsProjection_cheby_create(SEXP xSEXP, SEXP NSEXP, SEXP KSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::rowvec >::type x(xSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    __result = Rcpp::wrap(cheby_create(x, N, K));
+    return __result;
+END_RCPP
+}
+// basis_cube
+arma::cube basis_cube(arma::mat X, int N, int K, bool cheby);
+RcppExport SEXP edsProjection_basis_cube(SEXP XSEXP, SEXP NSEXP, SEXP KSEXP, SEXP chebySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    Rcpp::traits::input_parameter< bool >::type cheby(chebySEXP);
+    __result = Rcpp::wrap(basis_cube(X, N, K, cheby));
+    return __result;
+END_RCPP
+}
+// X_rescale
+arma::mat X_rescale(arma::mat X_in, int K);
+RcppExport SEXP edsProjection_X_rescale(SEXP X_inSEXP, SEXP KSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat >::type X_in(X_inSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    __result = Rcpp::wrap(X_rescale(X_in, K));
+    return __result;
+END_RCPP
+}
+// poly_eval
+arma::vec poly_eval(arma::vec a, arma::mat X_in, int N, bool rescale, bool cheby);
+RcppExport SEXP edsProjection_poly_eval(SEXP aSEXP, SEXP X_inSEXP, SEXP NSEXP, SEXP rescaleSEXP, SEXP chebySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::vec >::type a(aSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type X_in(X_inSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< bool >::type rescale(rescaleSEXP);
+    Rcpp::traits::input_parameter< bool >::type cheby(chebySEXP);
+    __result = Rcpp::wrap(poly_eval(a, X_in, N, rescale, cheby));
+    return __result;
+END_RCPP
+}
