@@ -209,29 +209,46 @@ BEGIN_RCPP
 END_RCPP
 }
 // X_rescale
-arma::mat X_rescale(arma::mat X_in, int K);
-RcppExport SEXP edsProjection_X_rescale(SEXP X_inSEXP, SEXP KSEXP) {
+arma::mat X_rescale(arma::mat X_in, int K, bool pc_rescale);
+RcppExport SEXP edsProjection_X_rescale(SEXP X_inSEXP, SEXP KSEXP, SEXP pc_rescaleSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< arma::mat >::type X_in(X_inSEXP);
     Rcpp::traits::input_parameter< int >::type K(KSEXP);
-    __result = Rcpp::wrap(X_rescale(X_in, K));
+    Rcpp::traits::input_parameter< bool >::type pc_rescale(pc_rescaleSEXP);
+    __result = Rcpp::wrap(X_rescale(X_in, K, pc_rescale));
+    return __result;
+END_RCPP
+}
+// X_limits
+arma::mat X_limits(arma::mat X_in, arma::rowvec lower, arma::rowvec upper, int M, int K);
+RcppExport SEXP edsProjection_X_limits(SEXP X_inSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP MSEXP, SEXP KSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat >::type X_in(X_inSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type upper(upperSEXP);
+    Rcpp::traits::input_parameter< int >::type M(MSEXP);
+    Rcpp::traits::input_parameter< int >::type K(KSEXP);
+    __result = Rcpp::wrap(X_limits(X_in, lower, upper, M, K));
     return __result;
 END_RCPP
 }
 // poly_eval
-arma::vec poly_eval(arma::vec a, arma::mat X_in, int N, bool rescale, bool cheby);
-RcppExport SEXP edsProjection_poly_eval(SEXP aSEXP, SEXP X_inSEXP, SEXP NSEXP, SEXP rescaleSEXP, SEXP chebySEXP) {
+arma::vec poly_eval(arma::vec a, arma::mat X_in, int N, arma::rowvec lower, arma::rowvec upper, bool cheby);
+RcppExport SEXP edsProjection_poly_eval(SEXP aSEXP, SEXP X_inSEXP, SEXP NSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP chebySEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< arma::vec >::type a(aSEXP);
     Rcpp::traits::input_parameter< arma::mat >::type X_in(X_inSEXP);
     Rcpp::traits::input_parameter< int >::type N(NSEXP);
-    Rcpp::traits::input_parameter< bool >::type rescale(rescaleSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type upper(upperSEXP);
     Rcpp::traits::input_parameter< bool >::type cheby(chebySEXP);
-    __result = Rcpp::wrap(poly_eval(a, X_in, N, rescale, cheby));
+    __result = Rcpp::wrap(poly_eval(a, X_in, N, lower, upper, cheby));
     return __result;
 END_RCPP
 }

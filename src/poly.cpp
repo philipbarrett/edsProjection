@@ -128,10 +128,16 @@ arma::cube basis_cube( arma::mat X, int N, int K, bool cheby=false ){
 }
 
 // [[Rcpp::export]]
-arma::mat X_rescale( arma::mat X_in, int K ){
+arma::mat X_rescale( arma::mat X_in, int K, bool pc_rescale=false ){
 // Rescales the evaluation points into a sphere in [-1,1]^K
 
-  mat X_sphere = pcd_scaling( X_in ) ;
+  /** NEED TO RESCALE ON A FIXED INTERVAL **/
+
+  mat X_sphere = X_in ;
+  
+  /** PC-scaling: Do not use yet **/
+  pc_rescale = false ;
+  if( pc_rescale ) X_sphere = pcd_scaling( X_in ) ;
       // Create unit-variance sphere of points
   rowvec X_max = max( X_sphere ) ;
   rowvec X_min = min( X_sphere ) ;
@@ -148,20 +154,29 @@ arma::mat X_rescale( arma::mat X_in, int K ){
 }
 
 // [[Rcpp::export]]
+arma::mat X_limits( arma::mat X_in, arma::rowvec lower, arma::rowvec upper, 
+                      int M, int K ){
+// Rescales the evaluation points into [-1,1]^K based on predefined end-points
+
+  mat X = 2 * ( X_in - ones(M) * lower ) / ( ones( M ) * ( upper - lower ) ) - 
+              ones( M, K ) ;
+      // The output matrix.
+  return X ;
+}
+
+// [[Rcpp::export]]
 arma::vec poly_eval( arma::vec a, arma::mat X_in, int N, 
-                      bool rescale=false, bool cheby=false ){
+                      arma::rowvec lower, arma::rowvec upper,
+                      bool cheby=false ){
 // Computes the order-N polynomial approximation defined by the vector of
 // coefficients a evaluated at the cloud of points X_in
   
   int K = X_in.n_cols ;
   int M = X_in.n_rows ;
       // The number of dimensions and points of X
-  mat X = X_in ;
-  if( rescale ) X = X_rescale( X_in, K ) ;
+//  mat X = X_rescale( X_in, K, pc_rescale ) ;
+  mat X = X_limits( X_in, lower, upper, M, K ) ; 
       // Rescale to the unit sphere if required
-      
-      /** NEED TO FIGURE OUT THE RESCALING **/
-      
   cube basis = basis_cube( X, N, K, cheby ) ;
       // The cube of basis polynomials
   umat indices = idx_create( N, K ) ;

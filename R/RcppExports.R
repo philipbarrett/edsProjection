@@ -65,11 +65,15 @@ basis_cube <- function(X, N, K, cheby = FALSE) {
     .Call('edsProjection_basis_cube', PACKAGE = 'edsProjection', X, N, K, cheby)
 }
 
-X_rescale <- function(X_in, K) {
-    .Call('edsProjection_X_rescale', PACKAGE = 'edsProjection', X_in, K)
+X_rescale <- function(X_in, K, pc_rescale = FALSE) {
+    .Call('edsProjection_X_rescale', PACKAGE = 'edsProjection', X_in, K, pc_rescale)
 }
 
-poly_eval <- function(a, X_in, N, rescale = FALSE, cheby = FALSE) {
-    .Call('edsProjection_poly_eval', PACKAGE = 'edsProjection', a, X_in, N, rescale, cheby)
+X_limits <- function(X_in, lower, upper, M, K) {
+    .Call('edsProjection_X_limits', PACKAGE = 'edsProjection', X_in, lower, upper, M, K)
+}
+
+poly_eval <- function(a, X_in, N, lower, upper, cheby = FALSE) {
+    .Call('edsProjection_poly_eval', PACKAGE = 'edsProjection', a, X_in, N, lower, upper, cheby)
 }
 
