@@ -109,22 +109,31 @@ arma::mat endog_sim( int n_out, arma::mat exog_sim, arma::mat coeffs, int N,
 }
 
 // [[Rcpp::export]]
-arma::vec irf_create( int pds, int n_sim, int N, int shk_idx,
+arma::mat irf_create( int pds, int n_sim, int N, int shk_idx,
                       arma::rowvec rho, arma::rowvec sig_eps, 
                       arma::mat coeffs, arma::rowvec upper, arma::rowvec lower, 
-                      arma::rowvec init, int n_endog, int n_exog, bool cheby=false ){
+                      arma::rowvec init, int n_endog, int n_exog, 
+                      double shk = 0, bool cheby=false ){
 // Computes an IRF via simulation
 
-  cube exog_base = zeros( n_exog, pds, n_sim ) ;
-  cube exog_alt = zeros( n_exog, pds, n_sim ) ;
-  cube endog_base = zeros( n_endog, pds, n_sim ) ;
-  cube endog_alt = zeros( n_endog, pds, n_sim ) ;
+  cube exog_base = zeros( pds, n_exog, n_sim ) ;
+  cube exog_alt = zeros( pds, n_exog, n_sim ) ;
+  cube endog_base = zeros( pds, n_endog, n_sim ) ;
+  cube endog_alt = zeros( pds, n_endog, n_sim ) ;
       // Initialize the different simulation matrices
-  rowvec impulse_0 = sig_eps / sqrt( 1 - pow( rho, 2 ) ) ;
-      // The impulse is a one standard-deviation shock
+  rowvec impulse_0 = zeros<rowvec>( n_exog ) ;
+  impulse_0( shk_idx ) = shk ;
+      // The initial impulse
+  if( shk == 0 ){
+    impulse_0( shk_idx ) = sig_eps( shk_idx ) / sqrt( 1 - pow( rho( shk_idx ), 2 ) ) ;
+      // The impulse is a one standard-deviation shock if not specified
+  }
+  
   mat rho_decline = ones( pds, n_exog ) ;
-  for( int i = 1 ; i < pds ; i++ ){
-    rho_decline.row(i) = rho * rho_decline.row(i-1) ;
+  rho_decline.row(0) = zeros<rowvec>( n_exog ) ;
+      // The initial period has no shock
+  for( int i = 2 ; i < pds ; i++ ){
+    rho_decline.row(i) = rho % rho_decline.row(i-1) ;
   }   // The unscaled vector of decreasing shocks for the exogenous variables
   mat impulse = ( ones(pds) * impulse_0 ) % rho_decline ;
       // The matrix of impulses
@@ -133,10 +142,34 @@ arma::vec irf_create( int pds, int n_sim, int N, int shk_idx,
     for( int i = 0 ; i < n_exog ; i++ ){
       exog_base.slice(j).col(i) = ar1_sim( pds, rho(i), sig_eps(i), true, init(i) ) ;
     }
-    exog_alt.slice(j) = impulse % exog_base.slice(j) ;
+    exog_alt.slice(j) = impulse + exog_base.slice(j) ;
   } // Create the exogenous simulations
   
-
+  mat temp = zeros( n_exog + n_endog, pds ) ;
+      // Temporary storage of the output simulation (endog+exog)
+  for( int j = 0 ; j < n_sim ; j++ ){
+    for( int i = 0 ; i < n_exog ; i++ ){
+      temp = endog_sim( pds, exog_base.slice(j), coeffs, N, upper, lower, 
+                        init.tail(n_endog), cheby, 1, 0 ) ;
+      endog_base.slice(j) = temp.cols( n_exog, n_exog + n_endog - 1 ) ;
+          // The base endogenous simulation
+      temp = endog_sim( pds, exog_alt.slice(j), coeffs, N, upper, lower, 
+                        init.tail(n_endog), cheby, 1, 0 ) ;
+      endog_alt.slice(j) = temp.cols( n_exog, n_exog + n_endog - 1 ) ;
+          // The alternative endogenous simulation
+    }
+  }
+  mat out = zeros( pds, n_exog + n_endog ) ;
+      // Initialize output matrix
+  for( int i = 0 ; i < n_sim ; i++ ){
+    out.cols( 0, n_exog - 1 ) = out.cols( 0, n_exog - 1 ) +
+          ( exog_alt.slice(i) - exog_base.slice(i) ) / n_sim ;
+    out.cols( n_exog, n_exog + n_endog - 1 ) = 
+                out.cols( n_exog, n_exog + n_endog - 1 ) +
+                  ( endog_alt.slice(i) / endog_base.slice(i) - 1 ) / n_sim ;
+        // Create the IRFs
+  }
+  return out ;
 }
 
 

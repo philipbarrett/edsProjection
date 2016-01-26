@@ -306,3 +306,27 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// irf_create
+arma::mat irf_create(int pds, int n_sim, int N, int shk_idx, arma::rowvec rho, arma::rowvec sig_eps, arma::mat coeffs, arma::rowvec upper, arma::rowvec lower, arma::rowvec init, int n_endog, int n_exog, double shk, bool cheby);
+RcppExport SEXP edsProjection_irf_create(SEXP pdsSEXP, SEXP n_simSEXP, SEXP NSEXP, SEXP shk_idxSEXP, SEXP rhoSEXP, SEXP sig_epsSEXP, SEXP coeffsSEXP, SEXP upperSEXP, SEXP lowerSEXP, SEXP initSEXP, SEXP n_endogSEXP, SEXP n_exogSEXP, SEXP shkSEXP, SEXP chebySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type pds(pdsSEXP);
+    Rcpp::traits::input_parameter< int >::type n_sim(n_simSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< int >::type shk_idx(shk_idxSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type rho(rhoSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type sig_eps(sig_epsSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type coeffs(coeffsSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type upper(upperSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type init(initSEXP);
+    Rcpp::traits::input_parameter< int >::type n_endog(n_endogSEXP);
+    Rcpp::traits::input_parameter< int >::type n_exog(n_exogSEXP);
+    Rcpp::traits::input_parameter< double >::type shk(shkSEXP);
+    Rcpp::traits::input_parameter< bool >::type cheby(chebySEXP);
+    __result = Rcpp::wrap(irf_create(pds, n_sim, N, shk_idx, rho, sig_eps, coeffs, upper, lower, init, n_endog, n_exog, shk, cheby));
+    return __result;
+END_RCPP
+}

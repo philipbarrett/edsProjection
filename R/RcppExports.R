@@ -89,3 +89,7 @@ endog_sim <- function(n_out, exog_sim, coeffs, N, upper, lower, endog_init, cheb
     .Call('edsProjection_endog_sim', PACKAGE = 'edsProjection', n_out, exog_sim, coeffs, N, upper, lower, endog_init, cheby, kappa, burn)
 }
 
+irf_create <- function(pds, n_sim, N, shk_idx, rho, sig_eps, coeffs, upper, lower, init, n_endog, n_exog, shk = 0, cheby = FALSE) {
+    .Call('edsProjection_irf_create', PACKAGE = 'edsProjection', pds, n_sim, N, shk_idx, rho, sig_eps, coeffs, upper, lower, init, n_endog, n_exog, shk, cheby)
+}
+
