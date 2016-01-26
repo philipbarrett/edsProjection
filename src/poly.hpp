@@ -8,6 +8,8 @@
  * 
  ***********************************************************************************/
 
+#ifndef POLY_HPP
+#define POLY_HPP
 
 #include <RcppArmadillo.h>
 #include <math.h>
@@ -16,6 +18,8 @@
 
 using namespace Rcpp ;
 using namespace arma ;
+
+/** TO DO: Convert all the passing by value to by reference **/
 
 arma::urowvec idx_increment( arma::urowvec idx, int N, int K ) ;
   // Increments a row vector subject to the constraint that the sum of the
@@ -33,3 +37,17 @@ arma::mat ordinary_create( arma::rowvec x, int N, int K ) ;
   // single vector x (NB: x should be of length K)
 arma::mat cheby_create( arma::rowvec x, int N, int K ) ;
   // Creates the N chebychev polynomials for the elemnts of a K-vector
+arma::cube basis_cube( arma::mat X, int N, int K, bool cheby ) ;
+  // Computes the cube of polynomial bases for a matrix of multi-dimensional
+  // points X
+arma::mat X_rescale( arma::mat X_in, int K, bool pc_rescale ) ;
+  // Rescales the evaluation points into a sphere in [-1,1]^K
+arma::mat X_limits( arma::mat X_in, arma::rowvec lower, 
+                    arma::rowvec upper, int M, int K ) ;
+  // Rescales the evaluation points into [-1,1]^K based on predefined end-points
+arma::vec poly_eval( arma::vec a, arma::mat X_in, int N, 
+                      arma::rowvec lower, arma::rowvec upper, bool cheby ) ;
+  // Computes the order-N polynomial approximation defined by the vector of
+  // coefficients a evaluated at the cloud of points X_in
+
+#endif

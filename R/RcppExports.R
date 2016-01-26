@@ -77,3 +77,15 @@ poly_eval <- function(a, X_in, N, lower, upper, cheby = FALSE) {
     .Call('edsProjection_poly_eval', PACKAGE = 'edsProjection', a, X_in, N, lower, upper, cheby)
 }
 
+ar1_sim <- function(n_pds, rho, sig_eps, init_flag = FALSE, init = 0) {
+    .Call('edsProjection_ar1_sim', PACKAGE = 'edsProjection', n_pds, rho, sig_eps, init_flag, init)
+}
+
+endog_update <- function(exog, endog_old, coeffs, n_exog, n_endog, N, upper, lower, cheby = FALSE) {
+    .Call('edsProjection_endog_update', PACKAGE = 'edsProjection', exog, endog_old, coeffs, n_exog, n_endog, N, upper, lower, cheby)
+}
+
+endog_sim <- function(n_out, exog_sim, coeffs, N, upper, lower, endog_init, cheby = FALSE, kappa = 1L, burn = 0L) {
+    .Call('edsProjection_endog_sim', PACKAGE = 'edsProjection', n_out, exog_sim, coeffs, N, upper, lower, endog_init, cheby, kappa, burn)
+}
+

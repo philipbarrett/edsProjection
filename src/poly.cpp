@@ -186,7 +186,7 @@ arma::vec poly_eval( arma::vec a, arma::mat X_in, int N,
   vec out = zeros(M) ;
       // Initialize the output matrix
   vec v_basis = zeros(K) ;
-      // Holding vector for basis terms in each dimensiona
+      // Holding vector for basis terms in each dimension
   for( int m = 0 ; m < M ; m++ ){
       // Loop over points
     for( int i = 0 ; i < n_terms ; i++){

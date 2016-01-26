@@ -252,3 +252,57 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// ar1_sim
+arma::vec ar1_sim(int n_pds, double rho, double sig_eps, bool init_flag, double init);
+RcppExport SEXP edsProjection_ar1_sim(SEXP n_pdsSEXP, SEXP rhoSEXP, SEXP sig_epsSEXP, SEXP init_flagSEXP, SEXP initSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type n_pds(n_pdsSEXP);
+    Rcpp::traits::input_parameter< double >::type rho(rhoSEXP);
+    Rcpp::traits::input_parameter< double >::type sig_eps(sig_epsSEXP);
+    Rcpp::traits::input_parameter< bool >::type init_flag(init_flagSEXP);
+    Rcpp::traits::input_parameter< double >::type init(initSEXP);
+    __result = Rcpp::wrap(ar1_sim(n_pds, rho, sig_eps, init_flag, init));
+    return __result;
+END_RCPP
+}
+// endog_update
+arma::rowvec endog_update(arma::rowvec exog, arma::rowvec endog_old, arma::mat coeffs, int n_exog, int n_endog, int N, arma::rowvec upper, arma::rowvec lower, bool cheby);
+RcppExport SEXP edsProjection_endog_update(SEXP exogSEXP, SEXP endog_oldSEXP, SEXP coeffsSEXP, SEXP n_exogSEXP, SEXP n_endogSEXP, SEXP NSEXP, SEXP upperSEXP, SEXP lowerSEXP, SEXP chebySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::rowvec >::type exog(exogSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type endog_old(endog_oldSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type coeffs(coeffsSEXP);
+    Rcpp::traits::input_parameter< int >::type n_exog(n_exogSEXP);
+    Rcpp::traits::input_parameter< int >::type n_endog(n_endogSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type upper(upperSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< bool >::type cheby(chebySEXP);
+    __result = Rcpp::wrap(endog_update(exog, endog_old, coeffs, n_exog, n_endog, N, upper, lower, cheby));
+    return __result;
+END_RCPP
+}
+// endog_sim
+arma::mat endog_sim(int n_out, arma::mat exog_sim, arma::mat coeffs, int N, arma::rowvec upper, arma::rowvec lower, arma::rowvec endog_init, bool cheby, int kappa, int burn);
+RcppExport SEXP edsProjection_endog_sim(SEXP n_outSEXP, SEXP exog_simSEXP, SEXP coeffsSEXP, SEXP NSEXP, SEXP upperSEXP, SEXP lowerSEXP, SEXP endog_initSEXP, SEXP chebySEXP, SEXP kappaSEXP, SEXP burnSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< int >::type n_out(n_outSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type exog_sim(exog_simSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type coeffs(coeffsSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type upper(upperSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type endog_init(endog_initSEXP);
+    Rcpp::traits::input_parameter< bool >::type cheby(chebySEXP);
+    Rcpp::traits::input_parameter< int >::type kappa(kappaSEXP);
+    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
+    __result = Rcpp::wrap(endog_sim(n_out, exog_sim, coeffs, N, upper, lower, endog_init, cheby, kappa, burn));
+    return __result;
+END_RCPP
+}
