@@ -31,5 +31,11 @@ arma::mat endog_sim( int n_out, arma::mat exog_sim, arma::mat coeffs, int N,
                       arma::rowvec upper, arma::rowvec lower, arma::rowvec endog_init, 
                       bool cheby, int kappa, int burn ) ;
     // Returns a matrix of simulated exogenous and endogenous variables
-    
+arma::mat irf_create( int pds, int n_sim, int N, int shk_idx,
+                      arma::rowvec rho, arma::rowvec sig_eps, 
+                      arma::mat coeffs, arma::rowvec upper, arma::rowvec lower, 
+                      arma::rowvec init, int n_endog, int n_exog, 
+                      double shk, bool cheby ) ;
+    // Creates the impulse responses
+
 #endif

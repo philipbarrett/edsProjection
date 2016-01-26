@@ -7,3 +7,5 @@ coeff <- matrix( c( .5, 0, .5 * 4, 0, .1, 0, 0, 4, 1, 0 ), 5, 2 )
 oo <- endog_sim( 100, exog, coeff, 1, upper, lower, c(0,0), TRUE )
 plot( c(1,100), range(oo), type='n')
 for( i in 1:4 ) lines( 1:100, oo[,i], col=i )
+
+integrand_ngm( matrix(0,1,1), matrix(1,1,1), c(.01), params, matrix( c( 1, .1, .1 ), 1, 1), 1, 1, 1, 1.5, .5 )
