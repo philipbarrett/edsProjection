@@ -45,6 +45,10 @@ integrand_ngm <- function(exog, endog, exog_lead, params, coeffs, n_exog, n_endo
     .Call('edsProjection_integrand_ngm', PACKAGE = 'edsProjection', exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby)
 }
 
+err_ngm_mc <- function(exog, endog, exog_innov, params, coeffs, n_exog, n_endog, rho, sig_eps, n_mc, N, upper, lower, cheby = FALSE) {
+    .Call('edsProjection_err_ngm_mc', PACKAGE = 'edsProjection', exog, endog, exog_innov, params, coeffs, n_exog, n_endog, rho, sig_eps, n_mc, N, upper, lower, cheby)
+}
+
 idx_increment <- function(idx, N, K) {
     .Call('edsProjection_idx_increment', PACKAGE = 'edsProjection', idx, N, K)
 }

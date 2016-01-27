@@ -54,7 +54,7 @@ arma::rowvec endog_update( arma::rowvec exog, arma::rowvec endog_old, arma::mat 
   rowvec out = zeros<rowvec>( n_endog ) ;
       // Intialize output vector
   vec temp(1) ;
-      // Temporary contained
+      // Temporary container
   for( int i=0; i < n_endog ; i++ ){
     temp = poly_eval( coeffs.col(i), X, N, lower, upper, cheby ) ;
     out(i) = temp(0) ;
