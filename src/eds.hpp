@@ -37,8 +37,12 @@ arma::vec almost_ergodic_indices( arma::mat & X, double delta, double h ) ;
     // Removes the points with cumulative probability mass less than delta
 arma::mat almost_ergodic( arma::mat & X, double delta, double h ) ;
     // Removes the points with cumulative probability mass less than delta
+arma::vec p_eps_cheap_idx( arma::mat & X, arma::vec & eps, double delta, double h ) ;
+    // Indices of the cheap EDS algorithm with removal of low-probability points  
 arma::mat p_eps_cheap( arma::mat & X, arma::vec & eps, double delta, double h ) ;
     // The cheap EDS algorithm with removal of low-probability points
+arma::vec p_eps_cheap_const_idx( arma::mat & X, double eps, double delta, double h ) ;
+    // Indices wth constant epsilon
 arma::mat p_eps_cheap_const( arma::mat & X, double eps, double delta, double h ) ;
     // With constant epsilon
 

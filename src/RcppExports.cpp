@@ -103,6 +103,20 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// p_eps_cheap_idx
+arma::vec p_eps_cheap_idx(arma::mat& X, arma::vec& eps, double delta, double h);
+RcppExport SEXP edsProjection_p_eps_cheap_idx(SEXP XSEXP, SEXP epsSEXP, SEXP deltaSEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< arma::vec& >::type eps(epsSEXP);
+    Rcpp::traits::input_parameter< double >::type delta(deltaSEXP);
+    Rcpp::traits::input_parameter< double >::type h(hSEXP);
+    __result = Rcpp::wrap(p_eps_cheap_idx(X, eps, delta, h));
+    return __result;
+END_RCPP
+}
 // p_eps_cheap
 arma::mat p_eps_cheap(arma::mat& X, arma::vec& eps, double delta, double h);
 RcppExport SEXP edsProjection_p_eps_cheap(SEXP XSEXP, SEXP epsSEXP, SEXP deltaSEXP, SEXP hSEXP) {
@@ -114,6 +128,20 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< double >::type delta(deltaSEXP);
     Rcpp::traits::input_parameter< double >::type h(hSEXP);
     __result = Rcpp::wrap(p_eps_cheap(X, eps, delta, h));
+    return __result;
+END_RCPP
+}
+// p_eps_cheap_const_idx
+arma::vec p_eps_cheap_const_idx(arma::mat& X, double eps, double delta, double h);
+RcppExport SEXP edsProjection_p_eps_cheap_const_idx(SEXP XSEXP, SEXP epsSEXP, SEXP deltaSEXP, SEXP hSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat& >::type X(XSEXP);
+    Rcpp::traits::input_parameter< double >::type eps(epsSEXP);
+    Rcpp::traits::input_parameter< double >::type delta(deltaSEXP);
+    Rcpp::traits::input_parameter< double >::type h(hSEXP);
+    __result = Rcpp::wrap(p_eps_cheap_const_idx(X, eps, delta, h));
     return __result;
 END_RCPP
 }

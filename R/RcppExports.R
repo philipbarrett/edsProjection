@@ -33,8 +33,16 @@ almost_ergodic <- function(X, delta, h = 0) {
     .Call('edsProjection_almost_ergodic', PACKAGE = 'edsProjection', X, delta, h)
 }
 
+p_eps_cheap_idx <- function(X, eps, delta, h = 0) {
+    .Call('edsProjection_p_eps_cheap_idx', PACKAGE = 'edsProjection', X, eps, delta, h)
+}
+
 p_eps_cheap <- function(X, eps, delta, h = 0) {
     .Call('edsProjection_p_eps_cheap', PACKAGE = 'edsProjection', X, eps, delta, h)
+}
+
+p_eps_cheap_const_idx <- function(X, eps, delta, h = 0) {
+    .Call('edsProjection_p_eps_cheap_const_idx', PACKAGE = 'edsProjection', X, eps, delta, h)
 }
 
 p_eps_cheap_const <- function(X, eps, delta, h = 0) {

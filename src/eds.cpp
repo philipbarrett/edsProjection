@@ -187,9 +187,45 @@ arma::mat almost_ergodic( arma::mat & X, double delta, double h=0 ){
 }
 
 // [[Rcpp::export]]
-arma::mat p_eps_cheap( arma::mat & X, arma::vec & eps, double delta, double h=0 ) {
-// The cheap EDS algorithm with removal of low-probability points
+arma::vec p_eps_cheap_idx( arma::mat & X, arma::vec & eps, double delta, double h=0 ) {
+// Indices of the cheap EDS algorithm with removal of low-probability points  
+
+  mat X_norm = pcd_scaling( X ) ;
+      // The PCD rescaling of X (removes units)
   
+  /** 1. Calculate the rows to retain **/
+  vec keep = eds_keep( X_norm, eps ) ;
+  
+  /** 2. Construct a PC matrix with those rows **/
+  mat Z_norm = keep_mat( X_norm, keep ) ;
+  mat Z = keep_mat( X, keep ) ;
+  
+  /** 3. Construct a return matrix with those rows **/
+  vec erg_indices_Z = almost_ergodic_indices( Z_norm, delta, h ) ;
+      // The indices of the normalized returned points
+      
+  /** 4. Now loop over the original indices to remove the low-probability points **/
+  vec erg_indices = keep ;
+      // Initialize the 
+  int j = 0 ;
+      // The Z index
+  for( int i = 0 ; i < X.n_rows ; i++ ){
+    if( keep(i) == 1 ){
+      erg_indices(i) = erg_indices_Z(j) ; 
+          // Copy from the probability-reduced set
+      j++ ;
+          // Increment the Z counter
+    }
+  }
+      
+  return erg_indices ;
+      // The indices of X
+}
+
+// [[Rcpp::export]]
+arma::mat p_eps_cheap( arma::mat & X, arma::vec & eps, double delta, double h=0 ){
+// The cheap EDS algorithm with removal of low-probability points
+
   mat X_norm = pcd_scaling( X ) ;
       // The PCD rescaling of X (removes units)
   
@@ -207,6 +243,14 @@ arma::mat p_eps_cheap( arma::mat & X, arma::vec & eps, double delta, double h=0 
       // Retain only the indices in the almost-ergodic set
   
   return out ;
+}
+
+// [[Rcpp::export]]
+arma::vec p_eps_cheap_const_idx( arma::mat & X, double eps, double delta, double h=0 ) {
+// Indices wth constant epsilon
+  vec v_eps = eps * ones( X.n_rows ) ;
+      // Create the constant vector of epsilons
+  return p_eps_cheap_idx( X, v_eps, delta, h ) ;
 }
 
 // [[Rcpp::export]]
