@@ -48,33 +48,42 @@ double integrand_ngm( arma::mat exog, arma::mat endog, arma::rowvec exog_lead,
 }
 
 // [[Rcpp::export]]
-double err_ngm_mc( arma::mat exog, arma::mat endog, arma::mat exog_innov, 
+double err_ngm( arma::mat exog, arma::mat endog, arma::mat exog_innov_integ, 
                   List params, arma::mat coeffs, int n_exog, int n_endog,
-                  arma::rowvec rho, arma::rowvec sig_eps, int n_mc,
-                  int N, arma::rowvec upper, arma::rowvec lower, bool cheby=false ){
+                  arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
+                  arma::rowvec lower, bool cheby, arma::vec weights ){
 // Computes the single-period error on the neocassical growth model equilibrium 
-// condition using a Monte Carlo approach.  NB: THE INNOVATIONS EXOG_INNOV MUST
-// BE STANDARD, IE. MEAN 0, VARIANCE 1
+// condition using a Monte Carlo approach.  NB: THE INNOVATIONS exog_innov_integ
+// MUST ALREADY BE SCALED (IE. HAVE THE APPROPRIATE VARIANCE)
   
   double betta = params["betta"] ;
       // Extract beta
-  mat exog_lead = zeros( n_mc, n_exog ) ;
+  mat exog_lead = zeros( n_integ, n_exog ) ;
       // Initalize the draws of the exogenous variables in the next period
-  for( int i = 0 ; i < n_mc ; i++ ){
-    exog_lead.row(i) = rho % exog.row(0) + sig_eps % exog_innov.row(i) ;
+  for( int i = 0 ; i < n_integ ; i++ ){
+    exog_lead.row(i) = rho % exog.row(0) + exog_innov_integ.row(i) ;
         // Multiply the most recent exogenous draw by the appropriate rho and
         // add the innovation
   }
   
   double rhs = 0 ;
-      // Initialize the righ hand side
-  for( int i = 0 ; i < n_mc ; i++ ){
-    rhs = rhs + betta / n_mc * 
-                integrand_ngm( exog, endog, exog_lead.row(i), params, coeffs, 
+  double err = 0 ;
+      // Initialize the right hand side
+  for( int i = 0 ; i < n_integ ; i++ ){
+    err = betta * integrand_ngm( exog, endog, exog_lead.row(i), params, coeffs, 
                                 n_exog, n_endog, N, upper, lower, cheby ) ;
-  }   // Compute the integral via monte carlo
-  return ( 1 - rhs ) ;
+    rhs = rhs + weights(i) * err ;
+                                
+//      Rcout << "i = " << i << std::endl ;
+//      Rcout << "weights(i) = " << weights(i) << std::endl ;
+//      Rcout << "err = " << err << std::endl ;
+//      Rcout << "rhs = " << rhs << std::endl ;
+//      Rcout << "exog_lead.row(i):\n" << exog_lead.row(i) << std::endl ;
+      
+  }   // Compute the integral
+  return fabs( ( 1.0 - rhs ) / 1.0 ) ;
       // Because the target equation is: 1 = beta * E( integrand )
+      // Division just to make clear that this is a relative error
 }
 
 

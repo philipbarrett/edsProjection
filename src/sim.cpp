@@ -67,7 +67,7 @@ arma::rowvec endog_update( arma::rowvec exog, arma::rowvec endog_old, arma::mat 
 // [[Rcpp::export]]
 arma::mat endog_sim( int n_out, arma::mat exog_sim, arma::mat coeffs, int N,
                       arma::rowvec upper, arma::rowvec lower, arma::rowvec endog_init, 
-                      bool cheby=false, int kappa=1, int burn=0 ){
+                      bool cheby=false, int kappa=1, int burn=0, bool lag=false ){
 // Returns a matrix of simulated exogenous and endogenous variables
 
   int n_exog = exog_sim.n_cols ;
@@ -79,7 +79,9 @@ arma::mat endog_sim( int n_out, arma::mat exog_sim, arma::mat coeffs, int N,
   int n_pds = kappa * n_out ;
       // Skipping every kappa periods in the record
 //  mat out = zeros<mat>( n_out, ( 1 + leads ) * ( n_endog + n_exog ) ) ;
-  mat out = zeros<mat>( n_out, ( n_endog + n_exog ) ) ;
+  int n_col = !lag ? ( n_endog + n_exog ) : ( 2 * ( n_endog + n_exog ) ) ;
+      // Number of columns
+  mat out = zeros<mat>( n_out, n_col ) ;
       // The vector of outputs
       
   if( burn > 0 ){
@@ -101,6 +103,10 @@ arma::mat endog_sim( int n_out, arma::mat exog_sim, arma::mat coeffs, int N,
           // Record the exogenous variable
       out.row(out_row).subvec(n_endog,n_endog+n_exog-1) = endog_new ;
           // Record the endogenous variable
+      if( lag & i > 0 ){
+        out.row(out_row).subvec(n_endog+n_exog,n_endog+2*n_exog-1) = exog_sim.row(i+burn-1) ;
+        out.row(out_row).subvec(2*n_endog+n_exog,2*(n_endog+n_exog)-1) = endog_old ;
+      }   // Save the lagged variables where required
       out_row ++ ;
           // Increment the output row
     }
@@ -171,6 +177,8 @@ arma::mat irf_create( int pds, int n_sim, int N, int shk_idx,
   }
   return out ;
 }
+
+
 
 
 
