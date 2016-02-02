@@ -53,8 +53,16 @@ integrand_ngm <- function(exog, endog, exog_lead, params, coeffs, n_exog, n_endo
     .Call('edsProjection_integrand_ngm', PACKAGE = 'edsProjection', exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby)
 }
 
-err_ngm <- function(exog, endog, exog_innov_integ, params, coeffs, n_exog, n_endog, rho, n_integ, N, upper, lower, cheby, weights) {
-    .Call('edsProjection_err_ngm', PACKAGE = 'edsProjection', exog, endog, exog_innov_integ, params, coeffs, n_exog, n_endog, rho, n_integ, N, upper, lower, cheby, weights)
+integrand_ngm_D <- function(exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby = FALSE) {
+    .Call('edsProjection_integrand_ngm_D', PACKAGE = 'edsProjection', exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby)
+}
+
+err_ngm <- function(exog, endog, exog_innov_integ, params, coeffs, n_exog, n_endog, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
+    .Call('edsProjection_err_ngm', PACKAGE = 'edsProjection', exog, endog, exog_innov_integ, params, coeffs, n_exog, n_endog, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
+}
+
+err_ngm_D <- function(exog, endog, exog_innov_integ, params, coeffs, n_exog, n_endog, rho, n_integ, N, upper, lower, cheby, weights) {
+    .Call('edsProjection_err_ngm_D', PACKAGE = 'edsProjection', exog, endog, exog_innov_integ, params, coeffs, n_exog, n_endog, rho, n_integ, N, upper, lower, cheby, weights)
 }
 
 idx_increment <- function(idx, N, K) {
@@ -127,5 +135,9 @@ irf_create <- function(pds, n_sim, N, shk_idx, rho, sig_eps, coeffs, upper, lowe
 
 eval_err <- function(coeffs, X, model, lags, params, n_exog, n_endog, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad = TRUE, n_nodes = 0L) {
     .Call('edsProjection_eval_err', PACKAGE = 'edsProjection', coeffs, X, model, lags, params, n_exog, n_endog, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad, n_nodes)
+}
+
+eval_err_D <- function(coeffs, X, model, lags, params, n_exog, n_endog, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad = TRUE, n_nodes = 0L) {
+    .Call('edsProjection_eval_err_D', PACKAGE = 'edsProjection', coeffs, X, model, lags, params, n_exog, n_endog, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad, n_nodes)
 }
 

@@ -1,12 +1,12 @@
 Package: edsProjection
 Type: Package
-Title: What the package does (short line)
+Title: Implements polynomial projection on Maliar & Maliars's EDS grid
 Version: 1.0
 Date: 2016-01-14
-Author: Your Name
-Maintainer: Your Name <your@email.com>
+Author: Philip Barrett
+Maintainer: Philip Barrett <pobarrett@gmail.com>
 Description: More about what it does (maybe more than one line)
 License: GPL (>= 2)
-Imports: Rcpp (>= 0.11.5)
+Imports: Rcpp (>= 0.11.5), ipoptr
 LinkingTo: Rcpp, RcppArmadillo, BH
 Suggests: testthat

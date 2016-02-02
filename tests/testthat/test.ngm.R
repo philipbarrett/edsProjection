@@ -1,6 +1,6 @@
-context('Checking integration for NGM model')
+context('Checking NGM model')
 
-test_that("Quadrature vs. MC integration", {
+test_that("Integration", {
   
   params <- list( A=1, alpha=1/3, delta=.05, gamma=1, delta=.02, betta=.95 )
   upper <- c( 1, 1.5 )
@@ -31,50 +31,142 @@ test_that("Quadrature vs. MC integration", {
       # Check that the integrals are close(ish).  MCintegration is quite bad!
 })
 
-test_that("Set reduction and error evaluation", {
+test_that("Derivatives", {
   
   params <- list( A=1, alpha=1/3, delta=.05, gamma=1, delta=.02, betta=.95 )
   upper <- c( 1, 1.5 )
   lower <- c( -.5, 0 )
-  coeff <- matrix( c( 1, .1, .15 ), 3, 1)
+  N <- 2
+      # approximation order
+  coeff <- matrix( c( 1, .1, .15, .1, .1, -.05 ), 6, 1)
+  exog <- matrix(0,1,1)
+  endog <- matrix(1,2,1)
+  exog_shk <- .01
       # Variables used
   rho <- .8
   sig.eps <- .1
   n.quad <- 7
       # Number of quadrature nodes
-  n.sim.out <- 1e04
-      # The number of points extracted from the simulation
-  burn <- 1000
-  kappa <- 100
-  endog.init <- c(1)
-  exog.sim <- ar1_sim( n.sim.out * kappa + burn, rho, sig.eps )
-      # The simulated exogenous state
-  endog.sim <- endog_sim( n.sim.out, exog.sim, coeff, 1, upper, lower, 
-                          endog.init, FALSE, kappa, burn, TRUE )
-  idces <- p_eps_cheap_const_idx( endog.sim[,1:2], .3, .01 )
-  X <- endog.sim[ idces == 1, ]
-      # Set reduction
+
+  ##### The integrand #####
+  
+  ## Ordinary polynomials
+  base <- integrand_ngm( exog, endog, exog_shk, params, coeff, 1, 1, 2, upper, 
+                         lower, FALSE)
+  deriv.x <- integrand_ngm_D( exog, endog, exog_shk, params, coeff, 1, 1, 2, 
+                              upper, lower, FALSE)
+      # The exact derivative
+  deriv.fd <- 0 * deriv.x
+      # Initialize the first-diff approx
+  inc <- 1e-06 * diag( 6 )
+      # The matrix of increments
+  for( i in 1:6 )
+    deriv.fd[i] <- 1e06 * ( integrand_ngm( exog, endog, exog_shk, params, 
+                                           coeff + inc[i,], 
+                                           1, 1, 2, upper, lower, FALSE) - base )
+        # Fill in the vector of first derivatives
+  expect_equal( deriv.x, deriv.fd, tolerance=1e-04 )
+      # Need to have low tolerance because FD is only an approximation
+  
+  ## Chebychev polynomials
+  base <- integrand_ngm( exog, endog, exog_shk, params, coeff, 1, 1, 2, upper, 
+                         lower, TRUE )
+  deriv.x <- integrand_ngm_D( exog, endog, exog_shk, params, coeff, 1, 1, 2, 
+                              upper, lower, TRUE )
+      # The exact derivative
+  deriv.fd <- 0 * deriv.x
+      # Initialize the first-diff approx
+  inc <- 1e-06 * diag( 6 )
+      # The matrix of increments
+  for( i in 1:6 )
+    deriv.fd[i] <- 1e06 * ( integrand_ngm( exog, endog, exog_shk, params, 
+                                           coeff + inc[i,], 
+                                           1, 1, 2, upper, lower, TRUE) - base )
+      # Fill in the vector of first derivatives
+  expect_equal( deriv.x, deriv.fd, tolerance=1e-05 )
+      # Need to have low tolerance because FD is only an approximation
+
+  
+  ##### The integral #####
+  
+  ## Ordinary polynomials
   nodes <- quad_nodes_1d( n.quad, sig.eps, 0 )
   wts <- quad_weights_1d( n.quad )
-      # Quadrature weights and nodes
-  sum.err <- 0
-  for( i in 1:nrow(X) ){
-    exog.1 <- matrix( X[i,1], 1, 1 )
-    endog.1 <- matrix( X[i,c(2,4)], 2, 1 )
-        # The first elements of the states, as matrices 
-    err.1 <- err_ngm( exog.1, endog.1, nodes, params, coeff, 1, 1, rho, 
-                      n.quad, 1, upper, lower, FALSE, wts )
-        # The first line of the error
-    err.all.1 <- eval_err( coeff, matrix( X[i,], nrow=1) , 'ngm', 1, params, 1, 1, rho, sig.eps, 0, 1,
-                           upper, lower, FALSE, matrix(0,1,1), TRUE, n.quad )
-        # The same, just using the matrix of all terms but restricted to the
-        # first line
-    expect_equal( err.1, err.all.1 )
-    sum.err <- sum.err + err.1 / nrow(X)
-  }
+  base <- err_ngm( exog, endog, nodes, params, coeff, 1, 1, rho, 
+                     n.quad, 2, upper, lower, FALSE, wts, TRUE )  
+      # Case where the sign of the error derivative is important
+  deriv.x <- err_ngm_D( exog, endog, nodes, params, coeff, 1, 1, rho, 
+                        n.quad, 2, upper, lower, FALSE, wts )  
+      # The exact derivative
+  deriv.fd <- 0 * deriv.x
+      # Initialize the first-diff approx
+  inc <- 1e-06 * diag( 6 )
+      # The matrix of increments
+  for( i in 1:6 )
+    deriv.fd[i] <- 1e06 * ( err_ngm( exog, endog, nodes, params, 
+                                     coeff + inc[i,], 1, 1, rho, 
+                                     n.quad, 2, upper, lower, FALSE, wts ) - base )
+      # Fill in the vector of first derivatives
+  expect_equal( deriv.x, deriv.fd, tolerance=1e-04 )
+      # Need to have low tolerance because FD is only an approximation
   
-  err.all <- eval_err( coeff, X, 'ngm', 1, params, 1, 1, rho, sig.eps, 0, 1,
-                        upper, lower, FALSE, matrix(0,1,1), TRUE, n.quad )
-      # Usage
-  expect_equal( err.all, sum.err )
-})
+  exog <- matrix(0.2,1,1)
+  base <- err_ngm( exog, endog, nodes, params, coeff, 1, 1, rho, 
+                   n.quad, 2, upper, lower, FALSE, wts, TRUE )  
+      # Case where the sign of the error derivative is not important
+  deriv.x <- err_ngm_D( exog, endog, nodes, params, coeff, 1, 1, rho, 
+                        n.quad, 2, upper, lower, FALSE, wts )  
+      # The exact derivative
+  deriv.fd <- 0 * deriv.x
+      # Initialize the first-diff approx
+  inc <- 1e-06 * diag( 6 )
+      # The matrix of increments
+  for( i in 1:6 )
+    deriv.fd[i] <- 1e06 * ( err_ngm( exog, endog, nodes, params, 
+                                     coeff + inc[i,], 1, 1, rho, 
+                                     n.quad, 2, upper, lower, FALSE, wts ) - base )
+      # Fill in the vector of first derivatives
+  expect_equal( deriv.x, deriv.fd, tolerance=1e-04 )
+      # Need to have low tolerance because FD is only an approximation
+  
+  ## Chebychev polynomials
+  nodes <- quad_nodes_1d( n.quad, sig.eps, 0 )
+  wts <- quad_weights_1d( n.quad )
+  base <- err_ngm( exog, endog, nodes, params, coeff, 1, 1, rho, 
+                   n.quad, 2, upper, lower, TRUE, wts, TRUE )  
+      # Case where the sign of the error derivative is important
+  deriv.x <- err_ngm_D( exog, endog, nodes, params, coeff, 1, 1, rho, 
+                        n.quad, 2, upper, lower, TRUE, wts )  
+      # The exact derivative
+  deriv.fd <- 0 * deriv.x
+      # Initialize the first-diff approx
+  inc <- 1e-06 * diag( 6 )
+      # The matrix of increments
+  for( i in 1:6 )
+    deriv.fd[i] <- 1e06 * ( err_ngm( exog, endog, nodes, params, 
+                                     coeff + inc[i,], 1, 1, rho, 
+                                     n.quad, 2, upper, lower, TRUE, wts ) - base )
+      # Fill in the vector of first derivatives
+  expect_equal( deriv.x, deriv.fd, tolerance=1e-05 )
+      # Need to have low tolerance because FD is only an approximation
+  
+  exog <- matrix(0.6,1,1)
+  base <- err_ngm( exog, endog, nodes, params, coeff, 1, 1, rho, 
+                   n.quad, 2, upper, lower, TRUE, wts, TRUE )  
+      # Case where the sign of the error derivative is not important
+  deriv.x <- err_ngm_D( exog, endog, nodes, params, coeff, 1, 1, rho, 
+                        n.quad, 2, upper, lower, TRUE, wts )  
+      # The exact derivative
+  deriv.fd <- 0 * deriv.x
+      # Initialize the first-diff approx
+  inc <- 1e-06 * diag( 6 )
+      # The matrix of increments
+  for( i in 1:6 )
+    deriv.fd[i] <- 1e06 * ( err_ngm( exog, endog, nodes, params, 
+                                     coeff + inc[i,], 1, 1, rho, 
+                                     n.quad, 2, upper, lower, TRUE, wts ) - base )
+      # Fill in the vector of first derivatives
+  expect_equal( deriv.x, deriv.fd, tolerance=1e-05 )
+      # Need to have low tolerance because FD is only an approximation
+  
+} )
