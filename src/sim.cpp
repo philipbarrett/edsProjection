@@ -104,7 +104,11 @@ arma::mat endog_sim( int n_out, arma::mat exog_sim, arma::mat coeffs, int N,
       out.row(out_row).subvec(n_endog,n_endog+n_exog-1) = endog_new ;
           // Record the endogenous variable
       if( lag ){
-        out.row(out_row).subvec(n_endog+n_exog,n_endog+2*n_exog-1) = exog_sim.row(i+burn-1) ;
+        if( i == 0 & burn == 0 ){
+          out.row(out_row).subvec(n_endog+n_exog,n_endog+2*n_exog-1) = zeros<rowvec>( n_exog ) ;
+        }else{
+          out.row(out_row).subvec(n_endog+n_exog,n_endog+2*n_exog-1) = exog_sim.row(i+burn-1) ;          
+        }
         out.row(out_row).subvec(2*n_endog+n_exog,2*(n_endog+n_exog)-1) = endog_old ;
       }   // Save the lagged variables where required
       out_row ++ ;

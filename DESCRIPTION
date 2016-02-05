@@ -7,6 +7,6 @@ Author: Philip Barrett
 Maintainer: Philip Barrett <pobarrett@gmail.com>
 Description: More about what it does (maybe more than one line)
 License: GPL (>= 2)
-Imports: Rcpp (>= 0.11.5), ipoptr
+Imports: Rcpp (>= 0.11.5), nloptr
 LinkingTo: Rcpp, RcppArmadillo, BH
 Suggests: testthat

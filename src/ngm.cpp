@@ -36,14 +36,23 @@ double integrand_ngm( arma::mat exog, arma::mat endog, arma::rowvec exog_lead,
                                     n_endog, N, upper, lower, cheby ) ;
       // Create the leads of the endogenous variables
   double c_t = ( 1 - delta ) * endog( 1, 0 ) - endog( 0, 0 ) + 
-                  exp( exog( 0, 0 ) ) * alpha * A * pow( endog( 1, 0 ), alpha ) ;
+                  exp( exog( 0, 0 ) ) * A * pow( endog( 1, 0 ), alpha ) ;
       // Current period consumption
   double c_t1 = ( 1 - delta ) * endog( 0, 0 ) - endog_lead( 0 ) + 
-                  exp( exog_lead( 0 ) ) * alpha * A * pow( endog( 0, 0 ), alpha ) ;
+                  exp( exog_lead( 0 ) ) * A * pow( endog( 0, 0 ), alpha ) ;
       // Next period consumption
   double integrand = pow( c_t1 / c_t, - gamma ) * 
-                ( 1 - delta * exp( exog(0) ) * alpha * A * ( endog( 0, 0 ) ) ) ;
+          ( 1 - delta + 
+            exp( exog(0, 0) ) * alpha * A * pow( endog( 0, 0 ), alpha - 1 ) ) ;
       // Calculate the integrand
+      
+//      Rcout << "endog:\n" << endog <<std::endl ;
+//      Rcout << "exog:\n" << exog <<std::endl ;
+//      Rcout << "exog_lead:" << exog_lead <<std::endl ;
+//      Rcout << "c_t = " << c_t <<std::endl ;
+//      Rcout << "c_t1 = " << c_t1 <<std::endl ;
+//      Rcout << "integrand = " << integrand <<std::endl ;
+      
   return integrand ;
 }
 
@@ -65,13 +74,14 @@ arma::mat integrand_ngm_D( arma::mat exog, arma::mat endog,
                                     n_endog, N, upper, lower, cheby ) ;
       // Create the leads of the endogenous variables
   double c_t = ( 1 - delta ) * endog( 1, 0 ) - endog( 0, 0 ) + 
-                  exp( exog( 0, 0 ) ) * alpha * A * pow( endog( 1, 0 ), alpha ) ;
+                  exp( exog( 0, 0 ) ) * A * pow( endog( 1, 0 ), alpha ) ;
       // Current period consumption
   double c_t1 = ( 1 - delta ) * endog( 0, 0 ) - endog_lead( 0 ) + 
-                  exp( exog_lead( 0 ) ) * alpha * A * pow( endog( 0, 0 ), alpha ) ;
+                  exp( exog_lead( 0 ) ) * A * pow( endog( 0, 0 ), alpha ) ;
       // Next period consumption
   double integrand = pow( c_t1 / c_t, - gamma ) * 
-                ( 1 - delta * exp( exog(0) ) * alpha * A * ( endog( 0, 0 ) ) ) ;
+          ( 1 - delta + 
+            exp( exog(0, 0) ) * alpha * A * pow( endog( 0, 0 ), alpha - 1 ) ) ;
       // Calculate the integrand
   double common = gamma / c_t1 * integrand ;
       // The common part of the integral
@@ -119,20 +129,28 @@ double err_ngm( arma::mat exog, arma::mat endog, arma::mat exog_innov_integ,
         // add the innovation
   }
   
-  double rhs = 0 ;
-  double err = 0 ;
+  vec rhs = zeros(1) ;
+  rowvec err = zeros<rowvec>(n_integ) ;
       // Initialize the right hand side
+      
   for( int i = 0 ; i < n_integ ; i++ ){
-    err = betta * integrand_ngm( exog, endog, exog_lead.row(i), params, coeffs, 
+    err(i) = betta * integrand_ngm( exog, endog, exog_lead.row(i), params, coeffs, 
                                 n_exog, n_endog, N, upper, lower, cheby ) ;
-    rhs = rhs + weights(i) * err ;
+                                
   }   // Compute the integral
+
+  rhs = err * weights ;
   
     if( print_rhs ){
-      Rcout << "rhs - 1 = " << rhs - 1 << std::endl ;
+      Rcout << "err: " << err << std::endl ;
+      Rcout << "weights:\n" << weights << std::endl ;
+      Rcout << "rhs: " << rhs << std::endl ;
+      Rcout << "rhs(0) - 1 = " << rhs(0) - 1 << std::endl ;
     }
   
-  return fabs( ( 1.0 - rhs ) / 1.0 ) ;
+  double rel_err = ( 1.0 - rhs(0) )  / 1.0 ;
+  return pow( rel_err, 2.0 ) ;
+//  return fabs( ( 1.0 - rhs ) / 1.0 ) ;
       // Because the target equation is: 1 = beta * E( integrand )
       // Division just to make clear that this is a relative error
 }
@@ -172,9 +190,14 @@ arma::mat err_ngm_D( arma::mat exog, arma::mat endog, arma::mat exog_innov_integ
         // absolute part causes innaccuracies. There is surely a better way to
         // do this.
   }   // Compute the integral
-  double sign = ( 1.0 - rhs >= 0 ) ? 1 : -1 ;
-      // The sign of the non-absolute error
-  return - rhs_D * sign ;
+  
+  double rel_err = ( 1.0 - rhs )  / 1.0 ;
+  return - 2 * rhs_D * rel_err ;
+      // Because d/d(coeff)[ .5 * rel_err ^ 2 ] = - d/d(coeff)[rhs] * rel_err
+  
+//  double sign = ( 1.0 - rhs >= 0 ) ? 1 : -1 ;
+//      // The sign of the non-absolute error
+//  return - rhs_D * sign ;
 }
 
 

@@ -95,7 +95,7 @@ test_that("Derivatives", {
                                   rho, sig.eps, 0, N, upper, lower, FALSE, 
                                   matrix(0,1,1), TRUE, n.quad ) - base )
       # Fill in the vector of first derivatives
-  expect_equal( deriv.x, deriv.fd, tolerance=1e-05 )
+  expect_equal( deriv.x, deriv.fd, tolerance=1e-04 )
       # Need to have low tolerance because FD is only an approximation
   
   
@@ -103,35 +103,38 @@ test_that("Derivatives", {
 
 test_that("Minimizing coefficients", {
   
-  params <- list( A=1, alpha=1/3, delta=.05, gamma=1, delta=.02, betta=.95 )
-  upper <- c( 1, 1.5 )
-  lower <- c( -.5, 0 )
-  N <- 2
-      # approximation order
-  coeff <- matrix( c( 1, .1, .15, .1, .1, -.05 ), 6, 1)
-  exog <- matrix(0,1,1)
-  endog <- matrix(1,2,1)
-      # Variables used
-  rho <- .8
-  sig.eps <- .1
-  n.quad <- 7
-      # Number of quadrature nodes
-  n.sim.out <- 1e04
-      # The number of points extracted from the simulation
-  burn <- 1000
-  kappa <- 100
-  endog.init <- c(1)
-  exog.sim <- ar1_sim( n.sim.out * kappa + burn, rho, sig.eps )
-      # The simulated exogenous state
-  endog.sim <- endog_sim( n.sim.out, exog.sim, coeff, N, upper, lower, 
-                          endog.init, FALSE, kappa, burn, TRUE )
-  idces <- p_eps_cheap_const_idx( endog.sim[,c(1:2,4)], .3, .01 )
-      # Need to include the lagged state in the evaluation set for the
-      # equilibrium condition
-  X <- endog.sim[ idces == 1, ]
-      # The restricted simulation
-  err.min(  coeff, X, 'ngm', 1, params, 1, 1, rho, sig.eps, 0, N,
-            upper, lower, FALSE, matrix(0,1,1), TRUE, n.quad )
+  ## THIS TEST SKIPPED - JUST USAGE ##
   
+#   params <- list( A=1, alpha=1/3, delta=.05, gamma=1, delta=.02, betta=.95 )
+#   upper <- c( 1, 1.5 )
+#   lower <- c( -.5, 0 )
+#   N <- 2
+#       # approximation order
+#   coeff <- matrix( c( 1, .1, .15, .1, .1, -.05 ), 6, 1)
+#   exog <- matrix(0,1,1)
+#   endog <- matrix(1,2,1)
+#       # Variables used
+#   rho <- .8
+#   sig.eps <- .1
+#   cheby <- TRUE
+#   n.quad <- 7
+#       # Number of quadrature nodes
+#   n.sim.out <- 1e04
+#       # The number of points extracted from the simulation
+#   burn <- 1000
+#   kappa <- 100
+#   endog.init <- c(1)
+#   exog.sim <- ar1_sim( n.sim.out * kappa + burn, rho, sig.eps )
+#       # The simulated exogenous state
+#   endog.sim <- endog_sim( n.sim.out, exog.sim, coeff, N, upper, lower, 
+#                           endog.init, cheby, kappa, burn, TRUE )
+#   idces <- p_eps_cheap_const_idx( endog.sim[,c(1:2,4)], .3, .01 )
+#       # Need to include the lagged state in the evaluation set for the
+#       # equilibrium condition
+#   X <- endog.sim[ idces == 1, ]
+#       # The restricted simulation
+#   err.min(  coeff, X, 'ngm', 1, params, 1, 1, rho, sig.eps, 0, N,
+#             upper, lower, cheby, matrix(0,1,1), TRUE, n.quad )
+#         # Just a usage example
   
 })

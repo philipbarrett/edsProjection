@@ -22,11 +22,12 @@ double eval_err( arma::mat coeffs, arma::mat X, std::string model,
 
   int n_pts = X.n_rows ;
       // The number of points at which the error is assessed
-  double err = 0 ;
-      // The error
   mat exog = zeros( 1 + lags, n_exog ) ;
   mat endog = zeros( 1 + lags, n_endog ) ;
       // Temporary containers used in the loop
+  vec err = zeros(n_pts) ;
+  double out = 0 ;
+      // The error
 
   /** Create the integration nodes and weights **/
   n_integ = quad ? pow( n_nodes, n_exog ) : n_integ ;
@@ -35,10 +36,10 @@ double eval_err( arma::mat coeffs, arma::mat X, std::string model,
   mat nodes( n_integ, n_exog ) ;
       // The weights and integration nodes
   if( quad ){
-    mat quad = quad_nodes_weights_mat( pow( n_nodes, n_exog ), n_exog, 
+    mat m_quad = quad_nodes_weights_mat( pow( n_nodes, n_exog ), n_exog, 
                         sig_eps, zeros(n_exog) ) ;
-    weights = quad.col(n_exog) ;
-    nodes = quad.head_cols(n_exog) ;
+    weights = m_quad.col(n_exog) ;
+    nodes = m_quad.head_cols(n_exog) ;
         // Quadrature
   }
   else
@@ -60,13 +61,21 @@ double eval_err( arma::mat coeffs, arma::mat X, std::string model,
         endog.row(j) = X.row(i).subvec( j*(n_exog+n_endog) + n_exog, 
                                           (j+1)*(n_exog+n_endog) - 1 ) ;
       }   // Fill in the endogenous and exogenous matrices
-      err += err_ngm( exog, endog, nodes, params, coeffs, 
+      err(i) = err_ngm( exog, endog, nodes, params, coeffs, 
                           n_exog, n_endog, rho, n_integ, N, 
                           upper, lower, cheby, weights, false ) / n_pts ;
     }   // The average absolute relative error
   }
-      
-  return err ;
+  
+//    Rcout << "n_integ = " << n_integ << std::endl ;
+//    Rcout << "weights:\n" << weights << std::endl ;
+//    Rcout << "nodes:\n" << nodes << std::endl ;
+//    Rcout << "err:\n" << err << std::endl ;
+  
+  out = sum(err) ;
+      // Sum the errors
+      // ERROR WEIGHTING COULD GO HERE
+  return out ;
 }
 
 // [[Rcpp::export]]
