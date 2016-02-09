@@ -12,7 +12,8 @@
 #include "sim.hpp"
 
 // [[Rcpp::export]]
-double integrand_ngm( arma::mat exog, arma::mat endog, arma::rowvec exog_lead, 
+double integrand_ngm( arma::rowvec exog, arma::rowvec endog_lag, 
+                      arma::rowvec exog_lead, 
                        List params, arma::mat coeffs, int n_exog, int n_endog, 
                        int N, arma::rowvec upper, arma::rowvec lower, 
                        bool cheby=false ){
@@ -32,18 +33,20 @@ double integrand_ngm( arma::mat exog, arma::mat endog, arma::rowvec exog_lead,
   double delta = params["delta"] ;
   double gamma = params["gamma"] ;
   
-  rowvec endog_lead = endog_update( exog_lead, endog.row(0), coeffs, n_exog, 
+  rowvec endog = endog_update( exog, endog_lag, coeffs, n_exog, n_endog, 
+                                    N, upper, lower, cheby ) ;
+  rowvec endog_lead = endog_update( exog_lead, endog, coeffs, n_exog, 
                                     n_endog, N, upper, lower, cheby ) ;
       // Create the leads of the endogenous variables
-  double c_t = ( 1 - delta ) * endog( 1, 0 ) - endog( 0, 0 ) + 
-                  exp( exog( 0, 0 ) ) * A * pow( endog( 1, 0 ), alpha ) ;
+  double c_t = ( 1 - delta ) * endog_lag( 0 ) - endog( 0 ) + 
+                  exp( exog( 0 ) ) * A * pow( endog_lag( 0 ), alpha ) ;
       // Current period consumption
-  double c_t1 = ( 1 - delta ) * endog( 0, 0 ) - endog_lead( 0 ) + 
-                  exp( exog_lead( 0 ) ) * A * pow( endog( 0, 0 ), alpha ) ;
+  double c_t1 = ( 1 - delta ) * endog( 0 ) - endog_lead( 0 ) + 
+                  exp( exog_lead( 0 ) ) * A * pow( endog( 0 ), alpha ) ;
       // Next period consumption
   double integrand = pow( c_t1 / c_t, - gamma ) * 
           ( 1 - delta + 
-            exp( exog(0, 0) ) * alpha * A * pow( endog( 0, 0 ), alpha - 1 ) ) ;
+            exp( exog( 0 ) ) * alpha * A * pow( endog( 0 ), alpha - 1 ) ) ;
       // Calculate the integrand
       
 //      Rcout << "endog:\n" << endog <<std::endl ;
@@ -57,7 +60,7 @@ double integrand_ngm( arma::mat exog, arma::mat endog, arma::rowvec exog_lead,
 }
 
 // [[Rcpp::export]]
-arma::mat integrand_ngm_D( arma::mat exog, arma::mat endog, 
+arma::mat integrand_ngm_D( arma::rowvec exog, arma::rowvec endog_lag, 
                 arma::rowvec exog_lead, List params, arma::mat coeffs, 
                 int n_exog, int n_endog, int N, arma::rowvec upper, 
                 arma::rowvec lower, bool cheby=false ){
@@ -70,18 +73,20 @@ arma::mat integrand_ngm_D( arma::mat exog, arma::mat endog,
   double delta = params["delta"] ;
   double gamma = params["gamma"] ;
   
-  rowvec endog_lead = endog_update( exog_lead, endog.row(0), coeffs, n_exog, 
+  rowvec endog = endog_update( exog, endog_lag, coeffs, n_exog, n_endog, 
+                                    N, upper, lower, cheby ) ;
+  rowvec endog_lead = endog_update( exog_lead, endog, coeffs, n_exog, 
                                     n_endog, N, upper, lower, cheby ) ;
       // Create the leads of the endogenous variables
-  double c_t = ( 1 - delta ) * endog( 1, 0 ) - endog( 0, 0 ) + 
-                  exp( exog( 0, 0 ) ) * A * pow( endog( 1, 0 ), alpha ) ;
+  double c_t = ( 1 - delta ) * endog_lag( 0 ) - endog( 0 ) + 
+                  exp( exog( 0 ) ) * A * pow( endog_lag( 0 ), alpha ) ;
       // Current period consumption
-  double c_t1 = ( 1 - delta ) * endog( 0, 0 ) - endog_lead( 0 ) + 
-                  exp( exog_lead( 0 ) ) * A * pow( endog( 0, 0 ), alpha ) ;
+  double c_t1 = ( 1 - delta ) * endog( 0 ) - endog_lead( 0 ) + 
+                  exp( exog_lead( 0 ) ) * A * pow( endog( 0 ), alpha ) ;
       // Next period consumption
   double integrand = pow( c_t1 / c_t, - gamma ) * 
           ( 1 - delta + 
-            exp( exog(0, 0) ) * alpha * A * pow( endog( 0, 0 ), alpha - 1 ) ) ;
+            exp( exog( 0 ) ) * alpha * A * pow( endog( 0 ), alpha - 1 ) ) ;
       // Calculate the integrand
   double common = gamma / c_t1 * integrand ;
       // The common part of the integral
@@ -110,7 +115,7 @@ arma::mat integrand_ngm_D( arma::mat exog, arma::mat endog,
 }
 
 // [[Rcpp::export]]
-double err_ngm( arma::mat exog, arma::mat endog, arma::mat exog_innov_integ, 
+double err_ngm( arma::rowvec exog, arma::rowvec endog_lag, arma::mat exog_innov_integ, 
                   List params, arma::mat coeffs, int n_exog, int n_endog,
                   arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
                   arma::rowvec lower, bool cheby, arma::vec weights,
@@ -134,7 +139,7 @@ double err_ngm( arma::mat exog, arma::mat endog, arma::mat exog_innov_integ,
       // Initialize the right hand side
       
   for( int i = 0 ; i < n_integ ; i++ ){
-    err(i) = betta * integrand_ngm( exog, endog, exog_lead.row(i), params, coeffs, 
+    err(i) = betta * integrand_ngm( exog, endog_lag, exog_lead.row(i), params, coeffs, 
                                 n_exog, n_endog, N, upper, lower, cheby ) ;
                                 
   }   // Compute the integral
@@ -156,7 +161,7 @@ double err_ngm( arma::mat exog, arma::mat endog, arma::mat exog_innov_integ,
 }
 
 // [[Rcpp::export]]
-arma::mat err_ngm_D( arma::mat exog, arma::mat endog, arma::mat exog_innov_integ, 
+arma::mat err_ngm_D( arma::rowvec exog, arma::rowvec endog_lag, arma::mat exog_innov_integ, 
                      List params, arma::mat coeffs, int n_exog, int n_endog,
                      arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
                      arma::rowvec lower, bool cheby, arma::vec weights ){
@@ -167,7 +172,7 @@ arma::mat err_ngm_D( arma::mat exog, arma::mat endog, arma::mat exog_innov_integ
   mat exog_lead = zeros( n_integ, n_exog ) ;
       // Initalize the draws of the exogenous variables in the next period
   for( int i = 0 ; i < n_integ ; i++ ){
-    exog_lead.row(i) = rho % exog.row(0) + exog_innov_integ.row(i) ;
+    exog_lead.row(i) = rho % exog + exog_innov_integ.row(i) ;
         // Multiply the most recent exogenous draw by the appropriate rho and
         // add the innovation
   }
@@ -179,11 +184,11 @@ arma::mat err_ngm_D( arma::mat exog, arma::mat endog, arma::mat exog_innov_integ
   double err = 0 ;
       // Initialize the right hand side
   for( int i = 0 ; i < n_integ ; i++ ){
-    err_D = betta * integrand_ngm_D( exog, endog, exog_lead.row(i), params, coeffs, 
+    err_D = betta * integrand_ngm_D( exog, endog_lag, exog_lead.row(i), params, coeffs, 
                                     n_exog, n_endog, N, upper, lower, cheby ) ;
     rhs_D = rhs_D + weights(i) * err_D ;
         // The derivative
-    err = betta * integrand_ngm( exog, endog, exog_lead.row(i), params, coeffs, 
+    err = betta * integrand_ngm( exog, endog_lag, exog_lead.row(i), params, coeffs, 
                                 n_exog, n_endog, N, upper, lower, cheby ) ;
     rhs = rhs + weights(i) * err ;
         // The level.  Needed to make sure that the sign is ok.  Otherwise the 
@@ -199,5 +204,4 @@ arma::mat err_ngm_D( arma::mat exog, arma::mat endog, arma::mat exog_innov_integ
 //      // The sign of the non-absolute error
 //  return - rhs_D * sign ;
 }
-
 
