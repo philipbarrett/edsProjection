@@ -46,7 +46,7 @@ many.pts <-
             matrix(0,1,1,), TRUE, opt$n.quad )
 
 
-sol <- sol.iterate( coeff.init, opt, params.full.dep, FALSE )
+# sol <- sol.iterate( coeff.init, opt, params.full.dep, FALSE )
 
 exact.sol <- function( k, x, params ){
 # The exact solution
@@ -118,6 +118,56 @@ lines( KK, k.prime.apx, col=3, lwd=2, lty=2 )
 lines( KK, k.prime.apx.new, col=3, lwd=2, lty=3 )
 abline(v=endog.sim[,4], lty=3)
 
+## CHECKING THE ERROR EVALUATION
+err_ngm( matrix(endog.sim[1,1],1,1), matrix(endog.sim[1,c(2,4)],2,1), nodes, 
+         params.full.dep, coeff.init, opt$n.exog, opt$n.endog, params.full.dep$rho, opt$n.quad, 
+         opt$N, opt$upper, opt$lower, FALSE, wts, TRUE )
+
+err_ngm( matrix(endog.sim[1,1],1,1), matrix(endog.sim[1,c(4,2)],2,1), nodes, 
+         params.full.dep, coeff.init, opt$n.exog, opt$n.endog, params.full.dep$rho, opt$n.quad, 
+         opt$N, opt$upper, opt$lower, FALSE, wts, TRUE )
+
+eval_err( coeff.init, matrix( endog.sim[1,], nrow=1), 'ngm', opt$lags, 
+          params.full.dep, opt$n.exog, opt$n.endog, params.full.dep$rho, 
+          params.full.dep$sig.eps,  0, opt$N, upper, lower, FALSE, 
+          matrix(0,1,1), TRUE, opt$n.quad )
+
+eval_err_D( coeff.init, matrix( endog.sim[1,], nrow=1), 'ngm', opt$lags, 
+            params.full.dep, opt$n.exog, opt$n.endog, params.full.dep$rho, 
+            params.full.dep$sig.eps,  0, opt$N, upper, lower, FALSE, 
+            matrix(0,1,1), TRUE, opt$n.quad )
+
+eval_err_D( coeff.init, matrix( endog.sim[19:20,], nrow=2), 'ngm', opt$lags, 
+            params.full.dep, opt$n.exog, opt$n.endog, params.full.dep$rho, 
+            params.full.dep$sig.eps,  0, opt$N, upper, lower, FALSE, 
+            matrix(0,1,1), TRUE, opt$n.quad )
+    ## WHY IS THIS NOT ZERO!?!?!?!?
+
+err.min( coeff.init, matrix( endog.sim[1,], nrow=1), 'ngm', opt$lags, params.full.dep,
+         opt$n.exog, opt$n.endog,
+         params.full.dep$rho, params.full.dep$sig.eps, 0, opt$N, upper, lower, FALSE, 
+         matrix(0,1,1), TRUE, opt$n.quad, TRUE )
+
+err.min( coeff.init, endog.sim, 'ngm', opt$lags, params.full.dep,
+         opt$n.exog, opt$n.endog,
+         params.full.dep$rho, params.full.dep$sig.eps, 0, opt$N, upper, lower, FALSE, 
+         matrix(0,1,1), TRUE, opt$n.quad, TRUE )
+
+# sol <- sol.iterate( coeff.init, opt, params.full.dep, TRUE )
+
+coeff.k.inc <- seq( -coeff.init[2], coeff.init[2], length.out=201 )
+err.seq <- sapply( coeff.k.inc, function(coeff.k) 
+  eval_err( coeff.init + c(0,coeff.k,0), endog.sim[19:20,], 'ngm', opt$lags, 
+#   eval_err( coeff.init + c(0,coeff.k,0), endog.sim, 'ngm', opt$lags, 
+            params.full.dep, opt$n.exog, opt$n.endog, params.full.dep$rho, 
+            params.full.dep$sig.eps,  0, opt$N, upper, lower, FALSE, 
+            matrix(0,1,1), TRUE, opt$n.quad ) )
+plot( coeff.init[2] + coeff.k.inc, err.seq, type='l' )
+abline( v=coeff.init[2], lty=2 )
+abline( v=coeff.new[2], lty=2, col=2 )
+
+
+
 
 ## Iterating over successivve solutions on a grid with x=0
 coeff.new <- coeff.init
@@ -164,37 +214,35 @@ expect_true( k.ss == k.ss.prime )
 k.ss.euler.2 <- 
   integrand_ngm( matrix( 0, 1, 1), matrix( k.ss, nrow=2, ncol=1), 0, 
                  params.full.dep, coeff.old, 1, 1, 1, upper, lower, FALSE )
-expect_equal( k.ss.euler.2 * params.full.dep$betta, 1 )
+# expect_equal( k.ss.euler.2 * params.full.dep$betta, 1 )
     # THIS FAILS.  OF COURSE IT SHOULD
 
-single.integral.2 <- 
-  err_ngm( matrix( 0, 1, 1), matrix( k.ss, nrow=2, ncol=1), nodes, 
-           params.full.dep, coeff.old, opt$n.exog, opt$n.endog, 
-           params.full.dep$rho, opt$n.quad, opt$N, upper, lower, FALSE, wts, TRUE )
-
-many.pts <- 
-  eval_err( coeff.old, matrix( c( 0, k.ss, 0, k.ss ), nrow=1 ), 'ngm', opt$lags, 
-            params.full.dep, opt$n.exog, opt$n.endog, params.full.dep$rho, 
-            params.full.dep$sig.eps,  0, opt$N, upper, lower, FALSE, 
-            matrix(0,1,1,), TRUE, opt$n.quad )
-
-err.on.set.old <- 
-  eval_err( coeff.old, endog.sim, 'ngm', opt$lags, 
-            params.full.dep, opt$n.exog, opt$n.endog, params.full.dep$rho, 
-            params.full.dep$sig.eps,  0, opt$N, upper, lower, FALSE, 
-            matrix(0,1,1,), TRUE, opt$n.quad )
-
-err.on.set.new <- 
-  eval_err( coeff.new, endog.sim, 'ngm', opt$lags, 
-            params.full.dep, opt$n.exog, opt$n.endog, params.full.dep$rho, 
-            params.full.dep$sig.eps,  0, opt$N, upper, lower, FALSE, 
-            matrix(0,1,1,), TRUE, opt$n.quad )
-    # **THIS** is the crazy thing.  That the error on the alternate coeffieicnt 
-    # is smaller.  Is this a legit (just explosive?) solution.  Can I constrain 
-    # the lag on k to be positive (or better, just to be non-explosive - this is
-    # more general)
-
-
+# single.integral.2 <- 
+#   err_ngm( matrix( 0, 1, 1), matrix( k.ss, nrow=2, ncol=1), nodes, 
+#            params.full.dep, coeff.old, opt$n.exog, opt$n.endog, 
+#            params.full.dep$rho, opt$n.quad, opt$N, upper, lower, FALSE, wts, TRUE )
+# 
+# many.pts <- 
+#   eval_err( coeff.old, matrix( c( 0, k.ss, 0, k.ss ), nrow=1 ), 'ngm', opt$lags, 
+#             params.full.dep, opt$n.exog, opt$n.endog, params.full.dep$rho, 
+#             params.full.dep$sig.eps,  0, opt$N, upper, lower, FALSE, 
+#             matrix(0,1,1,), TRUE, opt$n.quad )
+# 
+# err.on.set.old <- 
+#   eval_err( coeff.old, endog.sim, 'ngm', opt$lags, 
+#             params.full.dep, opt$n.exog, opt$n.endog, params.full.dep$rho, 
+#             params.full.dep$sig.eps,  0, opt$N, upper, lower, FALSE, 
+#             matrix(0,1,1,), TRUE, opt$n.quad )
+# 
+# err.on.set.new <- 
+#   eval_err( coeff.new, endog.sim, 'ngm', opt$lags, 
+#             params.full.dep, opt$n.exog, opt$n.endog, params.full.dep$rho, 
+#             params.full.dep$sig.eps,  0, opt$N, upper, lower, FALSE, 
+#             matrix(0,1,1,), TRUE, opt$n.quad )
+#     # **THIS** is the crazy thing.  That the error on the alternate coeffieicnt 
+#     # is smaller.  Is this a legit (just explosive?) solution.  Can I constrain 
+#     # the lag on k to be positive (or better, just to be non-explosive - this is
+#     # more general)
 
 ## SOMEWHERE I AM SETTING N_INTEG = 0
 

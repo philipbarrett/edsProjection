@@ -6,14 +6,14 @@ test_that("Integration", {
   upper <- c( 1, 1.5 )
   lower <- c( -.5, 0 )
   coeff <- matrix( c( 1, .1, .15 ), 3, 1)
-  exog <- matrix(0,1,1)
-  endog <- matrix(1,2,1)
+  exog <- 0
+  endog <- 1
       # Variables used
   rho <- .8
   sig.eps <- .1
   n.mc <- 100000 # 1000000
       # Number of Monte Carlo shocks.  Works better & slower with bigger numbers.
-  n.quad <- 7
+  n.quad <- 5
       # Number of quadrature nodes
   
   set.seed=(12345)
@@ -27,7 +27,7 @@ test_that("Integration", {
                        coeff, 1, 1, rho, n.quad, 1,
                        upper, lower, FALSE, wts )
   
-  expect_true( abs( err.mc - err.quad ) < 2e-04 )
+  expect_true( abs( err.mc - err.quad ) < 3e-04 )
       # Check that the integrals are close(ish).  MCintegration is quite bad!
 })
 
@@ -39,8 +39,8 @@ test_that("Derivatives", {
   N <- 2
       # approximation order
   coeff <- matrix( c( 1, .1, .15, .1, .1, -.05 ), 6, 1)
-  exog <- matrix(0,1,1)
-  endog <- matrix(1,2,1)
+  exog <- 0
+  endog <- 1
   exog_shk <- .01
       # Variables used
   rho <- .8
@@ -51,7 +51,6 @@ test_that("Derivatives", {
   ##### The integrand #####
   
   ## Ordinary polynomials
-  exog <- matrix(0,1,1)
   base <- integrand_ngm( exog, endog, exog_shk, params, coeff, 1, 1, 2, upper, 
                          lower, FALSE)
   deriv.x <- integrand_ngm_D( exog, endog, exog_shk, params, coeff, 1, 1, 2, 

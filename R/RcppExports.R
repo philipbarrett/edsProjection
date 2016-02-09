@@ -49,20 +49,20 @@ p_eps_cheap_const <- function(X, eps, delta, h = 0) {
     .Call('edsProjection_p_eps_cheap_const', PACKAGE = 'edsProjection', X, eps, delta, h)
 }
 
-integrand_ngm <- function(exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby = FALSE) {
-    .Call('edsProjection_integrand_ngm', PACKAGE = 'edsProjection', exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby)
+integrand_ngm <- function(exog, endog_lag, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby = FALSE) {
+    .Call('edsProjection_integrand_ngm', PACKAGE = 'edsProjection', exog, endog_lag, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby)
 }
 
-integrand_ngm_D <- function(exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby = FALSE) {
-    .Call('edsProjection_integrand_ngm_D', PACKAGE = 'edsProjection', exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby)
+integrand_ngm_D <- function(exog, endog_lag, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby = FALSE) {
+    .Call('edsProjection_integrand_ngm_D', PACKAGE = 'edsProjection', exog, endog_lag, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby)
 }
 
-err_ngm <- function(exog, endog, exog_innov_integ, params, coeffs, n_exog, n_endog, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
-    .Call('edsProjection_err_ngm', PACKAGE = 'edsProjection', exog, endog, exog_innov_integ, params, coeffs, n_exog, n_endog, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
+err_ngm <- function(exog, endog_lag, exog_innov_integ, params, coeffs, n_exog, n_endog, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
+    .Call('edsProjection_err_ngm', PACKAGE = 'edsProjection', exog, endog_lag, exog_innov_integ, params, coeffs, n_exog, n_endog, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
 }
 
-err_ngm_D <- function(exog, endog, exog_innov_integ, params, coeffs, n_exog, n_endog, rho, n_integ, N, upper, lower, cheby, weights) {
-    .Call('edsProjection_err_ngm_D', PACKAGE = 'edsProjection', exog, endog, exog_innov_integ, params, coeffs, n_exog, n_endog, rho, n_integ, N, upper, lower, cheby, weights)
+err_ngm_D <- function(exog, endog_lag, exog_innov_integ, params, coeffs, n_exog, n_endog, rho, n_integ, N, upper, lower, cheby, weights) {
+    .Call('edsProjection_err_ngm_D', PACKAGE = 'edsProjection', exog, endog_lag, exog_innov_integ, params, coeffs, n_exog, n_endog, rho, n_integ, N, upper, lower, cheby, weights)
 }
 
 idx_increment <- function(idx, N, K) {

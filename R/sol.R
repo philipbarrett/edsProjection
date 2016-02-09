@@ -8,7 +8,7 @@
 
 err.min <- function( coeffs.init, X, model, lags, params, n.exog, 
                      n.endog, rho, sig.eps, n.integ, N, upper, lower, cheby,
-                     exog.innov.mc, quad, n.nodes ){
+                     exog.innov.mc, quad, n.nodes, use.case=FALSE ){
 ## Minimizes the error on the model equations given a grid X
   
   n.terms <- idx_count( N, n.exog + n.endog )
@@ -24,11 +24,26 @@ err.min <- function( coeffs.init, X, model, lags, params, n.exog,
                                     cheby,exog.innov.mc, quad, n.nodes )
       # The gradient of the error
   
+  if( use.case ){
+    return( list( f=f(coeffs.init), f.grad=f.grad(coeffs.init) ) )
+  }
+  
+    ### TEMPORARY HACK
+#     g <- function(x) c( x[2] - 1, - ( x[2] - 1 ) )
+#     g.grad <- function(x) rbind( c(0,1,0), c(0,-1,0) )
+        # Make the coefficinet on k less than one
+  
   opts <- list("algorithm"="NLOPT_LD_LBFGS", maxeval=400,
-               "xtol_rel"=1.0e-8, print_level=1 )
+               "xtol_rel"=1.0e-8, print_level=1,
+               "check_derivatives" = TRUE,
+               "check_derivatives_print" = "all")
       # Set some options
   sol <- nloptr::nloptr( x0=coeffs.init, eval_f = f, eval_grad_f = f.grad, opts=opts )
+#   sol <- nloptr::nloptr( x0=coeffs.init, eval_f = f, eval_grad_f = f.grad, 
+#                          eval_g_ineq = g, eval_jac_g_ineq = g.grad,
+#                          opts=opts )
       # Find the minimum
+  
   if( max( abs( f.grad( sol$solution ) ) < 1e-07 ) ){
     message("  Minimum error found, avg relative error = ", 
             round( sqrt( sol$objective ), 4 ) )
