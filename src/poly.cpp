@@ -202,6 +202,50 @@ arma::vec poly_eval( arma::vec a, arma::mat X_in, int N,
   return out ;
 }
 
+// [[Rcpp::export]]
+arma::vec coeff_reg( arma::vec y, arma::mat X_in, int N, 
+                      arma::rowvec lower, arma::rowvec upper,
+                      bool cheby=false ){
+// Computes the coefficients of the polynomial approximating y on the data X
 
+  int K = X_in.n_cols ;
+  int M = X_in.n_rows ;
+      // The number of dimensions and points of X
+//  mat X = X_rescale( X_in, K, pc_rescale ) ;
+  mat X = X_limits( X_in, lower, upper, M, K ) ; 
+      // Rescale to the unit sphere if required
+  cube basis = basis_cube( X, N, K, cheby ) ;
+      // The cube of basis polynomials
+  umat indices = idx_create( N, K ) ;
+      // The matrix of orders
+  int n_terms = indices.n_rows ;
+      // The number of terms in the expansion
+  vec v_basis = zeros(K) ;
+      // Holding vector for basis terms in each dimension
+  mat X_reg = zeros( M, n_terms ) ;
+      // The dependedn variables for the regression
+  for( int m = 0 ; m < M ; m++ ){
+      // Loop over points
+    for( int i = 0 ; i < n_terms ; i++){
+        // Loop over terms in the expansion
+      for( int k = 0 ; k < K ; k++ ){
+          // Loop over dimensions
+        v_basis(k) = basis( indices( i, k ), k, m ) ;
+            // Extract the appropriate combination  of basis elements
+      }
+      X_reg(m,i) = prod( v_basis ) ;
+    }
+  }
+  
+//    Rcout << "X_in:\n" << X_in << std::endl ;
+//    Rcout << "X:\n" << X << std::endl ;
+//    Rcout << "basis:\n" << basis << std::endl ;
+//    Rcout << "indices:\n" << indices << std::endl ;
+//    Rcout << "X_reg:\n" << X_reg << std::endl ;
+  
+  vec coeff = solve( X_reg, y ) ;
+  return coeff ;
+      // The regression coefficinets
+}
 
 

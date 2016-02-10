@@ -103,19 +103,20 @@ coeff.new <- matrix(
            params.full.dep$sig.eps,  0, opt$N, opt$upper, opt$lower, FALSE, 
            matrix(0,1,1,), TRUE, opt$n.quad )$coeff, ncol=1 )
 
-k.prime.apx <- sapply( KK, function(k) 
-                  endog_update( 0, k, coeff.init, opt$n.exog, 
-                          opt$n.endog, opt$N, opt$upper, opt$lower, FALSE ) )
-k.prime.apx.new <- sapply( KK, function(k) 
-  endog_update( 0, k, coeff.new, opt$n.exog, 
-                opt$n.endog, opt$N, opt$upper, opt$lower, FALSE ) )
-
 plot( range(KK), range(pol.sol.exact), typ='n' )
-lines( KK, pol.sol.exact[, 3], col=3, lwd=2 )
+for( i in 1:5 ) lines( KK, pol.sol.exact[, i], col=i, lwd=2 )
 abline( v=k.ss )
 abline( a=0, b=1 )
-lines( KK, k.prime.apx, col=3, lwd=2, lty=2 )
-lines( KK, k.prime.apx.new, col=3, lwd=2, lty=3 )
+for( i in 1:5 ){
+  k.prime.apx <- sapply( KK, function(k) 
+    endog_update( XX[i], k, coeff.init, opt$n.exog, 
+                  opt$n.endog, opt$N, opt$upper, opt$lower, FALSE ) )
+  k.prime.apx.new <- sapply( KK, function(k) 
+    endog_update( XX[i], k, coeff.new, opt$n.exog, 
+                  opt$n.endog, opt$N, opt$upper, opt$lower, FALSE ) )
+  lines( KK, k.prime.apx, col=i, lwd=2, lty=2 )
+  lines( KK, k.prime.apx.new, col=i, lwd=2, lty=3 )
+}
 abline(v=endog.sim[,4], lty=3)
 
 ## CHECKING THE ERROR EVALUATION

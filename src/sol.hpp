@@ -27,5 +27,4 @@ double eval_err( arma::mat coeffs, arma::mat X, std::string model,
                   int N, arma::rowvec upper, arma::rowvec lower, bool cheby,
                   arma::mat exog_innov_mc, bool quad, int n_nodes ) ;
 
-
 #endif

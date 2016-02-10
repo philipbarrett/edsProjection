@@ -6,8 +6,8 @@ test_that("Integration", {
   upper <- c( 1, 1.5 )
   lower <- c( -.5, 0 )
   coeff <- matrix( c( 1, .1, .15 ), 3, 1)
-  exog <- 0
-  endog <- 1
+  exog <- matrix( 0, 1, 1 )
+  endog <- matrix( 1, 2, 1 )
       # Variables used
   rho <- .8
   sig.eps <- .1
@@ -16,22 +16,24 @@ test_that("Integration", {
   n.quad <- 5
       # Number of quadrature nodes
   
-  set.seed=(12345)
+  set.seed(12345)
   exog.innov <- matrix( rnorm( n.mc, 0, sig.eps ), n.mc, 1 )
       # Monte Carlo integration shocks
-  err.mc <- err_ngm( exog, endog, exog.innov, params, coeff, 1, 1, rho, 
-                     n.mc, 1, upper, lower, FALSE, rep(1,n.mc)/n.mc )
+  err.mc <- euler_hat_ngm( exog, endog, exog.innov, params, coeff, 1, 1, rho, 
+                            n.mc, 1, upper, lower, FALSE, rep(1,n.mc)/n.mc )
   nodes <- quad_nodes_1d( n.quad, sig.eps, 0 )
   wts <- quad_weights_1d( n.quad )
-  err.quad <- err_ngm( exog, endog, nodes, params,
+  err.quad <- euler_hat_ngm( exog, endog, nodes, params,
                        coeff, 1, 1, rho, n.quad, 1,
                        upper, lower, FALSE, wts )
   
-  expect_true( abs( err.mc - err.quad ) < 3e-04 )
+  expect_true( abs( err.mc - err.quad ) < 1e-04 )
       # Check that the integrals are close(ish).  MCintegration is quite bad!
 })
 
 test_that("Derivatives", {
+  
+  skip("Derivatives not functional at present")
   
   params <- list( A=1, alpha=1/3, delta=.05, gamma=1, delta=.02, betta=.95 )
   upper <- c( 1, 1.5 )
@@ -181,8 +183,8 @@ test_that("Checking full-depreciation solution", {
               ( params.full.dep$A * params.full.dep$alpha )  ) ^ ( 1 / ( params.full.dep$alpha - 1 ) )
       # The steady state
   sd.x<- sqrt( params.full.dep$sig.eps / ( 1 - params.full.dep$rho ^ 2 ) )
-  upper <- c( 3 * sd.x, k.ss * 1.4 )
-  lower <- c( -3 * sd.x, k.ss * 0.6 )
+  upper <- c( 5 * sd.x, k.ss * 1.4 )
+  lower <- c( -5* sd.x, k.ss * 0.6 )
       # Create the bounds
   opt <- list( model='ngm', lags=1, n.exog=1, n.endog=1, N=1, cheby=FALSE, 
                upper = upper, lower=lower, quad=TRUE, n.quad=7,
@@ -191,8 +193,8 @@ test_that("Checking full-depreciation solution", {
       # Solution options
   a.b.range <- upper - lower
   coeff.init <- matrix( c( k.ss, 
-                           params.full.dep$alpha * a.b.range[2], 
-                           k.ss * a.b.range[1] ), 3, 1)
+                           params.full.dep$alpha * a.b.range[2] / 2, 
+                           k.ss * a.b.range[1] / 2 ), 3, 1)
       # The linear-approx solution evaluated @ the steady state:
       #   k' = alpha * betta * exp(x) * A * k ^ alpha
       #     ~= k.ss + k.ss * x + alpha * ( k - k.ss )
@@ -211,15 +213,19 @@ test_that("Checking full-depreciation solution", {
   wts <- quad_weights_1d( opt$n.quad )
   
   single.integral <- 
-    err_ngm( matrix( 0, 1, 1), matrix( k.ss, nrow=2, ncol=1), nodes, 
+    euler_hat_ngm( matrix( 0, 1, 1), matrix( k.ss, nrow=2, ncol=1), nodes, 
              params.full.dep, coeff.init, opt$n.exog, opt$n.endog, 
              params.full.dep$rho, opt$n.quad, opt$N, upper, lower, FALSE, wts )
   
+  expect_equal( k.ss, c( single.integral ), tolerance=4e-05 )
+      # These are not exactly equal because we integrate over a linear
+      # approximation to the solution.
+  
   mult.pts <- 
-    eval_err( coeff.init, matrix( c( 0, k.ss, 0, k.ss ), nrow=1 ), 'ngm', opt$lags, 
-              params.full.dep, opt$n.exog, opt$n.endog, params.full.dep$rho, 
-              params.full.dep$sig.eps,  0, opt$N, upper, lower, FALSE, 
-              matrix(0,1,1,), TRUE, opt$n.quad )
+    euler_hat( coeff.init, matrix( c( 0, k.ss, 0, k.ss ), nrow=1 ), 'ngm', opt$lags, 
+                params.full.dep, opt$n.exog, opt$n.endog, params.full.dep$rho, 
+                params.full.dep$sig.eps,  0, opt$N, upper, lower, FALSE, 
+                matrix(0,1,1,), TRUE, opt$n.quad )
   
   expect_equal( single.integral, mult.pts )
   
@@ -227,19 +233,34 @@ test_that("Checking full-depreciation solution", {
                        params.full.dep$rho, params.full.dep$sig.eps )
   endog.sim <- endog_sim( opt$n.sim, exog.sim, coeff.init, opt$N, opt$upper,
                           opt$lower, k.ss, FALSE, opt$kappa, opt$burn, opt$lags )
-  indices <- p_eps_cheap_const_idx( endog.sim[,c(1,2,4)], opt$eps, opt$delta )
+  indices <- p_eps_cheap_const_idx( endog.sim[,3:4], opt$eps, opt$delta )
   sum(indices)
   X <- endog.sim[indices==1,]
       # State reduction
-  grid.init <- eval_err( coeff.init, X, 'ngm', opt$lags, 
-                         params.full.dep, opt$n.exog, opt$n.endog, params.full.dep$rho, 
-                         params.full.dep$sig.eps,  0, opt$N, upper, lower, FALSE, 
-                         matrix(0,1,1,), TRUE, opt$n.quad )
-  grid.init.grad <- eval_err_D( coeff.init, X, 'ngm', opt$lags, 
-                         params.full.dep, opt$n.exog, opt$n.endog, params.full.dep$rho, 
-                         params.full.dep$sig.eps,  0, opt$N, upper, lower, FALSE, 
-                         matrix(0,1,1,), TRUE, opt$n.quad )
+  
+  should.be.coeff.init <- 
+    coeff_reg( endog.sim[,2], endog.sim[,c(1,4)], opt$N, 
+               opt$lower, opt$upper, opt$cheby )
+  expect_equal( coeff.init, should.be.coeff.init )
+      # Check that the regression does the right thing
+  
+  coeff.new <- coeff.init
+  for( i in 1:5 ){
+    endog.sim <- endog_sim( opt$n.sim, exog.sim, coeff.new, opt$N, opt$upper,
+                            opt$lower, k.ss, FALSE, opt$kappa, opt$burn, opt$lags )
+#     indices <- p_eps_cheap_const_idx( endog.sim[,3:4], opt$eps, opt$delta )
+#     sum(indices)
+#     X <- endog.sim[indices==1,]
+    k.hat <- euler_hat( coeff.new, endog.sim, 'ngm', opt$lags, 
+                           params.full.dep, opt$n.exog, opt$n.endog, params.full.dep$rho, 
+                           params.full.dep$sig.eps,  0, opt$N, upper, lower, FALSE, 
+                           matrix(0,1,1,), TRUE, opt$n.quad )
+    coeff.old <- coeff.new
+    coeff.new <- coeff_reg( k.hat, endog.sim[,c(1,4)], opt$N, opt$lower, opt$upper, opt$cheby )
+  }
 
+    
+      ## FIGURE OUT WHAT IS GOING ON HERE ##
   
 #   sol <- sol.iterate( coeff.init, opt, params.full.dep, TRUE )
   
