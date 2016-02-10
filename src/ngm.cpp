@@ -43,7 +43,7 @@ double integrand_ngm( arma::mat exog, arma::mat endog, arma::rowvec exog_lead,
       // Next period consumption
   double integrand = pow( c_t1 / c_t, - gamma ) * 
           ( 1 - delta + 
-            exp( exog(0, 0) ) * alpha * A * pow( endog( 0, 0 ), alpha - 1 ) ) ;
+            exp( exog_lead( 0 ) ) * alpha * A * pow( endog( 0, 0 ), alpha - 1 ) ) ;
       // Calculate the integrand
       
 //      Rcout << "endog:\n" << endog <<std::endl ;

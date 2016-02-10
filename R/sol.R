@@ -6,6 +6,12 @@
 # 02feb2016
 #########################################################################
 
+reg.update <- function(){
+## Computes the updated guess of the endogeunous states using the regression
+## approach
+  
+}
+
 err.min <- function( coeffs.init, X, model, lags, params, n.exog, 
                      n.endog, rho, sig.eps, n.integ, N, upper, lower, cheby,
                      exog.innov.mc, quad, n.nodes, use.case=FALSE ){
@@ -69,7 +75,7 @@ sol.iterate <- function( coeff.init, opt, params, debug.flag=FALSE ){
   lower <- opt$lower
   quad <- opt$quad
   n.quad <- opt$n.quad
-  err.tol <-opt$err.tol 
+  diff.tol <-opt$diff.tol 
   n.iter <-opt$n.iter
   burn <- opt$burn
   kappa <- opt$kappa
@@ -79,6 +85,8 @@ sol.iterate <- function( coeff.init, opt, params, debug.flag=FALSE ){
   h <- opt$h
   endog.init <- opt$endog.init
   gain <- opt$gain
+  reg.method <- opt$reg.method
+  sr <- opt$sr
   
   # Extract parameters
   rho <- params$rho
@@ -92,14 +100,19 @@ sol.iterate <- function( coeff.init, opt, params, debug.flag=FALSE ){
   n.state <- n.endog + n.exog
   coeff <- coeff.init
   i.iter <- 0
-  err <- 2 * err.tol
+  diff <- 2 * diff.tol
       # Initiate loop variables
   
-#     browser()
+  state.select <- 1:(n.exog)
+  if( lags > 0 ) for( j in 1:lags ) state.select <- c( state.select, j*n.state + n.exog + 1:n.endog )
+      # The states selected for the EDS algorithm
   
-  while( i.iter < n.iter & err > err.tol ){
+  while( i.iter < n.iter & diff > diff.tol ){
     
     if(debug.flag) browser()
+    
+    coeff.old <- coeff
+        # Store the old coefficient
     
     message('\n\n\n********************************************************')
     message('Iteration ', i.iter)
@@ -109,30 +122,46 @@ sol.iterate <- function( coeff.init, opt, params, debug.flag=FALSE ){
                             endog.init, cheby, kappa, burn, (lags>0) )
         # The simulation
     
+    if( max(abs(endog.sim)) > 1e05 )
+      stop('Candidate solution explodes.  Try reducing the gain.')
+    
     message('  ...complete\n  State reduction...')
     
-    state.select <- 1:(n.state)
-    if( lags > 0 ) for( j in 1:lags ) state.select <- c( state.select, j*n.state + n.exog + 1:n.endog )
-            # The states selected for the EDS algorithm
-    idces <- p_eps_cheap_const_idx( endog.sim[,state.select], eps, delta )
-        # Need to include the lagged state in the evaluation set for the
-        # equilibrium condition
-    X <- endog.sim[ idces == 1, ]
-        # The restricted simulation
+    if( sr ){
+      idces <- p_eps_cheap_const_idx( endog.sim[,state.select], eps, delta )
+          # Need to include the lagged state in the evaluation set for the
+          # equilibrium condition
+      X <- endog.sim[ idces == 1, ]
+          # The restricted simulation
+    }else{
+      X <- endog.sim
+    }
+    
 
     message('  ...complete\n  State reduced to ', nrow(X), ' points.')
-    message('Minimizing error...' )
+    message('Computing new solution...' )
     
-    update <- err.min(  coeff, X, 'ngm', lags, params, n.exog, n.endog, rho, sig.eps, 
-                        0, N, upper, lower, cheby, matrix(0,1,1), TRUE, n.quad )
+    if( reg.method ){
+      k.hat <- euler_hat( coeff, X, 'ngm', lags, params, n.exog, n.endog, 
+                          rho, sig.eps, 0, N, upper, lower, cheby, 
+                          matrix(0,1,1,), TRUE, n.quad )
+      coeff.new <- coeff_reg( k.hat, X[,state.select], N, lower, upper, cheby )
+    }else{
+      update <- err.min(  coeff, X, 'ngm', lags, params, n.exog, n.endog, rho, sig.eps, 
+                          0, N, upper, lower, cheby, matrix(0,1,1), TRUE, n.quad )
+      coeff.new <- update$coeff
+    }
     
     message('...complete' )
     
-    err <- update$err
-    coeff <- ( 1 - gain ) * coeff + gain * matrix( update$coeff, nrow=n.terms, ncol=n.endog )
+    coeff <- ( 1 - gain ) * coeff + gain * 
+                    matrix( coeff.new, nrow=n.terms, ncol=n.endog )
+    diff <- max( abs( coeff.old - coeff.new ) / abs( coeff.old ) )
     endog.init <- apply( matrix( X[, n.exog + 1:n.endog ], ncol=n.endog), 2, mean )
         # Housekeeping
     i.iter <- i.iter + 1
+    
+    message('  Maximum normalized difference = ', round( diff, 5 ) , "\n" )
   }
   
   

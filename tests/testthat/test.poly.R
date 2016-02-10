@@ -50,7 +50,7 @@ test_that("Polynomial evaluation", {
       # Try polynomial evaluation
   expect_equal( exog.sim, y )
       # This should be true
-  endog.sim <- endog_sim( n, exog.sim, coeffs, N, upper, lower, k.ss,
+  endog.sim <- endog_sim( n, exog.sim, coeffs, N, upper, lower, 0,
                             FALSE, 1, 0, TRUE )
       # The endogenous simulation
   expect_equal( c(exog.sim), endog.sim[,1] )
@@ -72,7 +72,7 @@ test_that("Polynomial evaluation", {
   n <- 20000
       # Increae the sample
   exog.sim <- ar1_sim( n, rho, sig.eps )
-  endog.sim <- endog_sim( n, exog.sim, coeffs, N, upper, lower, k.ss,
+  endog.sim <- endog_sim( n, exog.sim, coeffs, N, upper, lower, 0,
                           FALSE, 1, 0, TRUE )
   coeff.reg <- coeff_reg( endog.sim[,2], endog.sim[,c(1,4)], N, lower, upper, cheby )
   expect_equal( coeffs, coeff.reg )
@@ -118,6 +118,7 @@ test_that("Regression", {
   
   upper <- rep( 10, K )
   lower <- rep( 2, K )
+  n.elems <- 1000000
   X <- matrix( runif( K * n.elems, lower[1], upper[1] ), ncol=K )
       # Some new data.  Should get rescaled.
   err <- rnorm( n.elems )
@@ -125,7 +126,7 @@ test_that("Regression", {
       # Reset the coefficients
   y <- poly_eval( coeff, X, N, lower, upper, FALSE ) + err
   coeff.reg <- coeff_reg( y, X, N, lower, upper, FALSE )
-  expect_true( max( abs( coeff.reg - coeff ) ) < 6e-3 )
-  
+  expect_true( max( abs( coeff.reg - coeff ) ) < 1e-2 )
+      # Generous tolerance because regression coefficients just have some error
   
 } )
