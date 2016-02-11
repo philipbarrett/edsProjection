@@ -95,7 +95,7 @@ sol.iterate <- function( coeff.init, opt, params, debug.flag=FALSE ){
   n.terms <- idx_count( N, n.exog + n.endog )
   
   set.seed(1234)
-  exog.sim <- ar1_sim( n.sim * kappa + burn, rho, sig.eps )
+  exog.sim <- sapply( 1:n.exog, function(i) ar1_sim( n.sim * kappa + burn, rho[i], sig.eps[i] ) )
       # Create the exogenous simulation
   n.state <- n.endog + n.exog
   coeff <- coeff.init

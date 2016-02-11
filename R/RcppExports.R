@@ -49,6 +49,14 @@ p_eps_cheap_const <- function(X, eps, delta, h = 0) {
     .Call('edsProjection_p_eps_cheap_const', PACKAGE = 'edsProjection', X, eps, delta, h)
 }
 
+integrand_ngm_2 <- function(exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby = FALSE) {
+    .Call('edsProjection_integrand_ngm_2', PACKAGE = 'edsProjection', exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby)
+}
+
+euler_hat_ngm_2 <- function(exog, endog, exog_innov_integ, params, coeffs, n_exog, n_endog, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
+    .Call('edsProjection_euler_hat_ngm_2', PACKAGE = 'edsProjection', exog, endog, exog_innov_integ, params, coeffs, n_exog, n_endog, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
+}
+
 integrand_ngm <- function(exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby = FALSE) {
     .Call('edsProjection_integrand_ngm', PACKAGE = 'edsProjection', exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby)
 }
