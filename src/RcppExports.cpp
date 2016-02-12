@@ -227,7 +227,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // euler_hat_ngm
-arma::rowvec euler_hat_ngm(arma::mat exog, arma::mat endog, arma::mat exog_innov_integ, List params, arma::mat coeffs, int n_exog, int n_endog, arma::rowvec rho, int n_integ, int N, arma::rowvec upper, arma::rowvec lower, bool cheby, arma::vec weights, bool print_rhs);
+arma::rowvec euler_hat_ngm(arma::mat exog, arma::mat endog, arma::mat exog_innov_integ, List params, arma::mat coeffs, int n_exog, int n_endog, arma::rowvec rho, int n_integ, int N, arma::rowvec upper, arma::rowvec lower, bool cheby, arma::rowvec weights, bool print_rhs);
 RcppExport SEXP edsProjection_euler_hat_ngm(SEXP exogSEXP, SEXP endogSEXP, SEXP exog_innov_integSEXP, SEXP paramsSEXP, SEXP coeffsSEXP, SEXP n_exogSEXP, SEXP n_endogSEXP, SEXP rhoSEXP, SEXP n_integSEXP, SEXP NSEXP, SEXP upperSEXP, SEXP lowerSEXP, SEXP chebySEXP, SEXP weightsSEXP, SEXP print_rhsSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
@@ -245,7 +245,7 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< arma::rowvec >::type upper(upperSEXP);
     Rcpp::traits::input_parameter< arma::rowvec >::type lower(lowerSEXP);
     Rcpp::traits::input_parameter< bool >::type cheby(chebySEXP);
-    Rcpp::traits::input_parameter< arma::vec >::type weights(weightsSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type weights(weightsSEXP);
     Rcpp::traits::input_parameter< bool >::type print_rhs(print_rhsSEXP);
     __result = Rcpp::wrap(euler_hat_ngm(exog, endog, exog_innov_integ, params, coeffs, n_exog, n_endog, rho, n_integ, N, upper, lower, cheby, weights, print_rhs));
     return __result;
@@ -520,7 +520,7 @@ BEGIN_RCPP
 END_RCPP
 }
 // euler_hat
-arma::vec euler_hat(arma::mat coeffs, arma::mat X, std::string model, int lags, List params, int n_exog, int n_endog, arma::rowvec rho, arma::rowvec sig_eps, int n_integ, int N, arma::rowvec upper, arma::rowvec lower, bool cheby, arma::mat exog_innov_mc, bool quad, int n_nodes);
+arma::mat euler_hat(arma::mat coeffs, arma::mat X, std::string model, int lags, List params, int n_exog, int n_endog, arma::rowvec rho, arma::rowvec sig_eps, int n_integ, int N, arma::rowvec upper, arma::rowvec lower, bool cheby, arma::mat exog_innov_mc, bool quad, int n_nodes);
 RcppExport SEXP edsProjection_euler_hat(SEXP coeffsSEXP, SEXP XSEXP, SEXP modelSEXP, SEXP lagsSEXP, SEXP paramsSEXP, SEXP n_exogSEXP, SEXP n_endogSEXP, SEXP rhoSEXP, SEXP sig_epsSEXP, SEXP n_integSEXP, SEXP NSEXP, SEXP upperSEXP, SEXP lowerSEXP, SEXP chebySEXP, SEXP exog_innov_mcSEXP, SEXP quadSEXP, SEXP n_nodesSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;

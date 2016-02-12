@@ -214,6 +214,12 @@ arma::vec coeff_reg( arma::vec y, arma::mat X_in, int N,
 //  mat X = X_rescale( X_in, K, pc_rescale ) ;
   mat X = X_limits( X_in, lower, upper, M, K ) ; 
       // Rescale to the unit sphere if required
+      
+//      Rcout << "X.row(0) = " << X.row(0) << std::endl ;
+//      Rcout << "N = " << N << std::endl ;
+//      Rcout << "K = " << K << std::endl ;
+//      Rcout << "cheby = " << cheby << std::endl ;
+      
   cube basis = basis_cube( X, N, K, cheby ) ;
       // The cube of basis polynomials
   umat indices = idx_create( N, K ) ;
@@ -223,7 +229,7 @@ arma::vec coeff_reg( arma::vec y, arma::mat X_in, int N,
   vec v_basis = zeros(K) ;
       // Holding vector for basis terms in each dimension
   mat X_reg = zeros( M, n_terms ) ;
-      // The dependedn variables for the regression
+      // The dependent variables for the regression
   for( int m = 0 ; m < M ; m++ ){
       // Loop over points
     for( int i = 0 ; i < n_terms ; i++){

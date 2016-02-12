@@ -21,7 +21,7 @@ using namespace Rcpp ;
 using namespace arma ;
 //using namespace std::string ;
 
-arma::vec euler_hat( arma::mat coeffs, arma::mat X, std::string model, 
+arma::mat euler_hat( arma::mat coeffs, arma::mat X, std::string model, 
                       int lags, List params, int n_exog, int n_endog,
                       arma::rowvec rho, arma::rowvec sig_eps, int n_integ,
                       int N, arma::rowvec upper, arma::rowvec lower, bool cheby,

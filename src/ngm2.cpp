@@ -39,25 +39,31 @@ arma::rowvec integrand_ngm_2( arma::mat exog, arma::mat endog, arma::rowvec exog
   // endog is:                       exog is:
   //  | k^h_t,     k^f_t     |          | a^h_t,     a^f_t     |
   //  | k^h_{t-1}, k^f_{t-1} |          | a^h_{t-1}, a^f_{t-1} |
-      
+  
+  
   double c_h_t = ( 1 - delta ) * endog( 1, 0 ) - endog( 0, 0 ) + 
                   exp( exog( 0, 0 ) ) * A * pow( endog( 1, 0 ), alpha ) ;
-      // Current period home consumption
+      // Current period home consumption under autarky
   double c_h_t1 = ( 1 - delta ) * endog( 0, 0 ) - endog_lead( 0 ) + 
                   exp( exog_lead( 0 ) ) * A * pow( endog( 0, 0 ), alpha ) ;
-      // Next period home consumption
+      // Next period home consumption under autarky
   double c_f_t = ( 1 - delta ) * endog( 1, 1 ) - endog( 0, 1 ) + 
                   exp( exog( 0, 1 ) ) * A * pow( endog( 1, 1 ), alpha ) ;
-      // Current period home consumption
+      // Current period foreign consumption under autarky
   double c_f_t1 = ( 1 - delta ) * endog( 0, 1 ) - endog_lead( 1 ) + 
                   exp( exog_lead( 1 ) ) * A * pow( endog( 0, 1 ), alpha ) ;
-      // Next period home consumption
+      // Next period home foreign consumption under autarky
+  double c_t = .5 * ( c_h_t + c_f_t ) ;
+  double c_t1 = .5 * ( c_h_t1 + c_f_t1 ) ;
+      // Consumption with perfect risk sharing
   
   rowvec integrand(2) ;
-  integrand(0) = pow( c_h_t1 / c_h_t, - gamma ) * 
+  integrand(0) = pow( c_t1 / c_t, - gamma ) * 
           ( 1 - delta + exp( exog_lead( 0 ) ) * alpha * A * pow( endog( 0, 0 ), alpha - 1 ) ) ;
-  integrand(1) = pow( c_f_t1 / c_f_t, - gamma ) * 
+  integrand(1) = pow( c_t1 / c_t, - gamma ) * 
           ( 1 - delta + exp( exog_lead( 1 ) ) * alpha * A * pow( endog( 0, 1 ), alpha - 1 ) ) ;
+      // Two countries have same consumption but diefferent capital stocks and
+      // technologies
   return integrand ;
 }
 
@@ -82,7 +88,7 @@ arma::rowvec euler_hat_ngm_2( arma::mat exog, arma::mat endog, arma::mat exog_in
         // add the innovation
   }
   
-  rowvec rhs = zeros<rowvec>(2) ;
+  rowvec rhs = zeros<rowvec>( n_endog ) ;
   mat err = zeros( n_integ, n_endog ) ;
       // Initialize the right hand side
       

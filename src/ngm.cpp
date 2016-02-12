@@ -61,7 +61,7 @@ double integrand_ngm( arma::mat exog, arma::mat endog, arma::rowvec exog_lead,
 arma::rowvec euler_hat_ngm( arma::mat exog, arma::mat endog, arma::mat exog_innov_integ, 
                   List params, arma::mat coeffs, int n_exog, int n_endog,
                   arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
-                  arma::rowvec lower, bool cheby, arma::vec weights,
+                  arma::rowvec lower, bool cheby, arma::rowvec weights,
                   bool print_rhs=false ){
 // Computes the single-period error on the neocassical growth model equilibrium 
 // condition using a Monte Carlo approach.  NB: THE INNOVATIONS exog_innov_integ
@@ -77,8 +77,8 @@ arma::rowvec euler_hat_ngm( arma::mat exog, arma::mat endog, arma::mat exog_inno
         // add the innovation
   }
   
-  vec rhs = zeros(1) ;
-  rowvec err = zeros<rowvec>(n_integ) ;
+  vec rhs = zeros(n_endog) ;
+  vec err = zeros(n_integ) ;
       // Initialize the right hand side
       
   for( int i = 0 ; i < n_integ ; i++ ){
@@ -87,7 +87,7 @@ arma::rowvec euler_hat_ngm( arma::mat exog, arma::mat endog, arma::mat exog_inno
                                 
   }   // Compute the integral
 
-  rhs = err * weights ;
+  rhs = weights * err ;
   
     if( print_rhs ){
       Rcout << "err: " << err << std::endl ;
@@ -96,7 +96,7 @@ arma::rowvec euler_hat_ngm( arma::mat exog, arma::mat endog, arma::mat exog_inno
       Rcout << "rhs(0) - 1 = " << rhs(0) - 1 << std::endl ;
     }
   
-  rowvec endog_hat = rhs * endog.row(0) ;
+  rowvec endog_hat = rhs % endog.row(0) ;
   return endog_hat ;
       // Return k * the Euler Error
   

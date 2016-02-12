@@ -23,8 +23,12 @@ arma::rowvec integrand_ngm_2( arma::mat exog, arma::mat endog, arma::rowvec exog
                        List params, arma::mat coeffs, int n_exog, int n_endog, 
                        int N, arma::rowvec upper, arma::rowvec lower, 
                        bool cheby ) ;
-arma::rowvec euler_hat_ngm_2( arma::mat exog, arma::mat endog, arma::mat exog_innov_integ, 
+                       
+arma::rowvec euler_hat_ngm_2( 
+                  arma::mat exog, arma::mat endog, arma::mat exog_innov_integ, 
                   List params, arma::mat coeffs, int n_exog, int n_endog,
                   arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
-                  arma::rowvec lower, bool cheby, arma::rowvec weights, bool print_rhs ) ;
+                  arma::rowvec lower, bool cheby, arma::rowvec weights, 
+                  bool print_rhs ) ;
+
 #endif

@@ -10,12 +10,13 @@
 
 #include "sol.hpp"
 #include "ngm.hpp"
+#include "ngm2.hpp"
 #include "quad.hpp"
 
 
 
 // [[Rcpp::export]]
-arma::vec euler_hat( arma::mat coeffs, arma::mat X, std::string model, 
+arma::mat euler_hat( arma::mat coeffs, arma::mat X, std::string model, 
                       int lags, List params, int n_exog, int n_endog,
                       arma::rowvec rho, arma::rowvec sig_eps, int n_integ,
                       int N, arma::rowvec upper, arma::rowvec lower, bool cheby,
@@ -33,41 +34,56 @@ arma::vec euler_hat( arma::mat coeffs, arma::mat X, std::string model,
   /** Create the integration nodes and weights **/
   n_integ = quad ? pow( n_nodes, n_exog ) : n_integ ;
       // Update the number of points if using quadrature
-  vec weights( n_integ ) ;
+  rowvec weights( n_integ ) ;
   mat nodes( n_integ, n_exog ) ;
+  vec v_sig_eps = conv_to<vec>::from( sig_eps ) ;
       // The weights and integration nodes
+      
   if( quad ){
-    mat m_quad = quad_nodes_weights_mat( pow( n_nodes, n_exog ), n_exog, 
-                        sig_eps, zeros(n_exog) ) ;
-    weights = m_quad.col(n_exog) ;
+    mat m_quad = quad_nodes_weights_mat( n_nodes, n_exog, 
+                        v_sig_eps, zeros(n_exog) ) ;
+    vec temp = m_quad.col( n_exog ) ;
+    weights = conv_to<rowvec>::from( temp ) ;
     nodes = m_quad.head_cols(n_exog) ;
         // Quadrature
   }
   else
   {
-    vec weights = ones( n_pts ) / n_integ ;
-    mat nodes = exog_innov_mc ;
+    weights = ones<rowvec>( n_pts ) / n_integ ;
+    nodes = exog_innov_mc ;
         // Monte Carlo integration
   }
+
+  /** Define the model function **/
+  rowvec (*euler_hat_fn) ( 
+                  arma::mat exog, arma::mat endog, arma::mat exog_innov_integ, 
+                  List params, arma::mat coeffs, int n_exog, int n_endog,
+                  arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
+                  arma::rowvec lower, bool cheby, arma::rowvec weights, 
+                  bool print_rhs ) ;
+      // The pointer to model evaluation function
+  if( model == "ngm" )
+    euler_hat_fn = euler_hat_ngm ;
+        // The one-country neoclassical growth model
+  if( model == "ngm2" )
+    euler_hat_fn = euler_hat_ngm_2 ;
+        // The two-country neoclassical growth model
   
   /** Now compute the model errors **/
-  if( model == "ngm" ){
-  // The neoclassical growth model
-    for( int i = 0 ; i < n_pts ; i++ ){
-    // Loop over the evaluation points
-      for( int j = 0 ; j < 1 + lags ; j++ ){
-      // Loop over the lags
-        exog.row(j) = X.row(i).subvec( j*(n_exog+n_endog), 
-                                          j*(n_exog+n_endog) + n_exog - 1 ) ;
-        endog.row(j) = X.row(i).subvec( j*(n_exog+n_endog) + n_exog, 
-                                          (j+1)*(n_exog+n_endog) - 1 ) ;
-      }   // Fill in the endogenous and exogenous matrices
-      
-      err.row(i) = euler_hat_ngm( exog, endog, nodes, params, coeffs, 
-                              n_exog, n_endog, rho, n_integ, N, 
-                              upper, lower, cheby, weights, false ) ; // / n_pts ;
-    }   // The average absolute relative error
-  }
+  for( int i = 0 ; i < n_pts ; i++ ){
+  // Loop over the evaluation points
+    for( int j = 0 ; j < 1 + lags ; j++ ){
+    // Loop over the lags
+      exog.row(j) = X.row(i).subvec( j*(n_exog+n_endog), 
+                                        j*(n_exog+n_endog) + n_exog - 1 ) ;
+      endog.row(j) = X.row(i).subvec( j*(n_exog+n_endog) + n_exog, 
+                                        (j+1)*(n_exog+n_endog) - 1 ) ;
+    }   // Fill in the endogenous and exogenous matrices
+    err.row(i) = euler_hat_fn( 
+                            exog, endog, nodes, params, coeffs, 
+                            n_exog, n_endog, rho, n_integ, N, 
+                            upper, lower, cheby, weights, false ) ; // / n_pts ;
+  }   // The error on the states according to the Euler equations
   
 //    Rcout << "n_integ = " << n_integ << std::endl ;
 //    Rcout << "weights:\n" << weights << std::endl ;
