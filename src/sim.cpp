@@ -51,11 +51,13 @@ arma::rowvec endog_update( arma::rowvec exog, arma::rowvec endog_old, arma::mat 
   X.row(0).head(n_exog) = exog ;
   X.row(0).tail(n_endog) = endog_old ;
       // Fill in the evaluation point
-  rowvec out = zeros<rowvec>( n_endog ) ;
-      // Intialize output vector
   vec temp(1) ;
       // Temporary container
-  for( int i=0; i < n_endog ; i++ ){
+  int n_out = coeffs.n_cols ;
+      // The number of points to output
+  rowvec out = zeros<rowvec>( n_out ) ;
+      // Intialize output vector
+  for( int i=0; i < n_out ; i++ ){
     temp = poly_eval( coeffs.col(i), X, N, lower, upper, cheby ) ;
     out(i) = temp(0) ;
         // Update each of the endogenous states
@@ -115,6 +117,24 @@ arma::mat endog_sim( int n_out, arma::mat exog_sim, arma::mat coeffs, int N,
           // Increment the output row
     }
   }     // Create and store the rest of the simulation
+  return out ;
+}
+
+// [[Rcpp::export]]
+arma::mat cont_sim( arma::mat xn_sim, arma::mat coeffs_cont, int N,
+                      int n_endog, int n_exog, int n_cont, 
+                      arma::rowvec upper, arma::rowvec lower, bool cheby=false ){
+// Creates a simulated path of the control variables from a simulation of 
+
+  int n_out = xn_sim.n_rows ;
+  mat out = zeros<mat>( n_out, n_cont ) ;
+      // The vector of outputs
+  for( int i = 0 ; i < n_out ; i ++ ){
+    out.row(i) = endog_update( 
+          xn_sim.row(i).head(n_exog), 
+          xn_sim.row(i).subvec(n_exog, n_exog+n_endog-1 ),
+          coeffs_cont, n_exog, n_endog, N, upper, lower, cheby ) ;
+  }     // Create and store the simulated controls
   return out ;
 }
 

@@ -6,62 +6,7 @@
 # 02feb2016
 #########################################################################
 
-reg.update <- function(){
-## Computes the updated guess of the endogeunous states using the regression
-## approach
-  
-}
-
-err.min <- function( coeffs.init, X, model, lags, params, n.exog, 
-                     n.endog, rho, sig.eps, n.integ, N, upper, lower, cheby,
-                     exog.innov.mc, quad, n.nodes, use.case=FALSE ){
-## Minimizes the error on the model equations given a grid X
-  
-  n.terms <- idx_count( N, n.exog + n.endog )
-      # Number of terms in the polynomial approximation
-  f <- function(x) eval_err( matrix( x, nrow=n.terms, ncol=n.endog ), 
-                             X, model, lags, params, n.exog, n.endog,
-                             rho, sig.eps, n.integ, N, upper, lower, cheby,
-                             exog.innov.mc, quad, n.nodes )
-      # The error evaluated on the restricted grid X
-  f.grad <- function(x) eval_err_D( matrix( x, nrow=n.terms, ncol=n.endog ), 
-                                    X, model, lags, params, n.exog, n.endog,
-                                    rho, sig.eps, n.integ, N, upper, lower, 
-                                    cheby,exog.innov.mc, quad, n.nodes )
-      # The gradient of the error
-  
-  if( use.case ){
-    return( list( f=f(coeffs.init), f.grad=f.grad(coeffs.init) ) )
-  }
-  
-    ### TEMPORARY HACK
-#     g <- function(x) c( x[2] - 1, - ( x[2] - 1 ) )
-#     g.grad <- function(x) rbind( c(0,1,0), c(0,-1,0) )
-        # Make the coefficinet on k less than one
-  
-  opts <- list("algorithm"="NLOPT_LD_LBFGS", maxeval=400,
-               "xtol_rel"=1.0e-8, print_level=1,
-               "check_derivatives" = TRUE,
-               "check_derivatives_print" = "all")
-      # Set some options
-  sol <- nloptr::nloptr( x0=coeffs.init, eval_f = f, eval_grad_f = f.grad, opts=opts )
-#   sol <- nloptr::nloptr( x0=coeffs.init, eval_f = f, eval_grad_f = f.grad, 
-#                          eval_g_ineq = g, eval_jac_g_ineq = g.grad,
-#                          opts=opts )
-      # Find the minimum
-  
-  if( max( abs( f.grad( sol$solution ) ) < 1e-07 ) ){
-    message("  Minimum error found, avg relative error = ", 
-            round( sqrt( sol$objective ), 4 ) )
-    message("                             max gradient = ", 
-            max( abs( f.grad( sol$solution ) ) ) )
-  }
-      # Reporting
-  return( list( err=sqrt( sol$objective ), coeff=sol$solution ) )
-}
-
-
-sol.iterate <- function( coeff.init, opt, params, debug.flag=FALSE ){
+sol.iterate <- function( coeff.init, coeff.cont.init, opt, params, debug.flag=FALSE ){
 # The main solution iteration loop
   
   # Extract settings
@@ -69,6 +14,7 @@ sol.iterate <- function( coeff.init, opt, params, debug.flag=FALSE ){
   lags <- opt$lags
   n.exog <- opt$n.exog
   n.endog <- opt$n.endog
+  n.cont <- opt$n.cont
   N <- opt$N
   cheby <- opt$cheby
   upper <- opt$upper
@@ -85,7 +31,6 @@ sol.iterate <- function( coeff.init, opt, params, debug.flag=FALSE ){
   h <- opt$h
   endog.init <- opt$endog.init
   gain <- opt$gain
-  reg.method <- opt$reg.method
   sr <- opt$sr
   adapt.gain <- opt$adapt.gain
   adapt.exp <- opt$adapt.exp
@@ -102,6 +47,7 @@ sol.iterate <- function( coeff.init, opt, params, debug.flag=FALSE ){
       # Create the exogenous simulation
   n.state <- n.endog + n.exog
   coeff.new <- coeff <- coeff.init
+  coeff.cont.new <- coeff.cont <- coeff.cont.init
   i.iter <- 0
   diff <- 2 * diff.tol
       # Initiate loop variables
@@ -140,37 +86,48 @@ sol.iterate <- function( coeff.init, opt, params, debug.flag=FALSE ){
       X <- endog.sim
     }
     
-
     message('  ...complete\n  State reduced to ', nrow(X), ' points.')
+    
+    if( n.cont > 0 ){
+      message('Computing controls...' )
+      cont.sim <- cont_sim( X, coeff.cont, N, n.endog, n.exog, n.cont, upper, lower, cheby )
+      X.cont <- cbind( X, cont.sim )
+      message('...complete' )
+    }else{
+      X.cont <- X
+    }
+    
     message('Computing new solution...' )
     
-    if( reg.method ){
-      k.hat <- euler_hat( coeff, X, model, lags, params, n.exog, n.endog, 
-                          rho, sig.eps, 0, N, upper, lower, cheby, 
-                          matrix(0,1,1,), TRUE, n.quad )
-      for( i in 1:n.endog )
-        coeff.new[,i] <- coeff_reg( k.hat[,i], X[,state.select], N, lower, upper, cheby )
-          ## NEED TO CHANGE THE REGRESSION STAGE HERE
-    }else{
-      update <- err.min(  coeff, X, model, lags, params, n.exog, n.endog, rho, sig.eps, 
-                          0, N, upper, lower, cheby, matrix(0,1,1), TRUE, n.quad )
-      coeff.new <- update$coeff
+    k.hat <- euler_hat( coeff, coeff.cont, X.cont, model, lags, params, n.exog, 
+                        n.endog, n.cont, rho, sig.eps, 0, N, upper, lower, cheby, 
+                        matrix(0,1,1,), TRUE, n.quad )
+    for( i in 1:n.endog )
+      coeff.new[,i] <- coeff_reg( k.hat[,i], X[,state.select], N, lower, upper, cheby )
+    if( n.cont > 0 ){
+      for( i in 1:n.cont )
+        coeff.cont.new[,i] <- coeff_reg( k.hat[,n.endog+i], X[,state.select], N, lower, upper, cheby )      
     }
     
     message('...complete' )
     
+#     arma::mat coeffs, arma::mat coeffs_cont, 
+#     arma::mat X, std::string model, int lags, List params, 
+#     int n_exog, int n_endog, int n_cont,
+#     arma::rowvec rho, arma::rowvec sig_eps, int n_integ,
+#     int N, arma::rowvec upper, arma::rowvec lower, bool cheby,
+#     arma::mat exog_innov_mc, bool quad, int n_nodes
 
     diff <- max( abs( coeff.old - coeff.new ) / abs( coeff.old ) )
         ## The difference to the new estimate
     if( adapt.gain ){
       gain <- max( exp( - adapt.exp * diff ), gain )
-      coeff <- ( 1 - gain ) * coeff + gain * 
-        matrix( coeff.new, nrow=n.terms, ncol=n.endog )
       message('  Adaptive gain = ', round( gain, 5 ) )
-    }else{
-      coeff <- ( 1 - gain ) * coeff + gain * 
-        matrix( coeff.new, nrow=n.terms, ncol=n.endog )
     } # Adaptive gain
+    coeff <- ( 1 - gain ) * coeff + gain * 
+      matrix( coeff.new, nrow=n.terms, ncol=n.endog )
+    coeff.cont <- ( 1 - gain ) * coeff.cont + gain * 
+      matrix( coeff.cont.new, nrow=n.terms, ncol=n.endog )
     
     endog.init <- apply( matrix( X[, n.exog + 1:n.endog ], ncol=n.endog), 2, mean )
         # Housekeeping

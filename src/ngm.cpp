@@ -58,8 +58,11 @@ double integrand_ngm( arma::mat exog, arma::mat endog, arma::rowvec exog_lead,
 
 
 // [[Rcpp::export]]
-arma::rowvec euler_hat_ngm( arma::mat exog, arma::mat endog, arma::mat exog_innov_integ, 
-                  List params, arma::mat coeffs, int n_exog, int n_endog,
+arma::rowvec euler_hat_ngm( 
+                  arma::mat exog, arma::mat endog, arma::rowvec cont,
+                  arma::mat exog_innov_integ, 
+                  List params, arma::mat coeffs, arma::mat coeffs_cont, 
+                  int n_exog, int n_endog, int n_cont,
                   arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
                   arma::rowvec lower, bool cheby, arma::rowvec weights,
                   bool print_rhs=false ){
@@ -84,7 +87,6 @@ arma::rowvec euler_hat_ngm( arma::mat exog, arma::mat endog, arma::mat exog_inno
   for( int i = 0 ; i < n_integ ; i++ ){
     err(i) = betta * integrand_ngm( exog, endog, exog_lead.row(i), params, coeffs, 
                                 n_exog, n_endog, N, upper, lower, cheby ) ;
-                                
   }   // Compute the integral
 
   rhs = weights * err ;

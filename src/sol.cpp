@@ -11,13 +11,15 @@
 #include "sol.hpp"
 #include "ngm.hpp"
 #include "ngm2.hpp"
+#include "ngmCont.hpp"
 #include "quad.hpp"
 
 
 
 // [[Rcpp::export]]
-arma::mat euler_hat( arma::mat coeffs, arma::mat X, std::string model, 
-                      int lags, List params, int n_exog, int n_endog,
+arma::mat euler_hat( arma::mat coeffs, arma::mat coeffs_cont, 
+                      arma::mat X, std::string model, int lags, List params, 
+                      int n_exog, int n_endog, int n_cont,
                       arma::rowvec rho, arma::rowvec sig_eps, int n_integ,
                       int N, arma::rowvec upper, arma::rowvec lower, bool cheby,
                       arma::mat exog_innov_mc, bool quad=true, int n_nodes=0 ){
@@ -27,8 +29,9 @@ arma::mat euler_hat( arma::mat coeffs, arma::mat X, std::string model,
       // The number of points at which the error is assessed
   mat exog = zeros( 1 + lags, n_exog ) ;
   mat endog = zeros( 1 + lags, n_endog ) ;
+  rowvec cont = zeros( n_cont ) ;
       // Temporary containers used in the loop
-  mat err = zeros(n_pts, n_endog) ;
+  mat err = zeros(n_pts, n_endog + n_cont ) ;
       // Becuase there are as many equations as endogenous variables
 
   /** Create the integration nodes and weights **/
@@ -56,14 +59,19 @@ arma::mat euler_hat( arma::mat coeffs, arma::mat X, std::string model,
 
   /** Define the model function **/
   rowvec (*euler_hat_fn) ( 
-                  arma::mat exog, arma::mat endog, arma::mat exog_innov_integ, 
-                  List params, arma::mat coeffs, int n_exog, int n_endog,
+                  arma::mat exog, arma::mat endog, arma::rowvec cont,
+                  arma::mat exog_innov_integ, 
+                  List params, arma::mat coeffs, arma::mat coeffs_cont, 
+                  int n_exog, int n_endog, int n_cont,
                   arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
-                  arma::rowvec lower, bool cheby, arma::rowvec weights, 
+                  arma::rowvec lower, bool cheby, arma::rowvec weights,
                   bool print_rhs ) ;
       // The pointer to model evaluation function
   if( model == "ngm" )
     euler_hat_fn = euler_hat_ngm ;
+        // The one-country neoclassical growth model
+  if( model == "ngm.cont" )
+    euler_hat_fn = ngm_reg ;
         // The one-country neoclassical growth model
   if( model == "ngm2" )
     euler_hat_fn = euler_hat_ngm_2 ;
@@ -79,10 +87,13 @@ arma::mat euler_hat( arma::mat coeffs, arma::mat X, std::string model,
       endog.row(j) = X.row(i).subvec( j*(n_exog+n_endog) + n_exog, 
                                         (j+1)*(n_exog+n_endog) - 1 ) ;
     }   // Fill in the endogenous and exogenous matrices
+    if( n_cont > 0 )
+      cont = X.row(i).tail( n_cont ) ;
+        // The controls
     err.row(i) = euler_hat_fn( 
-                            exog, endog, nodes, params, coeffs, 
-                            n_exog, n_endog, rho, n_integ, N, 
-                            upper, lower, cheby, weights, false ) ; // / n_pts ;
+                    exog, endog, cont, nodes, params, coeffs, 
+                    coeffs_cont, n_exog, n_endog, n_cont, rho, 
+                    n_integ, N, upper, lower, cheby, weights, false ) ;
   }   // The error on the states according to the Euler equations
   
 //    Rcout << "n_integ = " << n_integ << std::endl ;
