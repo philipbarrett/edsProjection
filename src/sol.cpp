@@ -15,7 +15,6 @@
 #include "quad.hpp"
 
 
-
 // [[Rcpp::export]]
 arma::mat euler_hat( arma::mat coeffs, arma::mat coeffs_cont, 
                       arma::mat X, std::string model, int lags, List params, 
@@ -29,8 +28,9 @@ arma::mat euler_hat( arma::mat coeffs, arma::mat coeffs_cont,
       // The number of points at which the error is assessed
   mat exog = zeros( 1 + lags, n_exog ) ;
   mat endog = zeros( 1 + lags, n_endog ) ;
-  rowvec cont = zeros( n_cont ) ;
-      // Temporary containers used in the loop
+  rowvec cont = zeros( std::max( n_cont, 1 ) ) ;
+      // Temporary containers used in the loop.  Make cont bigger than size 0
+      // here - just passing a useless empty container
   mat err = zeros(n_pts, n_endog + n_cont ) ;
       // Becuase there are as many equations as endogenous variables
 
@@ -56,9 +56,9 @@ arma::mat euler_hat( arma::mat coeffs, arma::mat coeffs_cont,
     nodes = exog_innov_mc ;
         // Monte Carlo integration
   }
-
+  
   /** Define the model function **/
-  rowvec (*euler_hat_fn) ( 
+  rowvec (*euler_hat_fn) (
                   arma::mat exog, arma::mat endog, arma::rowvec cont,
                   arma::mat exog_innov_integ, 
                   List params, arma::mat coeffs, arma::mat coeffs_cont, 

@@ -129,10 +129,14 @@ arma::mat cont_sim( arma::mat xn_sim, arma::mat coeffs_cont, int N,
   int n_out = xn_sim.n_rows ;
   mat out = zeros<mat>( n_out, n_cont ) ;
       // The vector of outputs
+
   for( int i = 0 ; i < n_out ; i ++ ){
     out.row(i) = endog_update( 
           xn_sim.row(i).head(n_exog), 
-          xn_sim.row(i).subvec(n_exog, n_exog+n_endog-1 ),
+          xn_sim.row(i).tail(n_endog ),
+                // Because the control depends on the **lagged** endogenous
+                // state (at least as written) because the endogenous state is
+                // an end-of-period variable
           coeffs_cont, n_exog, n_endog, N, upper, lower, cheby ) ;
   }     // Create and store the simulated controls
   return out ;

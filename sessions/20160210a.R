@@ -15,7 +15,8 @@ lower <- c( -3 * sd.x, k.ss * 0.6 )
 opt <- list( model='ngm', lags=1, n.exog=1, n.endog=1, N=1, cheby=FALSE, 
              upper = upper, lower=lower, quad=TRUE, n.quad=5, diff.tol=1e-05, 
              n.iter=20, burn=1000, kappa=25, n.sim=10000, eps = .3, delta=.02, 
-             endog.init=k.ss, gain=1, reg.method=TRUE, sr=FALSE, adapt.gain=TRUE )
+             endog.init=k.ss, gain=1, reg.method=TRUE, sr=FALSE, adapt.gain=TRUE,
+             n.cont=0, adapt.exp=10 )
     # Solution options
 a.b.range <- upper - lower
 coeff.init <- matrix( c( k.ss, params.1$alpha * a.b.range[2] / 2, 
@@ -26,7 +27,7 @@ coeff.init <- matrix( c( k.ss, params.1$alpha * a.b.range[2] / 2,
 #   NB: The range is already centered on k.ss, so can just use 
 #       these coeffs
 
-sol.1 <- sol.iterate( coeff.init, opt, params.1 )
+sol.1 <- sol.iterate( coeff.init, opt, params.1 ) #, debug.flag = T )
 
 #### 1. TWO-COUNTRY VERSION: PERFECT DEPRECIATION ####
 params.2 <- list( A=params.1$A, alpha=.3, delta=1, gamma=1, betta=.99, rho=c(.5,.5), sig.eps=c(.01,.01) )

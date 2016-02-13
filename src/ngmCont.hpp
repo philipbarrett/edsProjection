@@ -26,7 +26,7 @@ double integrand_ngm_cont(
                int N, arma::rowvec upper, arma::rowvec lower, bool cheby ) ;
 
 arma::rowvec euler_hat_ngm_cont( 
-                  arma::mat exog, arma::mat endog, arma::mat cont,
+                  arma::mat exog, arma::mat endog, arma::rowvec cont,
                   arma::mat exog_innov_integ, 
                   List params, arma::mat coeffs, arma::mat coeffs_cont, 
                   int n_exog, int n_endog, int n_cont,

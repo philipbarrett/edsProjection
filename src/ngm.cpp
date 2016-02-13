@@ -46,9 +46,10 @@ double integrand_ngm( arma::mat exog, arma::mat endog, arma::rowvec exog_lead,
             exp( exog_lead( 0 ) ) * alpha * A * pow( endog( 0, 0 ), alpha - 1 ) ) ;
       // Calculate the integrand
       
-//      Rcout << "endog:\n" << endog <<std::endl ;
-//      Rcout << "exog:\n" << exog <<std::endl ;
-//      Rcout << "exog_lead:" << exog_lead <<std::endl ;
+//      Rcout << "endog:\n" << endog ;
+//      Rcout << "exog:\n" << exog ;
+//      Rcout << "endog_lead:\n" << endog_lead ;
+//      Rcout << "exog_lead = " << exog_lead ;
 //      Rcout << "c_t = " << c_t <<std::endl ;
 //      Rcout << "c_t1 = " << c_t1 <<std::endl ;
 //      Rcout << "integrand = " << integrand <<std::endl ;
