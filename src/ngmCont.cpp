@@ -35,10 +35,6 @@ double integrand_ngm_cont(
   double delta = params["delta"] ;
   double gamma = params["gamma"] ;
   
-//  rowvec endog_lead = endog_update( exog_lead, endog.row(0), coeffs, n_exog, 
-//                                    n_endog, N, upper, lower, cheby ) ;
-//      // Create the leads of the endogenous variables.  Needed to compute the
-//      // evolution of the controls.
   rowvec cont_lead = endog_update( exog_lead, endog.row(0), coeffs_cont, n_exog, 
                                     n_endog, N, upper, lower, cheby ) ;
       // Create the next-period control.  Remember, the current-period state is
