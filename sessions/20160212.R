@@ -148,10 +148,11 @@ sd.x<- sqrt( params.full$sig.eps / ( 1 - params.full$rho ^ 2 ) )
 upper <- c(  3 * sd.x, k.ss * 1.4 )
 lower <- c( -3 * sd.x, k.ss * 0.6 )
 opt.full <- list( model='ngm', lags=1, n.exog=1, n.endog=1, N=2, cheby=FALSE, 
-                   upper = upper, lower=lower, quad=TRUE, n.quad=5, diff.tol=1e-04, 
-                   n.iter=30, burn=1000, kappa=25, n.sim=10000, eps = .3, delta=.02, 
-                   n.cont=0, endog.init=k.ss, gain=.1, reg.method=TRUE, sr=FALSE, 
-                   adapt.gain=TRUE, adapt.exp = .5, image=FALSE, cont.tol=1e-03, cont.iter=10 )
+                  upper = upper, lower=lower, quad=TRUE, n.quad=5, diff.tol=1e-03, 
+                  n.iter=30, burn=1000, kappa=25, n.sim=10000, eps = .3, delta=.02, 
+                  n.cont=0, endog.init=k.ss, gain=.1, reg.method=TRUE, sr=FALSE, 
+                  adapt.gain=TRUE, adapt.exp = .5, image=FALSE, cont.tol=1e-04, 
+                  cont.iter=10 )
 a.b.range <- upper - lower
 coeff.init.full <- matrix( c( k.ss, 
                               params.full$alpha * a.b.range[2] / 2, 0,
@@ -164,7 +165,10 @@ sol.check( sol.full, opt.full, params.full )
 opt.full$model <- 'ngm.cont'
 opt.full$n.cont <- 1
 opt.full$n.iter <- 50
-opt.full$image <- TRUE
+opt.full$gain <- .1
+# opt.full$image <- FALSE
+opt.full$adapt.exp <- 1
+opt.full$sr <- TRUE
     # Use the model with controls
 c.ss <- params.full$A * k.ss ^ params.full$alpha - params.full$delta * k.ss
     # Steady state consumption
@@ -173,8 +177,6 @@ coeff.cont.init.full <-   matrix( c( c.ss,
                                      params.full$A * k.ss ^ params.full$alpha * a.b.range[1] / 2 -
                                      sol.full$coeff[4], 0, 0 ), 6, 1)
     # Initialize with the full-depreciation solution
-opt.full$adapt.exp <- 5
-    # Damp overshooting
 sol.full.cont <- sol.iterate( sol.full$coeff, opt.full, params.full, coeff.cont.init.full )
     # Use the full rule for the states and the linearized one for the controls
     # from the no-control solution
@@ -183,5 +185,6 @@ sol.full.cont <- sol.iterate( coeff.init.full, opt.full, params.full, coeff.cont
     # guess for the control rule.
 sol.full.hard <- sol.iterate( coeff.init.2, opt.full, params.full, coeff.cont.init.2 )
     # Last, use both rules from just the full-depreciation solution
+sol.check( sol.full.cont, opt.full, params.full )
 sol.check( sol.full.hard, opt.full, params.full )
-
+    # Check the errors on the equations

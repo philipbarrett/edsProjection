@@ -116,7 +116,7 @@ sol.iterate <- function( coeff.init, opt, params, coeff.cont.init = NULL, debug.
         cont.diff <- max( abs( coeff.cont.new / coeff.cont - 1 ) )
         coeff.cont <- coeff.cont.new
         message('       ...complete' )
-        message('       Control normalized difference = ', round( cont.tol, 5 ) )
+        message('       Control normalized difference = ', round( cont.diff, 5 ) )
       }
       message( '    Computing solution for states' )
       for( i in 1:n.endog )
