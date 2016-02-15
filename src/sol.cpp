@@ -12,6 +12,8 @@
 #include "ngm.hpp"
 #include "ngm2.hpp"
 #include "ngmCont.hpp"
+#include "ngmCont2.hpp"
+#include "irbc.hpp"
 #include "quad.hpp"
 
 
@@ -28,7 +30,7 @@ arma::mat euler_hat( arma::mat coeffs, arma::mat coeffs_cont,
       // The number of points at which the error is assessed
   mat exog = zeros( 1 + lags, n_exog ) ;
   mat endog = zeros( 1 + lags, n_endog ) ;
-  rowvec cont = zeros( std::max( n_cont, 1 ) ) ;
+  rowvec cont = zeros<rowvec>( std::max( n_cont, 1 ) ) ;
       // Temporary containers used in the loop.  Make cont bigger than size 0
       // here - just passing a useless empty container
   mat err = zeros(n_pts, n_endog + n_cont ) ;
@@ -57,6 +59,7 @@ arma::mat euler_hat( arma::mat coeffs, arma::mat coeffs_cont,
         // Monte Carlo integration
   }
   
+  
   /** Define the model function **/
   rowvec (*euler_hat_fn) (
                   arma::mat exog, arma::mat endog, arma::rowvec cont,
@@ -67,15 +70,21 @@ arma::mat euler_hat( arma::mat coeffs, arma::mat coeffs_cont,
                   arma::rowvec lower, bool cheby, arma::rowvec weights,
                   bool print_rhs ) ;
       // The pointer to model evaluation function
+      
   if( model == "ngm" )
     euler_hat_fn = euler_hat_ngm ;
         // The one-country neoclassical growth model
   if( model == "ngm.cont" )
     euler_hat_fn = ngm_reg ;
-        // The one-country neoclassical growth model
+        // The one-country neoclassical growth model with controls
   if( model == "ngm2" )
     euler_hat_fn = euler_hat_ngm_2 ;
         // The two-country neoclassical growth model
+  if( model == "ngm2.cont" )
+    euler_hat_fn = ngm_reg_2 ;
+        // The two-country neoclassical growth model with controls
+  if( model == "irbc" )
+    euler_hat_fn = irbc_reg ;
   
   /** Now compute the model errors **/
   for( int i = 0 ; i < n_pts ; i++ ){
@@ -87,6 +96,7 @@ arma::mat euler_hat( arma::mat coeffs, arma::mat coeffs_cont,
       endog.row(j) = X.row(i).subvec( j*(n_exog+n_endog) + n_exog, 
                                         (j+1)*(n_exog+n_endog) - 1 ) ;
     }   // Fill in the endogenous and exogenous matrices
+    
     if( n_cont > 0 )
       cont = X.row(i).tail( n_cont ) ;
         // The controls

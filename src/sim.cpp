@@ -122,12 +122,13 @@ arma::mat endog_sim( int n_out, arma::mat exog_sim, arma::mat coeffs, int N,
 
 // [[Rcpp::export]]
 arma::mat cont_sim( arma::mat xn_sim, arma::mat coeffs_cont, int N,
-                      int n_endog, int n_exog, int n_cont, 
+                      int n_endog, int n_exog,
                       arma::rowvec upper, arma::rowvec lower, bool cheby=false ){
-// Creates a simulated path of the control variables from a simulation of 
+// Creates a simulated path of the control variables from a simulation of states.
+// NB: Can actually be used to generate endogenous states as well on a fixed grid.
 
   int n_out = xn_sim.n_rows ;
-  mat out = zeros<mat>( n_out, n_cont ) ;
+  mat out = zeros<mat>( n_out, coeffs_cont.n_cols ) ;
       // The vector of outputs
 
   for( int i = 0 ; i < n_out ; i ++ ){

@@ -32,7 +32,7 @@ arma::mat endog_sim( int n_out, arma::mat exog_sim, arma::mat coeffs, int N,
                       bool cheby, int kappa, int burn, bool lag ) ;
     // Returns a matrix of simulated exogenous and endogenous variables
 arma::mat cont_sim( arma::mat xn_sim, arma::mat coeffs_cont, int N,
-                      int n_endog, int n_exog, int n_cont, 
+                      int n_endog, int n_exog,
                       arma::rowvec upper, arma::rowvec lower, bool cheby ) ;
     // Creates a simulated path of the control variables from a simulation of 
 arma::mat irf_create( int pds, int n_sim, int N, int shk_idx,

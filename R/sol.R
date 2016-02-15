@@ -35,8 +35,8 @@ sol.iterate <- function( coeff.init, opt, params, coeff.cont.init = NULL, debug.
   adapt.gain <- opt$adapt.gain
   adapt.exp <- opt$adapt.exp
   image <- opt$image
-  cont.iter <- opt$cont.iter
-  cont.tol <- opt$cont.tol
+  inner.iter <- opt$inner.iter
+  inner.tol <- opt$inner.tol
   
   # Extract parameters
   rho <- params$rho
@@ -50,7 +50,7 @@ sol.iterate <- function( coeff.init, opt, params, coeff.cont.init = NULL, debug.
       # Create the exogenous simulation
   n.state <- n.endog + n.exog
   if( is.null( coeff.cont.init ) ) coeff.cont.init <- 0 * coeff.init
-  coeff.new <- coeff <- coeff.init
+  coeff <- coeff.init
   coeff.cont.new <- coeff.cont <- coeff.cont.init
   i.iter <- 0
   diff <- 2 * diff.tol
@@ -92,88 +92,85 @@ sol.iterate <- function( coeff.init, opt, params, coeff.cont.init = NULL, debug.
     
     message('  ...complete\n  State reduced to ', nrow(X), ' points.')
     
-    if( n.cont > 0 ){
+    message('  Inner loop:' )
+    j <- 1
+    inner.diff <- 2* inner.tol
+    coeff.inner.new <- coeff.inner <- coeff
+        # Initialize loop variables
+    while( j < inner.iter + 1 & inner.diff > inner.tol ){
+    # The inner loop on a fixed set
+      message( '    Iteration ', j )
       
-      message('  Inner loop:' )
-      j <- 1
-      cont.diff <- 2* cont.tol
-          # Initialize loop variables
-      while( j < cont.iter & cont.diff > cont.tol ){
-        message( '    Iteration ', j )
-        message('       Simulating controls...' )
-        cont.sim <- cont_sim( X, coeff.cont, N, n.endog, n.exog, n.cont, upper, lower, cheby )
+      if( j > 1 ){
+        endog.new <- cont_sim( X, coeff.inner, N, n.endog, n.exog, upper, lower, cheby )
+        X[, n.exog + 1:n.endog] <- endog.new
+            # Update the matrix of the model variables on the grid
+      }
+        
+      if( n.cont > 0 ){
+        message('       Calculating controls on set...' )
+        cont.sim <- cont_sim( X, coeff.cont, N, n.endog, n.exog, upper, lower, cheby )
         X.cont <- cbind( X, cont.sim )
         message('       ...complete' )
+      }else{
+        X.cont <- X
+      }
         
-        message('       Computing new solution for controls...' )
-        k.hat <- euler_hat( coeff, coeff.cont, X.cont, model, lags, params, n.exog, 
-                            n.endog, n.cont, rho, sig.eps, 0, N, upper, lower, cheby, 
-                            matrix(0,1,1,), TRUE, n.quad )
+      message('       Computing new inner solution...' )
+      k.hat <- euler_hat( coeff.inner, coeff.cont, X.cont, model, lags, params, n.exog, 
+                          n.endog, n.cont, rho, sig.eps, 0, N, upper, lower, cheby, 
+                          matrix(0,1,1,), TRUE, n.quad )
+        
+      for( i in 1:n.endog )
+        coeff.inner.new[,i] <- coeff_reg( k.hat[,i], X[,state.select], N, lower, upper, cheby )
+      if( n.cont > 0 ){
         for( i in 1:n.cont )
           coeff.cont.new[,i] <- coeff_reg( k.hat[,n.endog+i], X[, state.select], 
                                            N, lower, upper, cheby )
-        j <- j + 1
-        cont.diff <- max( abs( coeff.cont.new / coeff.cont - 1 ) )
-        coeff.cont <- coeff.cont.new
-        message('       ...complete' )
-        message('       Control normalized difference = ', round( cont.diff, 5 ) )
       }
-      message( '    Computing solution for states' )
-      for( i in 1:n.endog )
-        coeff.new[,i] <- coeff_reg( k.hat[,i], X[,state.select], N, lower, upper, cheby )
+      message('       ...complete' )
+        
+      inner.diff <- max( abs( coeff.inner.new / coeff.inner - 1 ) )
+          # The inner difference
 
-    }else{
-      # When there are no controls
-      X.cont <- X
-      message('  Computing new solution...' )
+      message('       Inner normalized difference = ', round( inner.diff, 5 ) )
+          # Screen updating
+      coeff.inner <- gain * coeff.inner.new + ( 1 - gain ) * coeff.inner
+      coeff.cont <- gain * coeff.cont.new + ( 1 - gain ) * coeff.cont
+      j <- j + 1
+          # Updating 
       
-      k.hat <- euler_hat( coeff, coeff.cont, X.cont, model, lags, params, n.exog, 
-                          n.endog, n.cont, rho, sig.eps, 0, N, upper, lower, cheby, 
-                          matrix(0,1,1,), TRUE, n.quad )
-      for( i in 1:n.endog )
-        coeff.new[,i] <- coeff_reg( k.hat[,i], X[,state.select], N, lower, upper, cheby )
-      if( n.cont > 0 ){
-        for( i in 1:n.cont )
-          coeff.cont.new[,i] <- coeff_reg( k.hat[,n.endog+i], 
-                                           X[, state.select], 
-                                           N, lower, upper, cheby )      
-      }
-      message('...complete' )
     }
-    
-#     arma::mat coeffs, arma::mat coeffs_cont, 
-#     arma::mat X, std::string model, int lags, List params, 
-#     int n_exog, int n_endog, int n_cont,
-#     arma::rowvec rho, arma::rowvec sig_eps, int n_integ,
-#     int N, arma::rowvec upper, arma::rowvec lower, bool cheby,
-#     arma::mat exog_innov_mc, bool quad, int n_nodes
-
-    diff <- max( abs( coeff.old - coeff.new ) / abs( coeff.old ) )
+      
+    diff <- max( abs( coeff.old - coeff.inner.new ) / abs( coeff.old ) )
         ## The difference to the new estimate
     if( adapt.gain ){
       gain <- max( exp( - adapt.exp * diff ), gain )
       message('  Adaptive gain = ', round( gain, 5 ) )
     } # Adaptive gain
-    coeff <- ( 1 - gain ) * coeff + gain * 
-      matrix( coeff.new, nrow=n.terms, ncol=n.endog )
-    coeff.cont <- ( 1 - gain ) * coeff.cont + gain * 
-      matrix( coeff.cont.new, nrow=n.terms, ncol=n.endog )
+    message('  Maximum normalized difference = ', round( diff, 5 ) , "\n" )
+    
+#     coeff <- ( 1 - gain ) * coeff + gain * 
+#       matrix( coeff.inner.new, nrow=n.terms, ncol=n.endog )
+#     coeff.cont <- coeff.cont.new
+#     coeff.cont <- ( 1 - gain ) * coeff.cont + gain * 
+#       matrix( coeff.cont.new, nrow=n.terms, ncol=n.endog )
     
     endog.init <- apply( matrix( X[, n.exog + 1:n.endog ], ncol=n.endog), 2, mean )
-        # Housekeeping
     i.iter <- i.iter + 1
+        # Housekeeping
     
     if(image){
       par(mfrow=c(2,1))
       x.vals <- ( 1:nrow(coeff) - 1 ) * ( 1 + n.endog ) + .5
-      plot.coeffs( coeff.new, main='New' )
-      for( i in 1: n.endog ) points( x.vals + i, coeff[,i], col='blue', pch=16 )
+      plot.coeffs( coeff.inner.new, main='New' )
+      for( i in 1:n.endog ) points( x.vals + i, coeff.inner[,i], col='blue', pch=16 )
       plot.coeffs( coeff.old, main='Old' )
-      for( i in 1: n.endog ) points( x.vals + i, coeff[,i], col='blue', pch=16 )
+      for( i in 1: n.endog ) points( x.vals + i, coeff.inner[,i], col='blue', pch=16 )
       par(mfrow=c(1,1))
     }
-    
-    message('  Maximum normalized difference = ', round( diff, 5 ) , "\n" )
+
+    coeff <- coeff.inner
   }
   
   
@@ -232,7 +229,7 @@ sol.check <- function( sol, opt, params ){
   endog.sim <- endog_sim( n.sim, exog.sim, coeff, N, upper, lower, 
                           endog.init, cheby, kappa, burn, (lags>0) )
   if( n.cont > 0 ){
-    cont.sim <- cont_sim( endog.sim, coeff.cont, N, n.endog, n.exog, n.cont, upper, lower, cheby )
+    cont.sim <- cont_sim( endog.sim, coeff.cont, N, n.endog, n.exog, upper, lower, cheby )
     X.cont <- cbind( endog.sim, cont.sim )
   }else{
     X.cont <- endog.sim
@@ -240,7 +237,7 @@ sol.check <- function( sol, opt, params ){
   
   k.hat <- euler_hat( sol$coeff, coeff.cont, X.cont, model, lags, params, n.exog, 
                       n.endog, n.cont, rho, sig.eps, 0, N, upper, lower, cheby, 
-                      matrix(0,1,1,), TRUE, 10 )
+                      matrix(0,1,1), TRUE, 10 )
       # Always increase the number of quadrature nodes to the maximum
   state.select <- n.exog + 1:(n.endog)
   if( n.cont > 0 ) state.select <- 

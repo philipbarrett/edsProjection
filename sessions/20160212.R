@@ -19,7 +19,7 @@ opt <- list( model='ngm', lags=1, n.exog=1, n.endog=1, N=1, cheby=FALSE,
              upper = upper, lower=lower, quad=TRUE, n.quad=5, diff.tol=1e-05, 
              n.iter=20, burn=1000, kappa=25, n.sim=10000, eps = .3, delta=.02, 
              endog.init=k.ss, gain=1, reg.method=TRUE, sr=FALSE, adapt.gain=TRUE,
-             n.cont=0, adapt.exp=10, image=FALSE )
+             n.cont=0, adapt.exp=10, image=FALSE, inner.iter=10, inner.tol=1e-05 )
 # Solution options
 a.b.range <- upper - lower
 coeff.init <- matrix( c( k.ss, params.full$alpha * a.b.range[2] / 2, 
@@ -45,14 +45,14 @@ opt.1 <- list( model='ngm.cont', lags=1, n.exog=1, n.endog=1, N=1, cheby=FALSE,
                n.iter=10, burn=1000, kappa=25, n.sim=10000, eps = .3, delta=.02, 
                n.cont=1, endog.init=k.ss, gain=1, reg.method=TRUE, sr=TRUE, 
                adapt.gain=TRUE, adapt.exp = 10, image=FALSE, 
-               cont.tol=1e-03, cont.iter=10 )
+               inner.tol=1e-05, inner.iter=10 )
 # Solution options
 a.b.range <- upper - lower
 coeff.init.1 <- sol$coeff
 
 c.ss <- params.1$A * k.ss ^ params.1$alpha - params.1$delta * k.ss
     # Steady state consumption
-coeff.cont.init. <- matrix( 
+coeff.cont.init.1 <- matrix( 
   c( c.ss, 
      1 / params.1$betta * a.b.range[2] / 2 - coeff.init[2], 
      params.1$A * k.ss ^ params.1$alpha * a.b.range[1] / 2 - coeff.init[3] ), 3, 1)
@@ -104,7 +104,7 @@ integrand_ngm( exog + .01, endog.lag, exog.lead, params.1, coeff.init.1,
                     opt.1$N, opt.1$upper, opt.1$lower )
     ## So this looks good for 
 
-sol.1 <- sol.iterate( coeff.init.1, opt.1, params.1, coeff.cont.init )
+sol.1 <- sol.iterate( coeff.init.1, opt.1, params.1, coeff.cont.init.1 )
 sol.check( sol.1, opt.1, params.1 )
 sol.check( sol, opt, params.full )
 
@@ -150,9 +150,9 @@ lower <- c( -3 * sd.x, k.ss * 0.6 )
 opt.full <- list( model='ngm', lags=1, n.exog=1, n.endog=1, N=2, cheby=FALSE, 
                   upper = upper, lower=lower, quad=TRUE, n.quad=5, diff.tol=1e-03, 
                   n.iter=30, burn=1000, kappa=25, n.sim=10000, eps = .3, delta=.02, 
-                  n.cont=0, endog.init=k.ss, gain=.1, reg.method=TRUE, sr=FALSE, 
-                  adapt.gain=TRUE, adapt.exp = .5, image=FALSE, cont.tol=1e-04, 
-                  cont.iter=10 )
+                  n.cont=0, endog.init=k.ss, gain=.1, reg.method=TRUE, sr=TRUE, 
+                  adapt.gain=TRUE, adapt.exp = .5, image=FALSE, inner.tol=1e-04, 
+                  inner.iter=10 )
 a.b.range <- upper - lower
 coeff.init.full <- matrix( c( k.ss, 
                               params.full$alpha * a.b.range[2] / 2, 0,
@@ -167,8 +167,7 @@ opt.full$n.cont <- 1
 opt.full$n.iter <- 50
 opt.full$gain <- .1
 # opt.full$image <- FALSE
-opt.full$adapt.exp <- 1
-opt.full$sr <- TRUE
+opt.full$adapt.exp <- 30
     # Use the model with controls
 c.ss <- params.full$A * k.ss ^ params.full$alpha - params.full$delta * k.ss
     # Steady state consumption

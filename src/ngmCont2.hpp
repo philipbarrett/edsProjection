@@ -19,7 +19,7 @@
 using namespace Rcpp ;
 using namespace arma ;
 
-arma::rovec integrand_ngm_cont_2( 
+arma::rowvec integrand_ngm_cont_2( 
                arma::mat exog, arma::mat endog, arma::rowvec cont, 
                arma::rowvec exog_lead, List params, arma::mat coeffs, 
                arma::mat coeffs_cont, int n_exog, int n_endog, int n_cont, 

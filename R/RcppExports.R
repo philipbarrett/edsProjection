@@ -49,12 +49,44 @@ p_eps_cheap_const <- function(X, eps, delta, h = 0) {
     .Call('edsProjection_p_eps_cheap_const', PACKAGE = 'edsProjection', X, eps, delta, h)
 }
 
+integrand_irbc <- function(exog, endog, cont, exog_lead, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby = FALSE) {
+    .Call('edsProjection_integrand_irbc', PACKAGE = 'edsProjection', exog, endog, cont, exog_lead, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby)
+}
+
+euler_hat_irbc <- function(exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
+    .Call('edsProjection_euler_hat_irbc', PACKAGE = 'edsProjection', exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
+}
+
+cont_eqns_irbc <- function(exog, endog, cont, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby = FALSE) {
+    .Call('edsProjection_cont_eqns_irbc', PACKAGE = 'edsProjection', exog, endog, cont, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby)
+}
+
+irbc_reg <- function(exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
+    .Call('edsProjection_irbc_reg', PACKAGE = 'edsProjection', exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
+}
+
 integrand_ngm_2 <- function(exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby = FALSE) {
     .Call('edsProjection_integrand_ngm_2', PACKAGE = 'edsProjection', exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby)
 }
 
 euler_hat_ngm_2 <- function(exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
     .Call('edsProjection_euler_hat_ngm_2', PACKAGE = 'edsProjection', exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
+}
+
+integrand_ngm_cont_2 <- function(exog, endog, cont, exog_lead, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby = FALSE) {
+    .Call('edsProjection_integrand_ngm_cont_2', PACKAGE = 'edsProjection', exog, endog, cont, exog_lead, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby)
+}
+
+euler_hat_ngm_cont_2 <- function(exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
+    .Call('edsProjection_euler_hat_ngm_cont_2', PACKAGE = 'edsProjection', exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
+}
+
+con_eqns_ngm_2 <- function(exog, endog, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby = FALSE) {
+    .Call('edsProjection_con_eqns_ngm_2', PACKAGE = 'edsProjection', exog, endog, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby)
+}
+
+ngm_reg_2 <- function(exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
+    .Call('edsProjection_ngm_reg_2', PACKAGE = 'edsProjection', exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
 }
 
 integrand_ngm_cont <- function(exog, endog, cont, exog_lead, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby = FALSE) {
@@ -149,8 +181,8 @@ endog_sim <- function(n_out, exog_sim, coeffs, N, upper, lower, endog_init, cheb
     .Call('edsProjection_endog_sim', PACKAGE = 'edsProjection', n_out, exog_sim, coeffs, N, upper, lower, endog_init, cheby, kappa, burn, lag)
 }
 
-cont_sim <- function(xn_sim, coeffs_cont, N, n_endog, n_exog, n_cont, upper, lower, cheby = FALSE) {
-    .Call('edsProjection_cont_sim', PACKAGE = 'edsProjection', xn_sim, coeffs_cont, N, n_endog, n_exog, n_cont, upper, lower, cheby)
+cont_sim <- function(xn_sim, coeffs_cont, N, n_endog, n_exog, upper, lower, cheby = FALSE) {
+    .Call('edsProjection_cont_sim', PACKAGE = 'edsProjection', xn_sim, coeffs_cont, N, n_endog, n_exog, upper, lower, cheby)
 }
 
 irf_create <- function(pds, n_sim, N, shk_idx, rho, sig_eps, coeffs, upper, lower, init, n_endog, n_exog, shk = 0, cheby = FALSE) {

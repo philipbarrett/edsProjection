@@ -12,10 +12,11 @@
 #include "sim.hpp"
 
 // [[Rcpp::export]]
-arma::rowvec integrand_ngm_2( arma::mat exog, arma::mat endog, arma::rowvec exog_lead, 
-                       List params, arma::mat coeffs, int n_exog, int n_endog, 
-                       int N, arma::rowvec upper, arma::rowvec lower, 
-                       bool cheby=false ){
+arma::rowvec integrand_ngm_2( 
+                arma::mat exog, arma::mat endog, 
+                arma::rowvec exog_lead, List params, arma::mat coeffs, 
+                int n_exog, int n_endog, 
+                int N, arma::rowvec upper, arma::rowvec lower, bool cheby=false ){
 // Computes the integrad for a particular realization of the exogenous states. 
 // Inputs are:
 //   - exog   A matrix of lags of the exogenous states.  Eg. exog(1,1) is the 
