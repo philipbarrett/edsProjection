@@ -37,6 +37,9 @@ sol.iterate <- function( coeff.init, opt, params, coeff.cont.init = NULL, debug.
   image <- opt$image
   inner.iter <- opt$inner.iter
   inner.tol <- opt$inner.tol
+  sym.reg <- opt$sym.reg
+  l.sym.ave <- opt$l.sym.ave
+  l.pairs <- opt$l.pairs
   
   # Extract parameters
   rho <- params$rho
@@ -123,13 +126,37 @@ sol.iterate <- function( coeff.init, opt, params, coeff.cont.init = NULL, debug.
         
       for( i in 1:n.endog )
         coeff.inner.new[,i] <- coeff_reg( k.hat[,i], X[,state.select], N, lower, upper, cheby )
+      if( sym.reg ) 
+        coeff.inner.new <- m.sym.ave.pair( coeff.inner.new, l.sym.ave, l.pairs )
+            # Symmetry regularization  
+      
+
+      
+      ########################################################################
+      # HACK ALERT!! HACK ALERT!! HACK ALERT!!
+      #  >n<  >n<  >n<  >n<  >n<  >n<  >n<  >n<
+      ########################################################################
+      
+#       coeff.inner.new[c(3,5,6),] <- 1e-09
+      
+      ########################################################################
+      # HACK PASSED!! HACK PASSED!! HACK PASSED!! 
+      #  >n<  >n<  >n<  >n<  >n<  >n<  >n<  >n<
+      ########################################################################
+      
+      
+      
       if( n.cont > 0 ){
         for( i in 1:n.cont )
           coeff.cont.new[,i] <- coeff_reg( k.hat[,n.endog+i], X[, state.select], 
                                            N, lower, upper, cheby )
+        if( sym.reg ) 
+          coeff.cont.new <- m.sym.ave.pair( coeff.cont.new, l.sym.ave, l.pairs.cont )
+            # Symmetry regularization  
       }
       message('       ...complete' )
-        
+      
+      inner.diff.old <- inner.diff
       inner.diff <- max( abs( coeff.inner.new / coeff.inner - 1 ) )
           # The inner difference
 
@@ -139,6 +166,10 @@ sol.iterate <- function( coeff.init, opt, params, coeff.cont.init = NULL, debug.
       coeff.cont <- gain * coeff.cont.new + ( 1 - gain ) * coeff.cont
       j <- j + 1
           # Updating 
+#       if( j > 2 & inner.diff > inner.diff.old ){
+#         j <- inner.iter * 2
+#         message( '     Inner loop divergence detected.  Aborting.' )
+#       }
       
     }
       
@@ -250,4 +281,36 @@ sol.check <- function( sol, opt, params ){
   
   return( list( max=apply(rel.err, 2, max), ave=apply(rel.err, 2, mean),
                 upper.check=upper.check, lower.check=lower.check ) )
+}
+
+sym.pair <- function( x ){
+# Regularizes two pairs of coeffenients by imposing symmetry on them.
+  t.l <- mean( c( x[1,1], x[2,2] ) )
+  b.l <- mean( c( x[2,1], x[1,2] ) )
+      # The top left and bottom left means
+  return( matrix( c( t.l, b.l, b.l, t.l ), 2, 2 ) )
+}
+
+ave.pair <- function( x ){
+# Regularizes a pair of coefficients by asserting that they are the same
+  return( rep( mean(x), 2 ) )
+}
+
+sym.ave.pair <- function( X, l.sym.ave ){
+# Regularizes a 2-column matrix of coefficients X by imposing symmetry and 
+# equality on the row dictated in the list l.sym.ave with members $sym and $ave
+  out <- X
+  for( idx in l.sym.ave$sym )
+    out[ idx, ] <- sym.pair( X[ idx, ] )
+  for( idx in l.sym.ave$ave )
+    out[ idx, ] <- ave.pair( X[ idx, ] )
+  return( out )
+}
+
+m.sym.ave.pair <- function( X, l.sym.ave, l.pairs ){
+# Applies sym.ave.pair to the list of pairs in l.pairs
+  out <- X
+  for( idx in l.pairs )
+    out[, idx] <- sym.ave.pair( X[, idx], l.sym.ave )
+  return( out )
 }

@@ -28,6 +28,9 @@ arma::rowvec integrand_irbc(
 
   rowvec integrand(4) ;
   
+  double R1 = cont(0) ;
+  double R2 = cont(1) ;
+      // The nominal interest rates
   double cons_r1 = cont_lead(2) / cont(2) ;
   double cons_r2 = cont_lead(3) / cont(3) ;
       // The consumption ratios
@@ -36,16 +39,14 @@ arma::rowvec integrand_irbc(
       // The price ratios (inflation rates)
   double e_r12 = cont_lead(6) / cont(6) ;
       // The ratio of exchange rates (appreciation/depreciation)
-  double R1 = cont(0) ;
-  double R2 = cont(1) ;
-      // The nominal interest rates
   
-  integrand(0) = R1 * pow( cons_r1, gamma ) * p_r1 ;
-  integrand(1) = R2 * pow( cons_r2, gamma ) * p_r2 ;
-  integrand(2) = R1 * pow( cons_r2, gamma ) * p_r1 / e_r12 ;
-  integrand(3) = R2 * pow( cons_r1, gamma ) * p_r1 * e_r12 ;
+  integrand(0) = R1 * pow( cons_r1, - gamma ) / p_r1 ;
+  integrand(1) = R2 * pow( cons_r2, - gamma ) / p_r2 ;
+  integrand(2) = pow( cons_r2, - gamma ) / ( p_r2 * e_r12 ) ;
+  integrand(3) = pow( cons_r1, - gamma ) * e_r12 / p_r1 ;
       // Two countries have same consumption but diefferent capital stocks and
       // technologies
+      
   return integrand ;
 }
 
@@ -72,35 +73,34 @@ arma::rowvec euler_hat_irbc(
         // add the innovation
   }
   
-  rowvec rhs = zeros<rowvec>( n_endog + 2 ) ;
-  mat err = zeros( n_integ, n_endog + 2 ) ;
+  rowvec integral = zeros<rowvec>( n_endog + 2 ) ;
+  mat integrand = zeros( n_integ, n_endog + 2 ) ;
       // Initialize the right hand side.
       // Add the extra two columns for the extra equations for the prices R1 and R2
       
   for( int i = 0 ; i < n_integ ; i++ ){
-    err.row(i) = betta * 
-              integrand_irbc( exog, endog, cont, exog_lead.row(i), params, 
+    integrand.row(i) = integrand_irbc( exog, endog, cont, exog_lead.row(i), params, 
                                       coeffs, coeffs_cont, n_exog, n_endog, 
                                       n_cont, N, upper, lower, cheby ) ;
   }   // Compute the integral
 
-  rhs = weights * err ;
+  integral = weights * integrand ;
   
     if( print_rhs ){
-      Rcout << "err: \n" << err << std::endl ;
+      Rcout << "err: \n" << integrand << std::endl ;
       Rcout << "weights:" << weights << std::endl ;
-      Rcout << "rhs: " << rhs << std::endl ;
-      Rcout << "rhs(0) - 1 = " << rhs(0) - 1 << std::endl ;
+      Rcout << "integral: " << integral << std::endl ;
+      Rcout << "integral(0) - 1 = " << integral(0) - 1 << std::endl ;
     }
   
-  rowvec temp(4) ; 
-  temp(0) = endog(0,0) ;
-  temp(1) = endog(0,1) ;
-  temp(2) = cont(0) ;
-  temp(3) = cont(1) ;
-  rowvec endog_hat = rhs % temp ;
+  rowvec endog_hat(4) ;
+  endog_hat(0) = endog(0,0) * betta * integral(0) ;
+  endog_hat(1) = endog(0,1) * betta * integral(1) ;
+  endog_hat(2) = 1 / ( betta * integral(2) ) ;
+  endog_hat(3) = 1 / ( betta * integral(3) ) ;
+      // The predictors
   return endog_hat ;
-      // Return ( B1, B2, R1, R2 ) * the Euler Error
+      // Return predictors for (B11, B22, R1, R2)
   
 }
 
@@ -129,28 +129,35 @@ arma::rowvec cont_eqns_irbc(
   double e_12 = cont(6) ;
   double X_11 = cont(7) ;
   double X_22 = cont(8) ;
-  double P_12 = cont(9) ;
-  double P_21 = cont(10) ;
+  double X_12 = cont(9) ;
       // Extract the controls
   rowvec A = exp( exog.row(0) ) ;
   double A_1 = A(0) ;
   double A_2 = A(1) ;
   double B_11 = endog(0,0) ;
-  double B_22 = endog(0,0) ;
+  double B_22 = endog(0,1) ;
   double B_11_lag = endog(1,0) ;
-  double B_22_lag = endog(1,0) ;
+  double B_22_lag = endog(1,1) ;
       // Extract the states
   
-  out(0) = pow( X_11, alpha ) * pow( A_2 - X_22, 1 - alpha ) ;
+  out(0) = pow( X_11, alpha ) * pow( X_12, 1 - alpha ) ;
   out(1) = pow( X_22, alpha ) * pow( A_1 - X_11, 1 - alpha ) ;
-  out(2) = ( 1 + B_11_lag - e_12 * B_22_lag - B_11 / R_1 + e_12 * B_22 / R_2 ) / C_1 ;
-  out(3) = 1 / ( 1 - alpha ) * P_21 / C_2 * ( A_1 - X_11 ) ;
-  out(4) = P1_bar / P_2 ;
+      // Prodcution technologies
+  out(2) = ( A_1 + B_11_lag - e_12 * B_22_lag - B_11 / R_1 + 
+                                      e_12 * B_22 / R_2 ) / C_1 ;
+  out(3) = ( A_2 + B_22_lag - B_11_lag / e_12  - B_22 / R_2 + 
+                                      B_11 / R_1 / e_12 ) / C_2 ;
+      // Budget constraints
+//  out(4) = ( 1 - alpha ) * C_1 / ( A_2 - X_22 ) * P_1 / P2_bar ;
+  out(4) = pow( C_1 / C_2 * P_1 / P_2 * (A_1-X_11) / X_12, .5 ) ;
+      // Definitiion of nominal exchange rate
   out(5) = alpha * C_1 * P_1 / P1_bar ;
   out(6) = alpha * C_2 * P_2 / P2_bar ;
-  out(7) = C_1 * ( 1 - alpha ) * P_1 / ( A_2 - X_22 ) ;
-  out(8) = P2_bar * P1_bar / P_12 ;
-      // Create the controls
+      // Optimal intermediate inputs
+  out(7) = pow( 1 / alpha - 1, 2 ) * X_11 * X_22 / ( A_1 - X_11 ) ;
+      // The law of one price
+      
+  // NB: Walras Law => the GMC cond for country 2's production is redundant 
   
   return( out ) ;
 }
