@@ -49,20 +49,28 @@ p_eps_cheap_const <- function(X, eps, delta, h = 0) {
     .Call('edsProjection_p_eps_cheap_const', PACKAGE = 'edsProjection', X, eps, delta, h)
 }
 
-integrand_irbc <- function(exog, endog, cont, exog_lead, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby = FALSE) {
-    .Call('edsProjection_integrand_irbc', PACKAGE = 'edsProjection', exog, endog, cont, exog_lead, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby)
+integrand_irbc <- function(exog, endog, exog_lead, params, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby = FALSE) {
+    .Call('edsProjection_integrand_irbc', PACKAGE = 'edsProjection', exog, endog, exog_lead, params, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby)
 }
 
-euler_hat_irbc <- function(exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
-    .Call('edsProjection_euler_hat_irbc', PACKAGE = 'edsProjection', exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
+euler_hat_irbc <- function(exog, endog, cont, exog_innov_integ, params, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
+    .Call('edsProjection_euler_hat_irbc', PACKAGE = 'edsProjection', exog, endog, cont, exog_innov_integ, params, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
 }
 
-cont_eqns_irbc <- function(exog, endog, cont, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby = FALSE) {
-    .Call('edsProjection_cont_eqns_irbc', PACKAGE = 'edsProjection', exog, endog, cont, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby)
+x_eqns_irbc <- function(exog, cont, params) {
+    .Call('edsProjection_x_eqns_irbc', PACKAGE = 'edsProjection', exog, cont, params)
+}
+
+contemp_eqns_irbc <- function(exog, endog, cont, params) {
+    .Call('edsProjection_contemp_eqns_irbc', PACKAGE = 'edsProjection', exog, endog, cont, params)
 }
 
 irbc_reg <- function(exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
     .Call('edsProjection_irbc_reg', PACKAGE = 'edsProjection', exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
+}
+
+euler_hat_grid <- function(coeffs, coeffs_cont, X, lags, params, n_exog, n_endog, n_cont, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad = TRUE, n_nodes = 0L) {
+    .Call('edsProjection_euler_hat_grid', PACKAGE = 'edsProjection', coeffs, coeffs_cont, X, lags, params, n_exog, n_endog, n_cont, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad, n_nodes)
 }
 
 integrand_ngm_2 <- function(exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby = FALSE) {
