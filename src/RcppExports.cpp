@@ -208,19 +208,6 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
-// x_eqns_irbc
-arma::rowvec x_eqns_irbc(arma::mat exog, arma::rowvec cont, List params);
-RcppExport SEXP edsProjection_x_eqns_irbc(SEXP exogSEXP, SEXP contSEXP, SEXP paramsSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::mat >::type exog(exogSEXP);
-    Rcpp::traits::input_parameter< arma::rowvec >::type cont(contSEXP);
-    Rcpp::traits::input_parameter< List >::type params(paramsSEXP);
-    __result = Rcpp::wrap(x_eqns_irbc(exog, cont, params));
-    return __result;
-END_RCPP
-}
 // contemp_eqns_irbc
 arma::rowvec contemp_eqns_irbc(arma::mat exog, arma::mat endog, arma::rowvec cont, List params);
 RcppExport SEXP edsProjection_contemp_eqns_irbc(SEXP exogSEXP, SEXP endogSEXP, SEXP contSEXP, SEXP paramsSEXP) {
@@ -288,22 +275,6 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type quad(quadSEXP);
     Rcpp::traits::input_parameter< int >::type n_nodes(n_nodesSEXP);
     __result = Rcpp::wrap(euler_hat_grid(coeffs, coeffs_cont, X, lags, params, n_exog, n_endog, n_cont, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad, n_nodes));
-    return __result;
-END_RCPP
-}
-// x_eqns_irbc_grid
-arma::mat x_eqns_irbc_grid(arma::mat X, int lags, List params, int n_exog, int n_endog, int n_cont);
-RcppExport SEXP edsProjection_x_eqns_irbc_grid(SEXP XSEXP, SEXP lagsSEXP, SEXP paramsSEXP, SEXP n_exogSEXP, SEXP n_endogSEXP, SEXP n_contSEXP) {
-BEGIN_RCPP
-    Rcpp::RObject __result;
-    Rcpp::RNGScope __rngScope;
-    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
-    Rcpp::traits::input_parameter< int >::type lags(lagsSEXP);
-    Rcpp::traits::input_parameter< List >::type params(paramsSEXP);
-    Rcpp::traits::input_parameter< int >::type n_exog(n_exogSEXP);
-    Rcpp::traits::input_parameter< int >::type n_endog(n_endogSEXP);
-    Rcpp::traits::input_parameter< int >::type n_cont(n_contSEXP);
-    __result = Rcpp::wrap(x_eqns_irbc_grid(X, lags, params, n_exog, n_endog, n_cont));
     return __result;
 END_RCPP
 }

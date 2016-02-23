@@ -34,7 +34,7 @@ arma::rowvec euler_hat_irbc(
                   arma::rowvec lower, bool cheby, arma::rowvec weights,
                   bool print_rhs ) ;
 
-arma::rowvec x_eqns_irbc( arma::mat exog, arma::rowvec cont, List params ) ;
+//arma::rowvec x_eqns_irbc( arma::mat exog, arma::rowvec cont, List params ) ;
 
 arma::rowvec contemp_eqns_irbc( 
                 arma::mat exog, arma::mat endog, arma::rowvec cont, List params ) ;

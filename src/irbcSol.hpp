@@ -27,8 +27,8 @@ arma::mat euler_hat_grid(
             int N, arma::rowvec upper, arma::rowvec lower, bool cheby,
             arma::mat exog_innov_mc, bool quad, int n_nodes ) ;
 
-arma::mat x_eqns_irbc_grid( arma::mat X, int lags, List params,
-                            int n_exog, int n_endog, int n_cont ) ;
+//arma::mat x_eqns_irbc_grid( arma::mat X, int lags, List params,
+//                            int n_exog, int n_endog, int n_cont ) ;
 
 arma::mat contemp_eqns_irbc_grid( arma::mat X, int lags, List params,
                                   int n_exog, int n_endog, int n_cont ) ;

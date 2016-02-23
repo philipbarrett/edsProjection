@@ -32,10 +32,10 @@ arma::rowvec integrand_irbc(
   double c2_lead = cont_lead(1) ;
       // The log consumption leads
       // The consumption ratios
-  double p1_lead = cont_lead(9) ;
-  double p2_lead = cont_lead(10) ;
+  double p1_lead = cont_lead(8) ;
+  double p2_lead = cont_lead(9) ;
       // The price ratios (inflation rates)
-  double e12_lead = cont_lead(13) ;
+  double e12_lead = cont_lead(12) ;
       // The log exchange rates lead
   
   log_integrand(0) = - ( gamma * c1_lead + p1_lead ) ;
@@ -71,9 +71,9 @@ arma::rowvec euler_hat_irbc(
   double c2 = cont(1) ;
   double r1 = cont(2) ;
   double r2 = cont(3) ;
-  double p1 = cont(9) ;
-  double p2 = cont(10) ;
-  double e12 = cont(13) ;
+  double p1 = cont(8) ;
+  double p2 = cont(9) ;
+  double e12 = cont(12) ;
       // Extract controls
   
   mat exog_lead = zeros( n_integ, n_exog ) ;
@@ -87,7 +87,8 @@ arma::rowvec euler_hat_irbc(
   rowvec integral = zeros<rowvec>( n_endog + 2 ) ;
   mat integrand = zeros( n_integ, n_endog + 2 ) ;
       // Initialize the right hand side.
-      // Add the extra two columns for the extra equations for the prices R1 and R2
+      // Add the extra two columns for the extra equations for the prices 
+      // r1 and r2
       
   for( int i = 0 ; i < n_integ ; i++ ){
     integrand.row(i) = integrand_irbc( exog, endog, exog_lead.row(i), params, 
@@ -120,43 +121,47 @@ arma::rowvec euler_hat_irbc(
 }
 
 
-// [[Rcpp::export]]
-arma::rowvec x_eqns_irbc( arma::mat exog, arma::rowvec cont, List params ){
-// Computes the error on the production function market clearing conditions
-// given consumption.  Predicts x_i^i(t) from:
-//    x_i^i(t) = log( e^a_i(t) - e^x_j^i(t) )
-//    x_j^i(t) = ( alpha * x_j^j(t) - c_j(t) ) / ( 1 - alpha )
-  
-  double alpha = params["alpha"] ;
-      // Extract alpha from params
-  double a_1 = exog(0,0) ;
-  double a_2 = exog(0,1) ;
-      // Extract the exogenous technology processes
-  double c_1 = cont(0) ;
-  double c_2 = cont(1) ;
-      // Consumption
-  double x_11_in = cont(4) ;
-  double x_22_in = cont(5) ;
-      // Own-country intermediate shares
-  double x_12 = ( c_1 - alpha * x_11_in ) / ( 1 - alpha ) ;
-  double x_21 = ( c_2 - alpha * x_22_in ) / ( 1 - alpha ) ;
-      // Cross-country intermediate shares
-  double x_11_out = std::log( std::exp( a_1 ) - std::exp( x_21 ) ) ;
-  double x_22_out = std::log( std::exp( a_2 ) - std::exp( x_12 ) ) ;
-      // The implied own-country shares
-      // NB: Do I need a >0 guard here in the log???
-      
-  rowvec out(2) ;
-  out << x_11_out << x_22_out ;
-      // The output vector
-  return out ;
-}
+//// [[Rcpp::export]]
+//arma::rowvec x_eqns_irbc( arma::mat exog, arma::rowvec cont, List params ){
+//// Computes the error on the production function market clearing conditions
+//// given consumption.  Predicts x_i^i(t) from:
+////    x_i^i(t) = log( e^a_i(t) - e^x_j^i(t) )
+////    x_j^i(t) = ( alpha * x_j^j(t) - c_j(t) ) / ( 1 - alpha )
+//  
+//  double alpha = params["alpha"] ;
+//      // Extract alpha from params
+//  double a_1 = exog(0,0) ;
+//  double a_2 = exog(0,1) ;
+//      // Extract the exogenous technology processes
+//  double c_1 = cont(0) ;
+//  double c_2 = cont(1) ;
+//      // Consumption
+//  double x_11_in = cont(4) ;
+//  double x_22_in = cont(5) ;
+//      // Own-country intermediate shares
+//  double x_12 = ( c_1 - alpha * x_11_in ) / ( 1 - alpha ) ;
+//  double x_21 = ( c_2 - alpha * x_22_in ) / ( 1 - alpha ) ;
+//      // Cross-country intermediate shares
+//  double x_11_out = std::log( std::exp( a_1 ) - std::exp( x_21 ) ) ;
+//  double x_22_out = std::log( std::exp( a_2 ) - std::exp( x_12 ) ) ;
+//      // The implied own-country shares
+//      // NB: Do I need a >0 guard here in the log???
+//      
+//  rowvec out(2) ;
+//  out << x_11_out << x_22_out ;
+//      // The output vector
+//  return out ;
+//}
 
 
 // [[Rcpp::export]]
 arma::rowvec contemp_eqns_irbc( 
   arma::mat exog, arma::mat endog, arma::rowvec cont, List params ){
-// Computes the block of contemporaneous equations.
+// Updates the controls in the contemporaneous block of the model
+// Takes as given: B11, B22, r1, r2, and guesses for x11, x22
+// Outputs values of the contemporaneous controls consistent with these, as well
+// as predictors (i.e. new guesses) for x11 and x22
+
 
   // Extract parameters
   double alpha = params["alpha"] ;
@@ -170,7 +175,7 @@ arma::rowvec contemp_eqns_irbc(
 
   rowvec out( 9 ) ;
       // Initialize the output vector.  Defines the equations for:
-      //   c_1, c_2, x_12, x_21, p_1, p_2, p_12, p_21, e_12
+      //   c_1, c_2, x_11, x_22, x_12, x_21, p_1, p_2, p_12, p_21, e_12
 
   rowvec A = exp( exog.row(0) ) ;
   double A_1 = A(0) ;
@@ -180,35 +185,41 @@ arma::rowvec contemp_eqns_irbc(
   double B_11_lag = endog(1,0) ;
   double B_22_lag = endog(1,1) ;
       // Extract the states
-  double c_1 = cont(0) ;
-  double c_2 = cont(1) ;
   double r_1 = cont(2) ;
   double r_2 = cont(3) ;
   double x_11 = cont(4) ;
   double x_22 = cont(5) ;
       // Extract the controls
   
-  double x_12 = ( alpha * x_11 - c_1 ) / ( 1 - alpha ) ;
-  double x_21 = ( alpha * x_22 - c_2 ) / ( 1 - alpha ) ;
-      // Cross-country intermediates
-  double p_1 = p1_bar - log_alpha + ( x_11 - c_1 ) / eta ;
-  double p_2 = p2_bar - log_alpha + ( x_22 - c_2 ) / eta ;
-      // The aggregate price levels
-  double p_12 = log_1_alpha - log_alpha + p1_bar + 
-                      ( x_11 - c_1 ) / ( eta * ( 1 - alpha ) ) ;
-  double p_21 = log_1_alpha - log_alpha + p2_bar + 
-                      ( x_22 - c_2 ) / ( eta * ( 1 - alpha ) ) ;
-      // The cross-country price levels
-  double e_12 = .5 * ( p1_bar - p2_bar + p_1 - p_2 ) ;
-      // the nominal exchange rate
-  double c_1_new = - p_1 + 
-        std::log( A_1 * std::exp( p_1 ) + B_11_lag - B_22_lag * std::exp( e_12 ) 
-                  - B_11 * std::exp( - r_1 ) - B_22 * std::exp( e_12 - r_2 ) ) ;
-  double c_2_new = - p_2 + 
-        std::log( A_2 * std::exp( p_2 ) + B_22_lag - B_11_lag * std::exp( - e_12 ) 
-                  - B_22 * std::exp( - r_2 ) - B_11 * std::exp( - e_12 - r_1 ) ) ;
-      // The consumption levels impled by the budget constraints
-  out << c_1_new << c_2_new << x_12 << x_21 << p_1 << p_2 
+  double x_21 = std::log( std::max( A_1 - std::exp( x_11 ), 1e-08 ) ) ;
+  double x_12 = std::log( std::max( A_2 - std::exp( x_22 ), 1e-08 ) ) ;
+      // Goods market clearing.  Guards to make sure that logs don't fail here.
+  double c_1 = alpha * x_11 + ( 1 - alpha ) * x_12 ;
+  double c_2 = alpha * x_22 + ( 1 - alpha ) * x_21 ;
+      // Consumption aggregators
+
+  double p_12 = log_1_alpha - log_alpha + p1_bar + ( x_11 - x_12 ) / eta ;
+  double p_21 = log_1_alpha - log_alpha + p2_bar + ( x_22 - x_21 ) / eta ;
+      // The cross-country price levels.  From factor optimality.
+  double e_12 = .5 * ( p1_bar - p2_bar + p_12 - p_21 ) ;
+      // The nominal exchange rate
+  double p_1  = - c_1 + 
+    std::log( std::max( 
+      A_1 * P1_bar - B_11 * std::exp( - r_1 ) + B_11_lag 
+      + std::exp( e_12 ) * ( B_22 * std::exp( - r_2 )  - B_22_lag ),
+      1e-08 ) ) ;
+      // Prices level in country 1
+  double p_2  = - c_2 + 
+    std::log( std::max(
+      A_2 * P2_bar - B_22 * std::exp( - r_2 ) + B_22_lag 
+      + std::exp( - e_12 ) * ( B_11 * std::exp( - r_1 )  - B_11_lag ),
+      1e-08 ) ) ;
+      // Price level in country 2
+      // The (log) price levels impled by the budget constraints
+  double x_11_new = c_1 + eta * ( p_1 - p1_bar + log_alpha ) ;
+  double x_22_new = c_2 + eta * ( p_2 - p2_bar + log_alpha ) ;
+      // The resulting factor demands from the remaining optimality condition
+  out << c_1 << c_2 << r_1 << r_2 << x_11_new << x_22_new << x_12 << x_21 << p_1 << p_2 
                  << p_12 << p_21 << e_12 << endr ;
       // The output vector    
   return( out ) ;

@@ -22,10 +22,10 @@ l.pairs.cont <- list( c(1,2), c(3,4), c(5,6), c(7,8), c(9,10), c(11,12) )
 opt <- list( lags=1, n.exog=2, n.endog=2, n.cont=13, N=1, cheby=FALSE,
              upper = upper, lower=lower, quad=TRUE, n.quad=5,  burn=1000,
              kappa=25, n.sim=10000, eps = .7, delta=.05, endog.init=c(0, 0), 
-             x.iter=20, x.tol=1e-05, x.gain=.25, c.iter=20, c.tol=1e-05, c.gain=.05,
-             n.iter=15, n.tol=1e-05, n.gain=.05, tol=1e-05, iter=4,
+             c.iter=400, c.tol=1e-05, c.gain=.1,
+             n.iter=40, n.tol=1e-05, n.gain=.05, tol=1e-05, iter=4,
              sr=TRUE, adapt.gain=TRUE, adapt.exp=20,image=TRUE,
-             sym.reg=TRUE, l.sym.ave=l.sym.ave, l.pairs=l.pairs, 
+             sym.reg=FALSE, l.sym.ave=l.sym.ave, l.pairs=l.pairs, 
              l.pairs.cont=l.pairs.cont )
 
 
@@ -46,4 +46,4 @@ coeff.cont.init[3, ] <- c(  .5,-.1,  .5,-.2, rep( .1, 9 ) )
 coeff.cont.init[4, ] <- coeff.cont.init[2, ]
 coeff.cont.init[5, ] <- coeff.cont.init[3, ]
 
-sol <- sol.irbc.iterate( coeff.init, opt, params, coeff.cont.init, debug.flag = TRUE )
+sol <- sol.irbc.iterate( coeff.init, opt, params, coeff.cont.init ) #, debug.flag = TRUE )
