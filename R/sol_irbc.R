@@ -9,7 +9,7 @@
 sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.flag=FALSE ){
   # The main solution iteration loop
   
-  # Extract settings
+  #### Extract settings ####
   lags <- opt$lags
   n.exog <- opt$n.exog
   n.endog <- opt$n.endog
@@ -20,8 +20,6 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
   lower <- opt$lower
   quad <- opt$quad
   n.quad <- opt$n.quad
-  diff.tol <-opt$diff.tol 
-  n.iter <-opt$n.iter
   burn <- opt$burn
   kappa <- opt$kappa
   n.sim <- opt$n.sim
@@ -29,50 +27,50 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
   delta <- opt$delta
   h <- opt$h
   endog.init <- opt$endog.init
-  gain <- opt$gain
   x.gain <- opt$x.gain
   c.gain <- opt$c.gain
+  n.gain <- opt$n.gain
   sr <- opt$sr
   adapt.gain <- opt$adapt.gain
   adapt.exp <- opt$adapt.exp
   image <- opt$image
+  iter <- opt$iter
+  tol <- opt$tol
+  n.iter <- opt$n.iter
+  n.tol <- opt$n.tol
+  c.iter <- opt$c.iter
+  c.tol <- opt$c.tol
   x.iter <- opt$x.iter
   x.tol <- opt$x.tol
-  c.iter <- opt$cons.iter
-  c.tol <- opt$cons.tol
   sym.reg <- opt$sym.reg
   l.sym.ave <- opt$l.sym.ave
   l.pairs <- opt$l.pairs
+  l.pairs.cont <- opt$l.pairs.cont
   
-  # Extract parameters
+  #### Extract parameters ####
   rho <- params$rho
   sig.eps <- params$sig.eps
   n.terms <- idx_count( N, n.exog + n.endog )
   
-  # Create the exogenous simulation
+  ##### Create the exogenous simulation ####
   set.seed(1234)
   exog.sim <- sapply( 1:n.exog, function(i) ar1_sim( n.sim * kappa + burn, 
                                                      rho[i], sig.eps[i] ) )
 
-  # Initiate loop variables
+  #####  Initiate loop variables   ##### 
   n.state <- n.endog + n.exog
-  if( is.null( coeff.cont.init ) ) coeff.cont.init <- 0 * coeff.init
-  coeff <- coeff.init
+  coeff.old <- coeff <- coeff.init
   coeff.cont.new <- coeff.cont <- coeff.cont.init
   i.iter <- 0
-  diff <- 2 * diff.tol
+  diff <- 2 * tol
   state.select <- 1:(n.exog)
   if( lags > 0 ) for( j in 1:lags ) state.select <- c( state.select, j*n.state + n.exog + 1:n.endog )
       # The states selected for the EDS algorithm
   
-  while( i.iter < n.iter & diff > diff.tol ){
+  while( i.iter < n.iter & diff > tol ){
+  # Main outer loop
     
-    if(debug.flag) browser()
-    
-    coeff.old <- coeff
-    # Store the old coefficient
-    
-    #### 0. APPROXIMATE THE STATE SPACE BY SIMULATION AND REDUCTION ####
+    ######## 1. APPROXIMATE THE STATE SPACE BY SIMULATION AND REDUCTION ########
     
     message('\n\n\n********************************************************')
     message('Iteration ', i.iter + 1)
@@ -97,126 +95,177 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
     }
     message('  ...complete\n  State reduced to ', nrow(X), ' points.')
     
-    #### 1. ITERATE OVER RULES FOR X AND C TO SOLVE CONTEMPORANEOUS EQUATIONS ####
+    
+    
+    ########2. ITERATE OVER RULES FOR X AND C TO SOLVE CONTEMPORANEOUS EQUATIONS ########
     
     message('  Solving for the consumption rule:' )
+    i.c <- 1
+    c.diff <- 2 * c.tol
+    c.gain <- opt$c.gain
+    coeff.c.new <- coeff.cont[ , 1:2 ]
+        # The loop variables for c
     
-    # Within iteration: Solve for intermediates, then consumption, updating the
-    # grid of these controls at each step
+    ### 2.1 Add the controls to the grid ###
+    cont.sim <- cont_sim( X, coeff.cont, N, n.endog, n.exog, upper, lower, cheby )
+    X.cont <- cbind( X, cont.sim )
+        # Compute the new simulation for the controls
     
-    # After iteration: Update the rules for the other controls, update the grid
-    # of all controls
-    
-    #### 2. ITERATE OVER RULES FOR B AND R TO SOLVE EULER EQUATIONS ####
-    
-    message('  Solving for the state rules:' )
-    
-    
-    
-    
-    
-    message('  Inner loop:' )
-    j <- 1
-    inner.diff <- 2* inner.tol
-    coeff.inner.new <- coeff.inner <- coeff
-    # Initialize loop variables
-    while( j < inner.iter + 1 & inner.diff > inner.tol ){
-      # The inner loop on a fixed set
-      message( '    Iteration ', j )
+    while( i.c <= c.iter & c.diff > c.tol ){
       
-      if( j > 1 ){
-        endog.new <- cont_sim( X, coeff.inner, N, n.endog, n.exog, upper, lower, cheby )
-        X[, n.exog + 1:n.endog] <- endog.new
-        # Update the matrix of the model variables on the grid
-      }
+      ### 2.2 Iterate to solve for intermediates given consumption ###
+      i.x <- 1
+      x.diff <- 2 * x.tol
+      x.gain <- opt$x.gain
+      coeff.x.new <- coeff.cont[ , 5:6 ]
+          # The loop variables for x
       
-      if( n.cont > 0 ){
-        message('       Calculating controls on set...' )
-        cont.sim <- cont_sim( X, coeff.cont, N, n.endog, n.exog, upper, lower, cheby )
+      message('    Intermediates ... ')
+      
+      if(debug.flag) browser()
+      
+      ## Solve for the **values** of x_11 and x_22 given everything else in the simulation ##
+      while( i.x <= x.iter & x.diff > x.tol ){
+        x.hat <- x_eqns_irbc_grid( X.cont, lags, params, n.exog, n.endog, n.cont )
+            # The predictors for the x values
+        cont.sim[ , 5:6 ] <- x.gain * x.hat + ( 1 - x.gain ) * cont.sim[, 5:6 ]
+            # Update the simulation on the grid
+        x.diff <- max( abs( x.hat - cont.sim[, 5:6] ) )
+        i.x <- i.x + 1
+            # Update the loop controls
         X.cont <- cbind( X, cont.sim )
-        message('       ...complete' )
-      }else{
-        X.cont <- X
+            # Update the coeffients and the simulation on the grid
+        if( adapt.gain ) x.gain <- max( exp( - adapt.exp * x.diff ), x.gain )
+            # Update the gain where required
       }
       
-      message('       Computing new inner solution...' )
-      k.hat <- euler_hat( coeff.inner, coeff.cont, X.cont, model, lags, params, n.exog, 
-                          n.endog, n.cont, rho, sig.eps, 0, N, upper, lower, cheby, 
-                          matrix(0,1,1,), TRUE, n.quad )
+      message('    ... complete.\n      Iterations = ', i.x,  
+              '\n      Difference = ', round( x.diff, 5 ),
+              '\n      Adaptive gain = ', round( x.gain, 5 ) )
       
+      ### 2.3 Compute the consumption errors and update the rule
+      cont.hat <- contemp_eqns_irbc_grid( X.cont, lags, params, n.exog, n.endog, n.cont )
+          # The predictors in the contemporaneous block
+      for(i in 1:2) coeff.c.new[,i] <- coeff_reg( cont.hat[,i], X[, state.select], 
+                                                  N, lower, upper, cheby )
+          # Compute the new coefficients on the consumption rule from the consumption predictors
+      c.diff <- max( abs( coeff.c.new / coeff.cont[, 1:2] - 1 ) )
+      i.c <- i.c + 1
+          # Update the loop controls
+      coeff.cont[ 1:2, ] <- x.gain * coeff.c.new + ( 1 - x.gain ) * coeff.cont[ , 1:2 ]
+      cont.sim[ 1:2, ] <- cont_sim( X, coeff.cont[ , 1:2 ], N, n.endog, n.exog, upper, lower, cheby )
+      X.cont <- cbind( X, cont.sim )
+          # Update the coefficients and the grid controls
+      if( adapt.gain ) c.gain <- max( exp( - adapt.exp * c.diff ), c.gain )
+          # Update the gain where required
+    }
+    
+    message('  Consumption rule complete.\n    Iterations = ', i.c,  
+            '\n    Difference = ', round( c.diff, 5 ),
+            '\n    Adaptive gain = ', round( c.gain, 5 ) )
+    
+    ### 2.4 Update the control rules and grid values ###
+    for(i in 1:7) coeff.cont[,6+i] <- coeff_reg( cont.hat[,2+i], X[, state.select], 
+                                                  N, lower, upper, cheby )
+        # Update the coefficients on the other controls in accordance with the
+        # solutions for consumption and intermediates
+    if( sym.reg ) coeff.cont <- m.sym.ave.pair( coeff.cont, l.sym.ave, l.pairs.cont )
+        # Symmetry regularization
+    cont.sim <- cont_sim( X, coeff.cont, N, n.endog, n.exog, upper, lower, cheby )
+    X.cont <- cbind( X, cont.sim )
+        # Compute the new simulation for the controls
+    
+    
+    
+    
+    ######## 3. ITERATE OVER RULES FOR B AND R TO SOLVE EULER EQUATIONS ########
+
+    message('  Solving for the forward-looking rules:' )
+    
+    
+    ### 3.1 Compute the endogenous variables on X ###
+    X[, n.exog + 1:n.endog] <- cont_sim( X, coeff, N, n.endog, n.exog, upper, lower, cheby )
+        # Update the endogenous states on the grid points (the controls will not change)
+    
+    i.n <- 1
+    n.diff <- 2 * n.tol
+    n.gain <- opt$n.gain
+    coeff.n <- coeff.n.new <- coeff
+    coeff.r <- coeff.r.new <- coeff.cont[ , 3:4 ]
+        # The loop variables for the rule for B and r
+    
+    
+    while( i.n <= n.iter & n.diff > n.tol ){
+
+      ### 3.2 Create the new predictors ###
+      k.hat <- euler_hat_grid( coeff.n, coeff.cont, X.cont, lags, params, n.exog, 
+                                n.endog, n.cont, rho, sig.eps, 0, N, upper, lower, cheby, 
+                                matrix(0,1,1,), TRUE, n.quad )
+          # The forward-looking variable predictors
+      
+      ### 3.3 Compute the error-minimizing coefficients for B and r ###
       for( i in 1:n.endog )
-        coeff.inner.new[,i] <- coeff_reg( k.hat[,i], X[,state.select], N, lower, upper, cheby )
-      if( sym.reg ) 
-        coeff.inner.new <- m.sym.ave.pair( coeff.inner.new, l.sym.ave, l.pairs )
-      # Symmetry regularization  
+        coeff.n.new[,i] <- coeff_reg( k.hat[,i], X[,state.select], N, lower, upper, cheby )
+      for( i in 1:2 )
+        coeff.r.new[,2+i] <- coeff_reg( k.hat[,2+i], X[,state.select], N, lower, upper, cheby )
+          # The updated coefficients
+
+      ### 3.4 Damp this part of the loop ###
+      n.diff <- max( abs( cbind( coeff.n, coeff.r ) - cbind( coeff.n.new, coeff.r.new ) / 
+                            cbind( coeff.n, coeff.r ) ) )
+      i.n <- i.n + 1
+          # Update the loop controls
+      coeff.n <- n.gain * coeff.n.new + ( 1 - gain ) * coeff.n
+      coeff.r <- n.gain * coeff.r.new + ( 1 - gain ) * coeff.r
+      coeff.cont[, 3:4 ] <- coeff.r
+          # Update the rules
+      if( adapt.gain ) n.gain <- max( exp( - adapt.exp * n.diff ), n.gain )
+          # Update the adaptive gain
+      if( sym.reg ){
+        coeff.n <- m.sym.ave.pair( coeff.n, l.sym.ave, l.pairs )
+        coeff.cont <- m.sym.ave.pair( coeff.cont, l.sym.ave, l.pairs.cont )
+      }   # Symmetry regularization
       
-      
-      if( n.cont > 0 ){
-        for( i in 1:n.cont )
-          coeff.cont.new[,i] <- coeff_reg( k.hat[,n.endog+i], X[, state.select], 
-                                           N, lower, upper, cheby )
-        if( sym.reg ) 
-          coeff.cont.new <- m.sym.ave.pair( coeff.cont.new, l.sym.ave, l.pairs.cont )
-        # Symmetry regularization  
-      }
-      message('       ...complete' )
-      
-      inner.diff.old <- inner.diff
-      inner.diff <- max( abs( coeff.inner.new / coeff.inner - 1 ) )
-      # The inner difference
-      
-      message('       Inner normalized difference = ', round( inner.diff, 5 ) )
-      # Screen updating
-      coeff.inner <- gain * coeff.inner.new + ( 1 - gain ) * coeff.inner
-      coeff.cont <- gain * coeff.cont.new + ( 1 - gain ) * coeff.cont
-      j <- j + 1
-      # Updating 
-      #       if( j > 2 & inner.diff > inner.diff.old ){
-      #         j <- inner.iter * 2
-      #         message( '     Inner loop divergence detected.  Aborting.' )
-      #       }
+      ### 3.5 Evaluate the rules on the state grid ###
+      X[, n.exog + 1:n.endog] <- cont_sim( X, coeff.n, N, n.endog, n.exog, upper, lower, cheby )
+      X[, ( 1 + lags ) * ( n.exog + n.endog ) ] <- 
+            cont_sim( X, coeff.cont, N, n.endog, n.exog, upper, lower, cheby )
       
     }
     
-    diff <- max( abs( coeff.old - coeff.inner.new ) / abs( coeff.old ) )
-    ## The difference to the new estimate
-    if( adapt.gain ){
-      gain <- max( exp( - adapt.exp * diff ), gain )
-      message('  Adaptive gain = ', round( gain, 5 ) )
-    } # Adaptive gain
-    message('  Maximum normalized difference = ', round( diff, 5 ) , "\n" )
+    message('  B and r rules complete.\n    Iterations = ', i.n,  
+            '\n    Difference    = ', round( n.diff, 5 ),
+            '\n    Adaptive gain = ', round( n.gain, 5 ) )
+
     
-    #     coeff <- ( 1 - gain ) * coeff + gain * 
-    #       matrix( coeff.inner.new, nrow=n.terms, ncol=n.endog )
-    #     coeff.cont <- coeff.cont.new
-    #     coeff.cont <- ( 1 - gain ) * coeff.cont + gain * 
-    #       matrix( coeff.cont.new, nrow=n.terms, ncol=n.endog )
+    
+    ###### 4. MEASURE THE CHANGES IN THE STATE VARIABLE COEFFICIENTS ######
+    diff <- max( abs( coeff.old - coeff.n.new ) / abs( coeff.old ) )
+        ## The difference to the new estimate
+    message('  Outer maximum normalized difference = ', round( diff, 5 ) , "\n" )
+        # The overall change
     
     endog.init <- apply( matrix( X[, n.exog + 1:n.endog ], ncol=n.endog), 2, mean )
     i.iter <- i.iter + 1
-    # Housekeeping
+        # Housekeeping
     
     if(image){
       par(mfrow=c(2,1))
       x.vals <- ( 1:nrow(coeff) - 1 ) * ( 1 + n.endog ) + .5
-      plot.coeffs( coeff.inner.new, main='New' )
-      for( i in 1:n.endog ) points( x.vals + i, coeff.inner[,i], col='blue', pch=16 )
+      plot.coeffs( coeff.new, main='New' )
+      for( i in 1:n.endog ) points( x.vals + i, coeff[,i], col='blue', pch=16 )
       plot.coeffs( coeff.old, main='Old' )
-      for( i in 1: n.endog ) points( x.vals + i, coeff.inner[,i], col='blue', pch=16 )
+      for( i in 1: n.endog ) points( x.vals + i, coeff[,i], col='blue', pch=16 )
       par(mfrow=c(1,1))
     }
-    
-    coeff <- coeff.inner
+        # Charting
+    coeff <- coeff.n
+    coeff.old <- coeff
+        # Update coefficients
   }
-  
-  
-  # Checks
-  #  1. Error on a new set of shocks
-  #  2. Bounds
   
   out <- list( coeff=coeff )
   if( n.cont > 0 ) out$coeff.cont <- coeff.cont
-  # Set up the output
-  
+      # Set up the output
   return( out )
 }

@@ -80,6 +80,7 @@ arma::mat euler_hat_grid(
   return err ;
 }
 
+// [[Rcpp::export]]
 arma::mat x_eqns_irbc_grid( arma::mat X, int lags, List params,
                               int n_exog, int n_endog, int n_cont ){
 // Compute the errors on the intermediates
@@ -111,6 +112,7 @@ arma::mat x_eqns_irbc_grid( arma::mat X, int lags, List params,
   return err ;
 }
 
+// [[Rcpp::export]]
 arma::mat contemp_eqns_irbc_grid( arma::mat X, int lags, List params,
                                   int n_exog, int n_endog, int n_cont ){
 // Compute the errors on the intermediates

@@ -291,6 +291,38 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// x_eqns_irbc_grid
+arma::mat x_eqns_irbc_grid(arma::mat X, int lags, List params, int n_exog, int n_endog, int n_cont);
+RcppExport SEXP edsProjection_x_eqns_irbc_grid(SEXP XSEXP, SEXP lagsSEXP, SEXP paramsSEXP, SEXP n_exogSEXP, SEXP n_endogSEXP, SEXP n_contSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< int >::type lags(lagsSEXP);
+    Rcpp::traits::input_parameter< List >::type params(paramsSEXP);
+    Rcpp::traits::input_parameter< int >::type n_exog(n_exogSEXP);
+    Rcpp::traits::input_parameter< int >::type n_endog(n_endogSEXP);
+    Rcpp::traits::input_parameter< int >::type n_cont(n_contSEXP);
+    __result = Rcpp::wrap(x_eqns_irbc_grid(X, lags, params, n_exog, n_endog, n_cont));
+    return __result;
+END_RCPP
+}
+// contemp_eqns_irbc_grid
+arma::mat contemp_eqns_irbc_grid(arma::mat X, int lags, List params, int n_exog, int n_endog, int n_cont);
+RcppExport SEXP edsProjection_contemp_eqns_irbc_grid(SEXP XSEXP, SEXP lagsSEXP, SEXP paramsSEXP, SEXP n_exogSEXP, SEXP n_endogSEXP, SEXP n_contSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< int >::type lags(lagsSEXP);
+    Rcpp::traits::input_parameter< List >::type params(paramsSEXP);
+    Rcpp::traits::input_parameter< int >::type n_exog(n_exogSEXP);
+    Rcpp::traits::input_parameter< int >::type n_endog(n_endogSEXP);
+    Rcpp::traits::input_parameter< int >::type n_cont(n_contSEXP);
+    __result = Rcpp::wrap(contemp_eqns_irbc_grid(X, lags, params, n_exog, n_endog, n_cont));
+    return __result;
+END_RCPP
+}
 // integrand_ngm_2
 arma::rowvec integrand_ngm_2(arma::mat exog, arma::mat endog, arma::rowvec exog_lead, List params, arma::mat coeffs, int n_exog, int n_endog, int N, arma::rowvec upper, arma::rowvec lower, bool cheby);
 RcppExport SEXP edsProjection_integrand_ngm_2(SEXP exogSEXP, SEXP endogSEXP, SEXP exog_leadSEXP, SEXP paramsSEXP, SEXP coeffsSEXP, SEXP n_exogSEXP, SEXP n_endogSEXP, SEXP NSEXP, SEXP upperSEXP, SEXP lowerSEXP, SEXP chebySEXP) {

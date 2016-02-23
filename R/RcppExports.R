@@ -73,6 +73,14 @@ euler_hat_grid <- function(coeffs, coeffs_cont, X, lags, params, n_exog, n_endog
     .Call('edsProjection_euler_hat_grid', PACKAGE = 'edsProjection', coeffs, coeffs_cont, X, lags, params, n_exog, n_endog, n_cont, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad, n_nodes)
 }
 
+x_eqns_irbc_grid <- function(X, lags, params, n_exog, n_endog, n_cont) {
+    .Call('edsProjection_x_eqns_irbc_grid', PACKAGE = 'edsProjection', X, lags, params, n_exog, n_endog, n_cont)
+}
+
+contemp_eqns_irbc_grid <- function(X, lags, params, n_exog, n_endog, n_cont) {
+    .Call('edsProjection_contemp_eqns_irbc_grid', PACKAGE = 'edsProjection', X, lags, params, n_exog, n_endog, n_cont)
+}
+
 integrand_ngm_2 <- function(exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby = FALSE) {
     .Call('edsProjection_integrand_ngm_2', PACKAGE = 'edsProjection', exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby)
 }

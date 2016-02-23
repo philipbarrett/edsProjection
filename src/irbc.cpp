@@ -135,19 +135,20 @@ arma::rowvec x_eqns_irbc( arma::mat exog, arma::rowvec cont, List params ){
   double c_1 = cont(0) ;
   double c_2 = cont(1) ;
       // Consumption
-  double x_11_in = cont(5) ;
-  double x_22_in = cont(6) ;
+  double x_11_in = cont(4) ;
+  double x_22_in = cont(5) ;
       // Own-country intermediate shares
-  double x_12 = ( alpha * x_11_in - c_1 ) / ( 1 - alpha ) ;
-  double x_21 = ( alpha * x_22_in - c_2 ) / ( 1 - alpha ) ;
+  double x_12 = ( c_1 - alpha * x_11_in ) / ( 1 - alpha ) ;
+  double x_21 = ( c_2 - alpha * x_22_in ) / ( 1 - alpha ) ;
       // Cross-country intermediate shares
   double x_11_out = std::log( std::exp( a_1 ) - std::exp( x_21 ) ) ;
   double x_22_out = std::log( std::exp( a_2 ) - std::exp( x_12 ) ) ;
       // The implied own-country shares
       // NB: Do I need a >0 guard here in the log???
+      
   rowvec out(2) ;
-  out << x_11_out << x_22_out << endr ;
-      // Theb output vector
+  out << x_11_out << x_22_out ;
+      // The output vector
   return out ;
 }
 
