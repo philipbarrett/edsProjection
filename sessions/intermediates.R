@@ -32,10 +32,10 @@ x11.conv <- log( alpha ) * .9
 for( i in 2:100 )
   x11.conv <- c( x11.conv, x11.all( x11.conv[i-1] ) )
 
-A.1 <- .02
+A.1 <- -.02
 X11 <- seq( .5, 1.5, length.out = 101 ) * log(alpha)
 plot( X11, sapply( X11, x11.all ), type='l' )
-c.1 <- log( c.ss ) * 1.02
+c.1 <- log( c.ss ) * .98
 lines( X11, sapply( X11, x11.all ), col=2 )
 abline( 0, 1 )
 abline( v=log(alpha), lty=2 )

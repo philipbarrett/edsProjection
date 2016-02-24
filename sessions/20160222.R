@@ -20,10 +20,11 @@ l.pairs.cont <- list( c(1,2), c(3,4), c(5,6), c(7,8), c(9,10), c(11,12) )
     # Symmetry constraints
 
 opt <- list( lags=1, n.exog=2, n.endog=2, n.cont=13, N=1, cheby=FALSE,
-             upper = upper, lower=lower, quad=TRUE, n.quad=5,  burn=1000,
+             upper = upper, lower=lower, quad=TRUE, n.quad=3,  burn=1000,
              kappa=25, n.sim=10000, eps = .7, delta=.05, endog.init=c(0, 0), 
              c.iter=400, c.tol=1e-05, c.gain=.1,
-             n.iter=40, n.tol=1e-05, n.gain=.05, tol=1e-05, iter=4,
+             k.iter=40, k.tol=1e-05, k.gain=.1,
+             n.iter=40, n.tol=1e-05, n.gain=.05, tol=1e-05, iter=40,
              sr=TRUE, adapt.gain=TRUE, adapt.exp=20,image=TRUE,
              sym.reg=FALSE, l.sym.ave=l.sym.ave, l.pairs=l.pairs, 
              l.pairs.cont=l.pairs.cont )

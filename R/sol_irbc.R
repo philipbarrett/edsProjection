@@ -39,6 +39,9 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
   c.iter <- opt$c.iter
   c.tol <- opt$c.tol
   c.gain <- opt$c.gain
+  k.iter <- opt$k.iter
+  k.tol <- opt$k.tol
+  k.gain <- opt$k.gain
   sym.reg <- opt$sym.reg
   l.sym.ave <- opt$l.sym.ave
   l.pairs <- opt$l.pairs
@@ -143,7 +146,8 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
     
     
     ######## 3. ITERATE OVER RULES FOR B AND R TO SOLVE EULER EQUATIONS ########
-
+    if( debug.flag ) browser()
+    
     message('  Solving for the forward-looking rules:' )
     
     i.n <- 1
@@ -155,7 +159,6 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
 
     while( i.n <= n.iter & n.diff > n.tol ){
 
-      
       ###################################################################
       ## TO DO: Make this part of the solution compute the B and r     ##
       ##        values that solve these equations exactly, and *then*  ##
@@ -163,12 +166,35 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
       ## Idea:  Make B act on the cross-country asset holdings?        ##
       ###################################################################
       
+      message('    Iteration ', i.n )
+      message('      Solving the Euler equations...' )
       
-      ### 3.2 Create the new predictors ###
-      k.hat <- euler_hat_grid( coeff.n, coeff.cont, X.cont, lags, params, n.exog, 
-                                n.endog, n.cont, rho, sig.eps, 0, N, upper, lower, cheby, 
-                                matrix(0,1,1,), TRUE, n.quad )
-          # The forward-looking variable predictors
+      k.diff <- 2 * opt$k.tol
+      k.gain <- opt$k.gain
+      i.k <- 0
+          # Intialize the loop variables
+      while( k.diff > k.tol & i.k < k.iter ){
+        k.hat <- euler_hat_grid( coeff.n, coeff.cont, X.cont, lags, params, n.exog, 
+                                 n.endog, n.cont, rho, sig.eps, 0, N, upper, lower, cheby, 
+                                 matrix(0,1,1,), TRUE, n.quad )
+            # The forward-looking variable predictors
+        k.diff <- max( c( max( abs( k.hat[,1:2] / X.cont[,3:4] - 1 ) ),
+                          max( abs( k.hat[,3:4] - X.cont[,(1+lags)*(n.endog+n.exog)+3:4] ) ) ) )
+        i.k <- i.k + 1
+            # Update loop variables
+        X.cont[,3:4] <- k.gain * k.hat[,1:2] + ( 1 - k.gain ) * X.cont[,3:4]
+        X.cont[,(1+lags)*(n.endog+n.exog)+3:4] <- 
+                        k.gain * k.hat[,1:2] + ( 1 - k.gain ) * X.cont[,3:4]
+            # Update the simulations for B and r
+        if( adapt.gain ) k.gain <- max( exp( - adapt.exp * k.diff ), k.gain )
+            # Update the gain where required
+      }
+      
+      message('      ...complete.\n        Iterations = ', i.k,  
+              '\n        Difference = ', round( k.diff, 5 ),
+              '\n        Adaptive gain = ', round( k.gain, 5 ) )
+      message('      Updating rules...')
+      
       
       ### 3.3 Compute the error-minimizing coefficients for B and r ###
       for( i in 1:n.endog )
@@ -195,14 +221,13 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
       
       ### 3.5 Evaluate the rules on the state grid ###
       X.cont[, n.exog + 1:n.endog] <- cont_sim( X, coeff.n, N, n.endog, n.exog, upper, lower, cheby )
-      X.cont[, ( 1 + lags ) * ( n.exog + n.endog ) + 1:n.cont ] <- 
-            cont_sim( X, coeff.cont, N, n.endog, n.exog, upper, lower, cheby )
-          # Again, could make just r for extra speed
+      X.cont[, ( 1 + lags ) * ( n.exog + n.endog ) + 3:4 ] <- 
+            cont_sim( X, coeff.cont[,3:4], N, n.endog, n.exog, upper, lower, cheby )
+      
+      message('      ...complete.\n        Difference    = ', round( n.diff, 5 ),
+              '\n        Adaptive gain = ', round( n.gain, 5 ) )
     }
     
-    message('  B and r rules complete.\n    Iterations = ', i.n,  
-            '\n    Difference    = ', round( n.diff, 5 ),
-            '\n    Adaptive gain = ', round( n.gain, 5 ) )
 
     ###### 4. MEASURE THE CHANGES IN THE STATE VARIABLE COEFFICIENTS ######
     diff <- max( abs( coeff.old - coeff.n.new ) / abs( coeff.old ) )
