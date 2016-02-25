@@ -106,12 +106,21 @@ arma::rowvec euler_hat_irbc(
     }
   
   rowvec out(4) ;
-  out(0) = B_11 * std::exp( ( c1 - 1 / gamma * ( rho_pref - r1 - p1 
-                                              - std::log( integral(0) ) ) ) ) ;
-  out(1) = B_22 * std::exp( ( c2 - 1 / gamma * ( rho_pref - r2 - p2 
-                                              - std::log( integral(1) ) ) ) ) ;
-  out(2) = rho_pref - e12 - gamma * c2 - p2 - std::log( integral(2) ) ;
-  out(3) = rho_pref + e12 - gamma * c1 - p1 - std::log( integral(3) ) ;
+//  out(0) = B_11 * std::exp( ( c1 - 1 / gamma * ( rho_pref - r1 - p1 
+//                                              - std::log( integral(0) ) ) ) ) ;
+//  out(1) = B_22 * std::exp( ( c2 - 1 / gamma * ( rho_pref - r2 - p2 
+//                                              - std::log( integral(1) ) ) ) ) ;
+//  out(2) = rho_pref - e12 - gamma * c2 - p2 - std::log( integral(2) ) ;
+//  out(3) = rho_pref + e12 - gamma * c1 - p1 - std::log( integral(3) ) ;
+  out(0) = B_11 -  
+              ( c2 - 1 / gamma * ( rho_pref - r2 - e12 - p2 
+                                              - std::log( integral(2) ) ) ) ;
+  out(1) = B_22 - 
+              ( c1 - 1 / gamma * ( rho_pref - r1 + e12 - p1 
+                                              - std::log( integral(3) ) ) ) ;
+  out(2) = rho_pref - gamma * c1 - p1 - std::log( integral(0) ) ;
+  out(3) = rho_pref - gamma * c2 - p2 - std::log( integral(1) ) ;
+  
       // The predictors.  Set up B_11, B_22 s.t. if current consumption is too 
       // high for the Euler equation to hold then B_{t+1} increases.  This will
       // pull down on consumption in the contemporaneous block later.

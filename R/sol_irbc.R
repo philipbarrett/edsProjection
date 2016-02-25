@@ -67,7 +67,7 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
   if( lags > 0 ) for( j in 1:lags ) state.select <- c( state.select, j*n.state + n.exog + 1:n.endog )
       # The states selected for the EDS algorithm
   
-  while( i.iter < n.iter & diff > tol ){
+  while( i.iter < iter & diff > tol ){
   # Main outer loop
     
     ######## 1. APPROXIMATE THE STATE SPACE BY SIMULATION AND REDUCTION ########
@@ -97,9 +97,9 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
     
     
     
-    ########2. ITERATE OVER RULES FOR X AND C TO SOLVE CONTEMPORANEOUS EQUATIONS ########
+    ######## 2. ITERATE OVER RULES FOR X TO SOLVE CONTEMPORANEOUS EQUATIONS ########
     
-    message('  Solving for the consumption rule:' )
+    message('  Solving for the controls:' )
     i.c <- 1
     c.diff <- 2 * c.tol
     c.gain <- opt$c.gain
@@ -127,7 +127,7 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
           # Update the gain where required
     }
     
-    message('  Consumption rule complete.\n    Iterations = ', i.c,  
+    message('  Control rules complete.\n    Iterations = ', i.c,  
             '\n    Difference = ', round( c.diff, 5 ),
             '\n    Adaptive gain = ', round( c.gain, 5 ) )
     
@@ -173,21 +173,25 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
       k.gain <- opt$k.gain
       i.k <- 0
           # Intialize the loop variables
+      b.r.idces <- c(n.exog+1:2,(1+lags)*(n.endog+n.exog)+3:4)
+          # Indices in X.cont
       while( k.diff > k.tol & i.k < k.iter ){
         k.hat <- euler_hat_grid( coeff.n, coeff.cont, X.cont, lags, params, n.exog, 
                                  n.endog, n.cont, rho, sig.eps, 0, N, upper, lower, cheby, 
                                  matrix(0,1,1,), TRUE, n.quad )
             # The forward-looking variable predictors
-        k.diff <- max( c( max( abs( k.hat[,1:2] / X.cont[,3:4] - 1 ) ),
-                          max( abs( k.hat[,3:4] - X.cont[,(1+lags)*(n.endog+n.exog)+3:4] ) ) ) )
+        v.k.diff <- apply( abs( k.hat - X.cont[, b.r.idces] ), 2, mean )
+        k.diff <- max( v.k.diff )
         i.k <- i.k + 1
             # Update loop variables
-        X.cont[,3:4] <- k.gain * k.hat[,1:2] + ( 1 - k.gain ) * X.cont[,3:4]
-        X.cont[,(1+lags)*(n.endog+n.exog)+3:4] <- 
-                        k.gain * k.hat[,1:2] + ( 1 - k.gain ) * X.cont[,3:4]
+        X.cont[,b.r.idces] <- k.gain * k.hat + ( 1 - k.gain ) * X.cont[,b.r.idces]
             # Update the simulations for B and r
-        if( adapt.gain ) k.gain <- max( exp( - adapt.exp * k.diff ), k.gain )
+#         if( adapt.gain ) k.gain <- max( exp( - adapt.exp * k.diff ), k.gain )
             # Update the gain where required
+        if( i.k %% 5 == 0 ) 
+          message('        i.k = ', i.k, ',  v.k.diff = (', 
+                  round(v.k.diff[1],4), ', ', round(v.k.diff[2],4),  ', ',
+                  round(v.k.diff[3],4), ', ', round(v.k.diff[4],4), ' )' )
       }
       
       message('      ...complete.\n        Iterations = ', i.k,  
@@ -204,8 +208,7 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
           # The updated coefficients
 
       ### 3.4 Damp this part of the loop ###
-      n.diff <- max( abs( cbind( coeff.n, coeff.r ) - cbind( coeff.n.new, coeff.r.new ) / 
-                            cbind( coeff.n, coeff.r ) ) )
+      n.diff <- max( abs( cbind( coeff.n, coeff.r ) - cbind( coeff.n.new, coeff.r.new ) ) )
       i.n <- i.n + 1
           # Update the loop controls
       coeff.n <- n.gain * coeff.n.new + ( 1 - n.gain ) * coeff.n
@@ -230,7 +233,7 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
     
 
     ###### 4. MEASURE THE CHANGES IN THE STATE VARIABLE COEFFICIENTS ######
-    diff <- max( abs( coeff.old - coeff.n.new ) / abs( coeff.old ) )
+    diff <- max( abs( coeff.old - coeff.n.new ) )
         ## The difference to the new estimate
     message('  Outer maximum normalized difference = ', round( diff, 5 ) , "\n" )
         # The overall change
@@ -243,9 +246,9 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
       par(mfrow=c(2,1))
       x.vals <- ( 1:nrow(coeff) - 1 ) * ( 1 + n.endog ) + .5
       plot.coeffs( coeff.n.new, main='New' )
-      for( i in 1:n.endog ) points( x.vals + i, coeff[,i], col='blue', pch=16 )
+      for( i in 1:n.endog ) points( x.vals + i, coeff.n[,i], col='blue', pch=16 )
       plot.coeffs( coeff.old, main='Old' )
-      for( i in 1: n.endog ) points( x.vals + i, coeff[,i], col='blue', pch=16 )
+      for( i in 1: n.endog ) points( x.vals + i, coeff.n[,i], col='blue', pch=16 )
       par(mfrow=c(1,1))
     }
         # Charting
@@ -256,6 +259,7 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
   
   out <- list( coeff=coeff )
   if( n.cont > 0 ) out$coeff.cont <- coeff.cont
+  out$X.cont <- X.cont
       # Set up the output
   return( out )
 }
