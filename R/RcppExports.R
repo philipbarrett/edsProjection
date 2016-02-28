@@ -201,3 +201,7 @@ euler_hat <- function(coeffs, coeffs_cont, X, model, lags, params, n_exog, n_end
     .Call('edsProjection_euler_hat', PACKAGE = 'edsProjection', coeffs, coeffs_cont, X, model, lags, params, n_exog, n_endog, n_cont, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad, n_nodes)
 }
 
+e_cont <- function(coeffs_cont, X, n_exog, n_endog, n_cont, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad = TRUE, n_nodes = 0L) {
+    .Call('edsProjection_e_cont', PACKAGE = 'edsProjection', coeffs_cont, X, n_exog, n_endog, n_cont, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad, n_nodes)
+}
+

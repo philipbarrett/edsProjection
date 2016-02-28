@@ -113,14 +113,11 @@ arma::rowvec euler_hat_irbc(
 //  out(2) = rho_pref - e12 - gamma * c2 - p2 - std::log( integral(2) ) ;
 //  out(3) = rho_pref + e12 - gamma * c1 - p1 - std::log( integral(3) ) ;
   out(0) = B_11 -  
-              ( c2 - 1 / gamma * ( rho_pref - r2 - e12 - p2 
-                                              - std::log( integral(2) ) ) ) ;
+              ( gamma * c2 - rho_pref + r1 + e12 + p2 + std::log( integral(2) ) ) ;
   out(1) = B_22 - 
-              ( c1 - 1 / gamma * ( rho_pref - r1 + e12 - p1 
-                                              - std::log( integral(3) ) ) ) ;
+              ( gamma * c1 - rho_pref + r2 - e12 + p1 + std::log( integral(3) ) ) ;
   out(2) = rho_pref - gamma * c1 - p1 - std::log( integral(0) ) ;
   out(3) = rho_pref - gamma * c2 - p2 - std::log( integral(1) ) ;
-  
       // The predictors.  Set up B_11, B_22 s.t. if current consumption is too 
       // high for the Euler equation to hold then B_{t+1} increases.  This will
       // pull down on consumption in the contemporaneous block later.
@@ -128,39 +125,6 @@ arma::rowvec euler_hat_irbc(
       // Return predictors for (B11, B22, r1, r2)
   
 }
-
-
-//// [[Rcpp::export]]
-//arma::rowvec x_eqns_irbc( arma::mat exog, arma::rowvec cont, List params ){
-//// Computes the error on the production function market clearing conditions
-//// given consumption.  Predicts x_i^i(t) from:
-////    x_i^i(t) = log( e^a_i(t) - e^x_j^i(t) )
-////    x_j^i(t) = ( alpha * x_j^j(t) - c_j(t) ) / ( 1 - alpha )
-//  
-//  double alpha = params["alpha"] ;
-//      // Extract alpha from params
-//  double a_1 = exog(0,0) ;
-//  double a_2 = exog(0,1) ;
-//      // Extract the exogenous technology processes
-//  double c_1 = cont(0) ;
-//  double c_2 = cont(1) ;
-//      // Consumption
-//  double x_11_in = cont(4) ;
-//  double x_22_in = cont(5) ;
-//      // Own-country intermediate shares
-//  double x_12 = ( c_1 - alpha * x_11_in ) / ( 1 - alpha ) ;
-//  double x_21 = ( c_2 - alpha * x_22_in ) / ( 1 - alpha ) ;
-//      // Cross-country intermediate shares
-//  double x_11_out = std::log( std::exp( a_1 ) - std::exp( x_21 ) ) ;
-//  double x_22_out = std::log( std::exp( a_2 ) - std::exp( x_12 ) ) ;
-//      // The implied own-country shares
-//      // NB: Do I need a >0 guard here in the log???
-//      
-//  rowvec out(2) ;
-//  out << x_11_out << x_22_out ;
-//      // The output vector
-//  return out ;
-//}
 
 
 // [[Rcpp::export]]

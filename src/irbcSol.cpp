@@ -80,38 +80,6 @@ arma::mat euler_hat_grid(
   return err ;
 }
 
-//// [[Rcpp::export]]
-//arma::mat x_eqns_irbc_grid( arma::mat X, int lags, List params,
-//                              int n_exog, int n_endog, int n_cont ){
-//// Compute the errors on the intermediates
-// 
-//   int n_pts = X.n_rows ;
-//      // The number of points at which the error is assessed
-//  mat exog = zeros( 1 + lags, n_exog ) ;
-//  rowvec cont = zeros<rowvec>( std::max( n_cont, 1 ) ) ;
-//      // Temporary containers used in the loop.  Make cont bigger than size 0
-//      // here - just passing a useless empty container
-//  mat err = zeros(n_pts, 2 ) ;
-//      // Becuase there are as many equations as endogenous variablesfour Euler
-//      // equations
-//  
-//  /** Now compute the model errors **/
-//  for( int i = 0 ; i < n_pts ; i++ ){
-//  // Loop over the evaluation points
-//    for( int j = 0 ; j < 1 + lags ; j++ ){
-//    // Loop over the lags
-//      exog.row(j) = X.row(i).subvec( j*(n_exog+n_endog), 
-//                                        j*(n_exog+n_endog) + n_exog - 1 ) ;
-//    }   // Fill in the exogenous matrices
-//    
-//    if( n_cont > 0 )
-//      cont = X.row(i).tail( n_cont ) ;
-//        // The controls
-//    err.row(i) = x_eqns_irbc( exog, cont, params ) ;
-//  }   // The error on the intermediate goods equations
-//  return err ;
-//}
-
 // [[Rcpp::export]]
 arma::mat contemp_eqns_irbc_grid( arma::mat X, int lags, List params,
                                   int n_exog, int n_endog, int n_cont ){
@@ -145,3 +113,4 @@ arma::mat contemp_eqns_irbc_grid( arma::mat X, int lags, List params,
   }   // The error on the contemporaneous block
   return err ;
 }
+

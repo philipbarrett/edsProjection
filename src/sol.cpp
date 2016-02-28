@@ -15,7 +15,7 @@
 #include "ngmCont2.hpp"
 #include "irbc.hpp"
 #include "quad.hpp"
-
+#include "sim.hpp"
 
 // [[Rcpp::export]]
 arma::mat euler_hat( arma::mat coeffs, arma::mat coeffs_cont, 
@@ -113,3 +113,74 @@ arma::mat euler_hat( arma::mat coeffs, arma::mat coeffs_cont,
   
   return err ;
 }
+
+
+// [[Rcpp::export]]
+arma::mat e_cont( 
+            arma::mat coeffs_cont, arma::mat X, int n_exog, int n_endog, 
+            int n_cont, arma::rowvec rho, arma::rowvec sig_eps, int n_integ,
+            int N, arma::rowvec upper, arma::rowvec lower, bool cheby,
+            arma::mat exog_innov_mc, bool quad=true, int n_nodes=0 ){
+// Computes a matrix of expected controls from a simulation
+
+  int n_pts = X.n_rows ;
+      // The number of points at which the error is assessed
+  mat exog = zeros<rowvec>( n_exog ) ;
+  mat endog = zeros<rowvec>( n_endog ) ;
+  mat out = zeros( n_pts, n_cont ) ;
+      // Temporary containers used in the loop.  Make cont bigger than size 0
+      // here - just passing a useless empty container
+
+  /** Create the integration nodes and weights **/
+  n_integ = quad ? pow( n_nodes, n_exog ) : n_integ ;
+      // Update the number of points if using quadrature
+  rowvec weights( n_integ ) ;
+  mat nodes( n_integ, n_exog ) ;
+  vec v_sig_eps = conv_to<vec>::from( sig_eps ) ;
+      // The weights and integration nodes
+      
+  if( quad ){
+    mat m_quad = quad_nodes_weights_mat( n_nodes, n_exog, 
+                        v_sig_eps, zeros(n_exog) ) ;
+    vec temp = m_quad.col( n_exog ) ;
+    weights = conv_to<rowvec>::from( temp ) ;
+    nodes = m_quad.head_cols(n_exog) ;
+        // Quadrature
+  }
+  else
+  {
+    weights = ones<rowvec>( n_pts ) / n_integ ;
+    nodes = exog_innov_mc ;
+        // Monte Carlo integration
+  }
+  
+  mat integrand = zeros( n_integ, n_cont ) ;
+      // Matrix to store the integrand
+  
+//      Rcout << "Bing" << std::endl ;
+  
+  /** Now compute the model errors **/
+  for( int i = 0 ; i < n_pts ; i++ ){
+  // Loop over the evaluation points
+  
+//      Rcout << "Bong" << std::endl ;
+  
+    for( int k = 0 ; k < n_integ ; k++ ){
+    // Loop over quadrature nodes
+      
+      exog = rho % X.row(i).head( n_exog ) + nodes.row(k) ;
+          // The updated exogenous variable in the next period
+      endog = X.row(i).subvec( n_exog, n_exog + n_endog - 1 ) ;
+          // Select the current-period endogenous states
+      integrand.row(k) = endog_update( exog, endog, coeffs_cont, n_exog, n_endog, N, 
+                                        upper, lower, cheby ) ;
+          // The integrand
+    }
+    out.row(i) = weights * integrand ;
+        // The integral over realizations of the shock
+  }
+  
+  return out ;
+}
+
+

@@ -159,13 +159,6 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
 
     while( i.n <= n.iter & n.diff > n.tol ){
 
-      ###################################################################
-      ## TO DO: Make this part of the solution compute the B and r     ##
-      ##        values that solve these equations exactly, and *then*  ##
-      ##        approximate.                                           ##
-      ## Idea:  Make B act on the cross-country asset holdings?        ##
-      ###################################################################
-      
       message('    Iteration ', i.n )
       message('      Solving the Euler equations...' )
       
@@ -260,6 +253,64 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
   out <- list( coeff=coeff )
   if( n.cont > 0 ) out$coeff.cont <- coeff.cont
   out$X.cont <- X.cont
+  out$opt <- opt
+  out$params <- params
       # Set up the output
   return( out )
 }
+
+sol.irbc.check <- function( sol, params=NULL, opt=NULL ){
+# Checks the model equation errors on the reduced state space X.cont
+  
+  if( is.null(params) ) params <- sol$params
+  if( is.null(opt) ) opt <- sol$opt
+      # Assign the options and params when required
+  
+  n.check <- 10000
+  n.burn <- 1000
+  n.quad <- 8
+      # The check and burn numbers.  Also do high-precision integration.
+  
+  n.exog <- opt$n.exog
+  n.endog <- opt$n.endog
+  n.cont <- opt$n.cont
+  upper <- opt$upper
+  lower <- opt$lower
+  N <- opt$N
+  cheby <- opt$cheby
+  lags <- opt$lags
+      # Copy from options
+  
+  rho <- params$rho
+  sig.eps <- params$sig.eps
+      # Copy from parameters
+  
+  exog.sim <- sapply( 1:n.exog, function(i) ar1_sim( n.check + n.burn, 
+                                                     rho[i], sig.eps[i] ) )
+      # The exogenous simulation
+  endog.sim <- endog_sim( n.check, exog.sim, sol$coeff, N, upper, lower, 
+                          c(0,0), cheby, 1, n.burn, (lags>0) )
+      # The endogenous simulation (Here set kappa=1)
+  cont.sim <- cont_sim( endog.sim, sol$coeff.cont, N, n.endog, n.exog, upper, lower, cheby )
+      # The controls
+  all.sim <- cbind( endog.sim, cont.sim )
+      # The combined simulation
+  
+  k.hat <- euler_hat_grid( sol$coeff, sol$coeff.cont, all.sim, lags, params, n.exog, 
+                  n.endog, n.cont, rho, sig.eps, 0, N, upper, lower, cheby, 
+                  matrix(0,1,1,), TRUE, n.quad )
+      # The predictors for B & r
+  cont.hat <- contemp_eqns_irbc_grid( all.sim, lags, params, n.exog, n.endog, n.cont )
+      # The predictors for the controls
+  cont.hat[, 3:4] <- k.hat[, 3:4]
+      # Replace the predictors for r
+  
+  err <- cbind( k.hat[,1:2] - endog.sim[, 3:4], cont.hat - cont.sim )
+      # The errors
+  out <- list( endog.sim=endog.sim, cont.sim=cont.sim, err=err )
+  
+  return( out )
+}
+
+
+
