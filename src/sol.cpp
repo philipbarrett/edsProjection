@@ -172,15 +172,52 @@ arma::mat e_cont(
           // The updated exogenous variable in the next period
       endog = X.row(i).subvec( n_exog, n_exog + n_endog - 1 ) ;
           // Select the current-period endogenous states
-      integrand.row(k) = endog_update( exog, endog, coeffs_cont, n_exog, n_endog, N, 
-                                        upper, lower, cheby ) ;
+      integrand.row(k) = exp( endog_update( exog, endog, coeffs_cont, n_exog, n_endog, N, 
+                                        upper, lower, cheby ) ) ;
           // The integrand
     }
-    out.row(i) = weights * integrand ;
+    out.row(i) = log( weights * integrand ) ;
         // The integral over realizations of the shock
   }
   
   return out ;
 }
 
+// [[Rcpp::export]]
+List real_cont( 
+            arma::mat coeffs_cont, arma::mat X, int n_exog, int n_endog, 
+            int n_cont, arma::rowvec rho, arma::rowvec sig_eps, int N, 
+            arma::rowvec upper, arma::rowvec lower, bool cheby, int seed=222 ){
+// Computes a matrix of realized next-period controls from a simulation
 
+  int n_pts = X.n_rows ;
+      // The number of points at which the error is assessed
+  mat exog = zeros<rowvec>( n_exog ) ;
+  mat endog = zeros<rowvec>( n_endog ) ;
+  mat cont_sim = zeros( n_pts, n_cont ) ;
+      // Temporary containers used in the loop.  Make cont bigger than size 0
+      // here - just passing a useless empty container
+  arma_rng::set_seed(seed) ;
+      // Set the seed
+  mat exog_sim = ( ones( n_pts ) * rho ) % X.cols( 0, n_exog - 1 ) + 
+                    ( ones( n_pts ) * sig_eps ) % randn<mat>( n_pts, n_exog ) ;
+      // The random draws
+  
+  /** Now compute the model errors **/
+  for( int i = 0 ; i < n_pts ; i++ ){
+  // Loop over the evaluation points
+    exog = exog_sim.row(i) ;
+        // The updated exogenous variable in the next period
+    endog = X.row(i).subvec( n_exog, n_exog + n_endog - 1 ) ;
+        // Select the current-period endogenous states
+    cont_sim.row(i) = endog_update( exog, endog, coeffs_cont, n_exog, n_endog, N, 
+                                        upper, lower, cheby ) ;
+        // The integral over realizations of the shock
+  }
+  
+  List out ;
+  out["r.exog"] = exog_sim ;
+  out["r.cont"] = cont_sim ;
+      // Create the output list
+  return out ;
+}

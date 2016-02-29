@@ -936,3 +936,25 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// real_cont
+List real_cont(arma::mat coeffs_cont, arma::mat X, int n_exog, int n_endog, int n_cont, arma::rowvec rho, arma::rowvec sig_eps, int N, arma::rowvec upper, arma::rowvec lower, bool cheby, int seed);
+RcppExport SEXP edsProjection_real_cont(SEXP coeffs_contSEXP, SEXP XSEXP, SEXP n_exogSEXP, SEXP n_endogSEXP, SEXP n_contSEXP, SEXP rhoSEXP, SEXP sig_epsSEXP, SEXP NSEXP, SEXP upperSEXP, SEXP lowerSEXP, SEXP chebySEXP, SEXP seedSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat >::type coeffs_cont(coeffs_contSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type X(XSEXP);
+    Rcpp::traits::input_parameter< int >::type n_exog(n_exogSEXP);
+    Rcpp::traits::input_parameter< int >::type n_endog(n_endogSEXP);
+    Rcpp::traits::input_parameter< int >::type n_cont(n_contSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type rho(rhoSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type sig_eps(sig_epsSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type upper(upperSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< bool >::type cheby(chebySEXP);
+    Rcpp::traits::input_parameter< int >::type seed(seedSEXP);
+    __result = Rcpp::wrap(real_cont(coeffs_cont, X, n_exog, n_endog, n_cont, rho, sig_eps, N, upper, lower, cheby, seed));
+    return __result;
+END_RCPP
+}

@@ -7,6 +7,7 @@ params <- list( alpha = .85, gamma = 5, P1.bar=1, P2.bar=1, betta=.99,
 opt$iter <- 125
 opt$k.iter <- 15
 opt$n.gain <- .02
+opt$model <- 'irbc'
 
 ## 1. BASELINE SOLUTION ##
 sol.irbc <- sol.irbc.iterate( sol.3$coeff, opt, params, sol.3$coeff.cont )
@@ -17,9 +18,23 @@ print( summary( abs( check$err ) ) )
 plot( 1:(opt$n.cont+opt$n.endog), log( apply( abs( check$err ), 2, mean ), 10 ) )
 plot( 1:(opt$n.cont+opt$n.endog), log( apply( abs( check$err ), 2, max ), 10 ) )
 
-expect <- e_cont( sol.irbc$coeff.cont, check$endog.sim, opt$n.exog, opt$n.endog, 
-                  opt$n.cont, sol.irbc$params$rho, sol.irbc$params$sig.eps, 0, opt$N, 
-                  opt$upper, opt$lower, opt$cheby, matrix(0,1,1), TRUE, 5 )
+expect <- e_cont( sol.irbc$coeff.cont, check$endog.sim[,1:4], opt$n.exog, 
+                  opt$n.endog, opt$n.cont, sol.irbc$params$rho, 
+                  sol.irbc$params$sig.eps, 0, opt$N, opt$upper, opt$lower, 
+                  opt$cheby, matrix(0,1,1), TRUE, 5 )
+cont.real <- real_cont( sol.irbc$coeff.cont, check$endog.sim[,1:4], opt$n.exog, 
+                     opt$n.endog, opt$n.cont, sol.irbc$params$rho, 
+                     sol.irbc$params$sig.eps, 1, opt$N, opt$upper, opt$lower, 
+                     opt$cheby )
+
+
+l.sym.ave <- list( sym=list( c(2,4), c(3,6), c(7,11), c(8,13), c(9,12), c(10,15) ),
+                   ave=c(1,5,14) )
+
+sol.irbc.sym <- sol.irbc
+sol.irbc.sym$coeff <- sym.ave.pair( sol.irbc$coeff, l.sym.ave )
+check.sym <- sol.irbc.check( sol.irbc.sym )
+
 
 n.irf <- 10
 sim.irf <- 1000

@@ -205,3 +205,7 @@ e_cont <- function(coeffs_cont, X, n_exog, n_endog, n_cont, rho, sig_eps, n_inte
     .Call('edsProjection_e_cont', PACKAGE = 'edsProjection', coeffs_cont, X, n_exog, n_endog, n_cont, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad, n_nodes)
 }
 
+real_cont <- function(coeffs_cont, X, n_exog, n_endog, n_cont, rho, sig_eps, N, upper, lower, cheby, seed = 222L) {
+    .Call('edsProjection_real_cont', PACKAGE = 'edsProjection', coeffs_cont, X, n_exog, n_endog, n_cont, rho, sig_eps, N, upper, lower, cheby, seed)
+}
+
