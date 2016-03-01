@@ -49,12 +49,12 @@ p_eps_cheap_const <- function(X, eps, delta, h = 0) {
     .Call('edsProjection_p_eps_cheap_const', PACKAGE = 'edsProjection', X, eps, delta, h)
 }
 
-integrand_irbc <- function(exog, endog, exog_lead, params, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby = FALSE) {
-    .Call('edsProjection_integrand_irbc', PACKAGE = 'edsProjection', exog, endog, exog_lead, params, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby)
+integrand_irbc <- function(endog, exog_lead, gamma, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby = FALSE) {
+    .Call('edsProjection_integrand_irbc', PACKAGE = 'edsProjection', endog, exog_lead, gamma, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby)
 }
 
-euler_hat_irbc <- function(exog, endog, cont, exog_innov_integ, params, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
-    .Call('edsProjection_euler_hat_irbc', PACKAGE = 'edsProjection', exog, endog, cont, exog_innov_integ, params, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
+euler_hat_irbc <- function(exog, endog, cont, exog_innov_integ, betta, gamma, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
+    .Call('edsProjection_euler_hat_irbc', PACKAGE = 'edsProjection', exog, endog, cont, exog_innov_integ, betta, gamma, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
 }
 
 contemp_eqns_irbc <- function(exog, endog, cont, params) {

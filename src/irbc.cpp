@@ -14,14 +14,14 @@
 
 // [[Rcpp::export]]
 arma::rowvec integrand_irbc( 
-                arma::mat exog, arma::mat endog, arma::rowvec exog_lead, 
-                List params, arma::mat coeffs_cont, 
+                arma::rowvec endog, arma::rowvec exog_lead, 
+                double gamma, arma::mat coeffs_cont, 
                 int n_exog, int n_endog, int n_cont, int N, 
                 arma::rowvec upper, arma::rowvec lower, bool cheby=false ){
 
-  double gamma = params["gamma"] ;
+//  double gamma = params["gamma"] ;
   
-  rowvec cont_lead = endog_update( exog_lead, endog.row(0), coeffs_cont, n_exog, 
+  rowvec cont_lead = endog_update( exog_lead, endog, coeffs_cont, n_exog, 
                                     n_endog, N, upper, lower, cheby ) ;
       // Create the next-period control.  Remember, the current-period state is
       // an end-of-period variable, so the control depends directly on its lag.
@@ -49,9 +49,9 @@ arma::rowvec integrand_irbc(
 
 // [[Rcpp::export]]
 arma::rowvec euler_hat_irbc( 
-                  arma::mat exog, arma::mat endog, arma::rowvec cont,
-                  arma::mat exog_innov_integ, 
-                  List params, arma::mat coeffs_cont, 
+                  arma::rowvec exog, arma::rowvec endog, arma::rowvec cont,
+                  arma::mat exog_innov_integ, double betta, 
+                  double gamma, arma::mat coeffs_cont, 
                   int n_exog, int n_endog, int n_cont,
                   arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
                   arma::rowvec lower, bool cheby, arma::rowvec weights,
@@ -60,12 +60,12 @@ arma::rowvec euler_hat_irbc(
 // condition using a Monte Carlo approach.  NB: THE INNOVATIONS exog_innov_integ
 // MUST ALREADY BE SCALED (IE. HAVE THE APPROPRIATE VARIANCE)
   
-  double betta = params["betta"] ;
-  double gamma = params["gamma"] ;
+//  double betta = params["betta"] ;
+//  double gamma = params["gamma"] ;
   double rho_pref = - std::log( betta ) ;
       // Extract coefficients
-  double B_11 = endog( 0, 0 ) ;
-  double B_22 = endog( 0, 1 ) ;
+  double B_11 = endog( 0 ) ;
+  double B_22 = endog( 1 ) ;
       // Extract the endogenous states
   double c1 = cont(0) ;
   double c2 = cont(1) ;
@@ -78,11 +78,9 @@ arma::rowvec euler_hat_irbc(
   
   mat exog_lead = zeros( n_integ, n_exog ) ;
       // Initalize the draws of the exogenous variables in the next period
-  for( int i = 0 ; i < n_integ ; i++ ){
-    exog_lead.row(i) = rho % exog.row(0) + exog_innov_integ.row(i) ;
+  exog_lead = ones(n_integ) * ( rho % exog ) + exog_innov_integ ;
         // Multiply the most recent exogenous draw by the appropriate rho and
         // add the innovation
-  }
   
   rowvec integral = zeros<rowvec>( n_endog + 2 ) ;
   mat integrand = zeros( n_integ, n_endog + 2 ) ;
@@ -91,19 +89,19 @@ arma::rowvec euler_hat_irbc(
       // r1 and r2
       
   for( int i = 0 ; i < n_integ ; i++ ){
-    integrand.row(i) = integrand_irbc( exog, endog, exog_lead.row(i), params, 
+    integrand.row(i) = integrand_irbc( endog, exog_lead.row(i), gamma, 
                                       coeffs_cont, n_exog, n_endog, 
                                       n_cont, N, upper, lower, cheby ) ;
   }   // Compute the integral
 
   integral = weights * integrand ;
   
-    if( print_rhs ){
-      Rcout << "err: \n" << integrand << std::endl ;
-      Rcout << "weights:" << weights << std::endl ;
-      Rcout << "integral: " << integral << std::endl ;
-      Rcout << "integral(0) - 1 = " << integral(0) - 1 << std::endl ;
-    }
+  if( print_rhs ){
+    Rcout << "err: \n" << integrand << std::endl ;
+    Rcout << "weights:" << weights << std::endl ;
+    Rcout << "integral: " << integral << std::endl ;
+    Rcout << "integral(0) - 1 = " << integral(0) - 1 << std::endl ;
+  }
   
   rowvec out(4) ;
 //  out(0) = B_11 * std::exp( ( c1 - 1 / gamma * ( rho_pref - r1 - p1 
@@ -209,10 +207,13 @@ arma::rowvec irbc_reg(
                   bool print_rhs=false ){
 // Computes the dependent variables for the regression problem.  Aggregates both
 // the states and controls.
+  double betta = params["betta"] ;
+  double gamma = params["gamma"] ;
+
   rowvec out = zeros<rowvec>( n_endog + n_cont ) ;
       // Initialize the output
   out.head(n_endog+2) = 
-        euler_hat_irbc( exog, endog, cont, exog_innov_integ, params, 
+        euler_hat_irbc( exog, endog, cont, exog_innov_integ, betta, gamma, 
                             coeffs_cont, n_exog, n_endog, n_cont,
                             rho, n_integ, N, upper, lower, cheby, weights,
                             print_rhs ) ;

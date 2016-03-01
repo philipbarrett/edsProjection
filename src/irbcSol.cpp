@@ -26,13 +26,15 @@ arma::mat euler_hat_grid(
 
   int n_pts = X.n_rows ;
       // The number of points at which the error is assessed
-  mat exog = zeros( 1 + lags, n_exog ) ;
-  mat endog = zeros( 1 + lags, n_endog ) ;
+  rowvec exog = zeros<rowvec>( n_exog ) ;
+  rowvec endog = zeros<rowvec>( n_endog ) ;
   rowvec cont = zeros<rowvec>( std::max( n_cont, 1 ) ) ;
       // Temporary containers used in the loop.  Make cont bigger than size 0
       // here - just passing a useless empty container
   mat err = zeros(n_pts, 4 ) ;
       // Becuase there are four Euler equations
+  double betta = params["betta"] ;
+  double gamma = params["gamma"] ;
 
   /** Create the integration nodes and weights **/
   n_integ = quad ? pow( n_nodes, n_exog ) : n_integ ;
@@ -61,18 +63,14 @@ arma::mat euler_hat_grid(
   for( int i = 0 ; i < n_pts ; i++ ){
   // Loop over the evaluation points
   
-    for( int j = 0 ; j < 1 + lags ; j++ ){
-    // Loop over the lags
-      exog.row(j) = X.row(i).subvec( j*(n_exog+n_endog), 
-                                        j*(n_exog+n_endog) + n_exog - 1 ) ;
-      endog.row(j) = X.row(i).subvec( j*(n_exog+n_endog) + n_exog, 
-                                        (j+1)*(n_exog+n_endog) - 1 ) ;
-    }   // Fill in the endogenous and exogenous matrices
+    exog = X.row(i).head(n_exog) ;
+    endog = X.row(i).subvec( n_exog, n_exog + n_endog - 1 ) ;
+        // Fill in the endogenous and exogenous matrices
     if( n_cont > 0 )
       cont = X.row(i).tail( n_cont ) ;
         // The controls
     err.row(i) = euler_hat_irbc(
-                    exog, endog, cont, nodes, params,
+                    exog, endog, cont, nodes, betta, gamma,
                     coeffs_cont, n_exog, n_endog, n_cont, rho, 
                     n_integ, N, upper, lower, cheby, weights, false ) ;
   }   // The error on the states according to the Euler equations
