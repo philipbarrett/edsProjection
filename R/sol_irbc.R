@@ -269,7 +269,6 @@ sol.irbc.check <- function( sol, params=NULL, opt=NULL ){
   n.check <- 10000
   n.burn <- 1000
   n.quad <- 8
-  kappa <- 50
       # The check and burn numbers.  Also do high-precision integration.
   
   n.exog <- opt$n.exog
@@ -286,11 +285,11 @@ sol.irbc.check <- function( sol, params=NULL, opt=NULL ){
   sig.eps <- params$sig.eps
       # Copy from parameters
   
-  exog.sim <- sapply( 1:n.exog, function(i) ar1_sim( kappa * n.check + n.burn, 
+  exog.sim <- sapply( 1:n.exog, function(i) ar1_sim( n.check + n.burn, 
                                                      rho[i], sig.eps[i] ) )
       # The exogenous simulation
   endog.sim <- endog_sim( n.check, exog.sim, sol$coeff, N, upper, lower, 
-                          c(0,0), cheby, kappa, n.burn, (lags>0) )
+                          c(0,0), cheby, 1, n.burn, (lags>0) )
       # The endogenous simulation (Here set kappa=1)
   cont.sim <- cont_sim( endog.sim, sol$coeff.cont, N, n.endog, n.exog, upper, lower, cheby )
       # The controls
