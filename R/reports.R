@@ -117,6 +117,14 @@ report.corr <- function( rep.data, loc=NULL ){
 }
 
 ###### CREATE THE REPORT ######
+report.chart.latex <- function( cht.file, out.file ){
+# Creaetes the latex code for including charts
+  write( '\\begin{figure}[phtb]\n\\centering', file=out.file, append=T )
+  write( paste0('\\includegraphics[width=3.5in]{', cht.file, '}'), file=out.file, append=T )
+  write( '\\end{figure}', file=out.file, append=T )
+}
+
+
 report.create <- function( sol, rep.data=NULL, loc=NULL ){
 # Create the report
   
@@ -130,7 +138,7 @@ report.create <- function( sol, rep.data=NULL, loc=NULL ){
       # The output file
   
   ## Header
-  write( '\\documentclass[12pt]{article}\n\\usepackage[utf8]{inputenc}\n', file=out.file )
+  write( '\\documentclass[12pt]{article}\n\\usepackage[utf8]{inputenc}\n\\usepackage{graphicx,ctable,booktabs}', file=out.file )
   write( paste0( '\\title{Model solution Report: ', st.time, '}\n' ), file=out.file, append=T )  
   write( '\\begin{document}\n', file=out.file, append=T )  
   write( '\\maketitle\n', file=out.file, append=T )  
@@ -151,10 +159,27 @@ report.create <- function( sol, rep.data=NULL, loc=NULL ){
   write( '\\input{correl.tex}', file=out.file, append=T )
   
   ## Variance table
-  
-  ## Charts
+  v.sd <- sapply( c(9, 10, 13), function(i) sd( rep.data$r.cont[, i] - rep.data$cont.sim[, i] ) )
+  v.sd[4] <- sd( rep.data$r.cont[,13] - rep.data$r.cont[,9] + rep.data$r.cont[,10] - 
+                   ( rep.data$cont.sim[,13] - rep.data$cont.sim[,9] + rep.data$cont.sim[,10] ) )
+  v.sd <- round( v.sd, 4 )
+      # Vector of control standard deviations
+  write( '\\begin{table}[htb]\n\\centering\n\\begin{tabular}{ccccc}', file=out.file, append=T )
+  write( ' & Domestic inflation & Foreign inflation & NER growth  & RER growth \\\\', 
+         file=out.file, append=T )
+  write( '\\hline', file=out.file, append=T )
+  write( paste0( 'Sample std dev & ', v.sd[1], ' & ', v.sd[2], ' & ', v.sd[3], ' & ', 
+                 v.sd[4], ' \\\\ '), 
+         file=out.file, append=T )
+  write( '\\end{tabular} \n\\caption{Model parameters} \n\\end{table} \n\n', file=out.file, append=T )
   
   ## Euler eq decomp
+  write( '\n***Euler equation decomposition to go here***\n', file=out.file, append=T)
+  
+  ## Charts
+  report.chart.latex('../charts/err.pdf', out.file)
+  for( i in 1:13) report.chart.latex( paste0('../charts/chart', i, '.pdf'), out.file)
+  report.chart.latex('../charts/assets.pdf', out.file)
   
   ## Footer
   write( '\\end{document}', file=out.file, append=T )
