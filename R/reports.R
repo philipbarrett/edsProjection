@@ -118,8 +118,9 @@ report.corr <- function( rep.data, loc=NULL ){
   
   # Chart for home/total assets + a 45 degree line
   pdf(paste0( loc, 'charts/assets.pdf') )
-  tot.assets <- rep.data$endog.sim[,3] - rep.data$endog.sim[,4] * exp( rep.data$cont.sim[,13] )
-  dom.assets <- rep.data$endog.sim[,3]
+  tot.assets <- rep.data$endog.sim[,3] * exp( - rep.data$cont.sim[,3] ) -
+                    rep.data$endog.sim[,4] * exp( rep.data$cont.sim[,13] - rep.data$cont.sim[,4] )
+  dom.assets <- rep.data$endog.sim[,3] * exp( - rep.data$cont.sim[,3] )
   plot( tot.assets, dom.assets, xlab='Total assets', 
         ylab='Domestically held assets' )
   abline( 0, .5, lty=2, col='blue' )

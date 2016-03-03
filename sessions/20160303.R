@@ -16,6 +16,7 @@ opt$k.iter <- 10
 opt$iter <- 10
 opt$sym.reg <- TRUE
 opt$sr <- TRUE
+opt$n.space <- 5
 
 sd.x <- params$sig.eps / sqrt( 1 - params$rho ^ 2 )
 opt$upper[1:2] <- 5 * sd.x

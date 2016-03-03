@@ -46,6 +46,7 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
   l.sym.ave <- opt$l.sym.ave
   l.pairs <- opt$l.pairs
   l.pairs.cont <- opt$l.pairs.cont
+  n.space <- opt$n.space
   
   #### Extract parameters ####
   rho <- params$rho
@@ -94,7 +95,6 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
       X <- endog.sim
     }
     message('  ...complete\n  State reduced to ', nrow(X), ' points.')
-    
     
     
     ######## 2. ITERATE OVER RULES FOR X TO SOLVE CONTEMPORANEOUS EQUATIONS ########

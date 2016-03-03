@@ -44,11 +44,19 @@ arma::mat pcd_scaling( arma::mat & X ) {
 // Reutrns the mean-zero, spherical unit-variance equivalent of a cloud of
 // points via PC decomposition
 
+  int i_select = 250 ;
+      // The number of rows to use in the pcd part
   rowvec X_mean = mean( X, 0 ) ;
       // The vector of column means
   mat X_center = ( X - ones( X.n_rows ) * X_mean ) ;
       // Centering the X matrix on its mean
-  mat X_pc = princomp( X_center ) ;
+  ivec select = randi<ivec>(i_select, distr_param(0, X.n_rows - 1 ) ) ;
+      // The subset of X to use in the PCD rescaling
+  mat X_for_pc = zeros( i_select, X.n_cols ) ;
+  for( int i = 0 ; i < i_select ; i++ )
+    X_for_pc.row(i) = X_center.row( select(i) ) ;
+      // Create the random subset of rows for the pcd part
+  mat X_pc = princomp( X_for_pc ) ;
       // The principal components of X
   mat X_pcd = X_center * X_pc ;
       // The principal component projection of X
