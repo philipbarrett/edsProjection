@@ -189,15 +189,45 @@ arma::vec poly_eval( arma::vec a, arma::mat X_in, int N,
       // Holding vector for basis terms in each dimension
   for( int m = 0 ; m < M ; m++ ){
       // Loop over points
-    for( int i = 0 ; i < n_terms ; i++){
-        // Loop over terms in the expansion
-      for( int k = 0 ; k < K ; k++ ){
-          // Loop over dimensions
-        v_basis(k) = basis( indices( i, k ), k, m ) ;
-            // Extract the appropriate combination  of basis elements
-      }
-      out(m) = out(m) + a(i) * prod( v_basis ) ;
+//    for( int i = 0 ; i < n_terms ; i++){
+//        // Loop over terms in the expansion
+//      for( int k = 0 ; k < K ; k++ ){
+//          // Loop over dimensions
+//        v_basis(k) = basis( indices( i, k ), k, m ) ;
+//            // Extract the appropriate combination  of basis elements
+//      }
+//      out(m) = out(m) + a(i) * prod( v_basis ) ;
+//    }
+    out(m) = poly_eval_core( a, basis.slice(m), indices, n_terms, K, M ) ;
+  }
+  
+  return out ;
+}
+
+// [[Rcpp::export]]
+double poly_eval_core( arma::vec a, arma::mat m_basis, 
+                          arma::umat indices, 
+                          int n_terms, int K, int M){
+// The central part of polynomial evaluation at just one point.  
+// Needs as inputs:
+//   - a: coefficients
+//   - basis: rescaled basis values
+//   - indices: the coefficient indices
+//   - n_terms: the number of terms in the approximation
+//   - K: the number of dimensions
+//   - M: the number of points at which to evaluate
+  double out = 0 ;
+  
+  vec v_basis = zeros(K) ;
+    // Holding vector for basis terms in each dimension
+  for( int i = 0 ; i < n_terms ; i++){
+      // Loop over terms in the expansion
+    for( int k = 0 ; k < K ; k++ ){
+        // Loop over dimensions
+      v_basis(k) = m_basis( indices( i, k ), k ) ;
+          // Extract the appropriate combination  of basis elements
     }
+    out = out + a(i) * prod( v_basis ) ;
   }
   return out ;
 }

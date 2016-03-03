@@ -52,7 +52,7 @@ cht.generic <- function( X, Y, xlab, ylab, file, loc ){
 report.corr <- function( rep.data, loc=NULL ){
 # Plots the report data
   
-  if( is.null( loc ) ) loc <- '/home/philip/Dropbox/2016/Research/IRBC puzzles/'
+  if( is.null( loc ) ) loc <- '~/Dropbox/2016/Research/IRBC puzzles/'
   loc.chts <- paste0( loc, 'charts/' )
   
   ## Create real exchange rate ##
@@ -169,7 +169,7 @@ report.create <- function( sol, rep.data=NULL, loc=NULL ){
       # The data for the charts
   st.time <- gsub( ':', '', gsub( ' ', '-', Sys.time() ) )
       # The timestamp
-  if( is.null( loc ) ) loc <- '/home/philip/Dropbox/2016/Research/IRBC puzzles/'
+  if( is.null( loc ) ) loc <- '~/Dropbox/2016/Research/IRBC puzzles/'
   out.file <- paste0( loc, 'reports/', st.time, '.tex' )
       # The output file
   

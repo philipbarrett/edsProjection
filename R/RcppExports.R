@@ -157,6 +157,10 @@ poly_eval <- function(a, X_in, N, lower, upper, cheby = FALSE) {
     .Call('edsProjection_poly_eval', PACKAGE = 'edsProjection', a, X_in, N, lower, upper, cheby)
 }
 
+poly_eval_core <- function(a, m_basis, indices, n_terms, K, M) {
+    .Call('edsProjection_poly_eval_core', PACKAGE = 'edsProjection', a, m_basis, indices, n_terms, K, M)
+}
+
 coeff_reg <- function(y, X_in, N, lower, upper, cheby = FALSE) {
     .Call('edsProjection_coeff_reg', PACKAGE = 'edsProjection', y, X_in, N, lower, upper, cheby)
 }
@@ -179,6 +183,10 @@ quad_nodes_weights_mat <- function(n_nodes, n_dim, sig, mu) {
 
 ar1_sim <- function(n_pds, rho, sig_eps, init_flag = FALSE, init = 0) {
     .Call('edsProjection_ar1_sim', PACKAGE = 'edsProjection', n_pds, rho, sig_eps, init_flag, init)
+}
+
+endog_update_slow <- function(exog, endog_old, coeffs, n_exog, n_endog, N, upper, lower, cheby = FALSE) {
+    .Call('edsProjection_endog_update_slow', PACKAGE = 'edsProjection', exog, endog_old, coeffs, n_exog, n_endog, N, upper, lower, cheby)
 }
 
 endog_update <- function(exog, endog_old, coeffs, n_exog, n_endog, N, upper, lower, cheby = FALSE) {

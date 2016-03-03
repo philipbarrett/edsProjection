@@ -41,7 +41,7 @@ arma::vec ar1_sim( int n_pds, double rho, double sig_eps,
 /** TO DO: Add correlated shocks in a VAR **/
 
 // [[Rcpp::export]]
-arma::rowvec endog_update( arma::rowvec exog, arma::rowvec endog_old, arma::mat coeffs, 
+arma::rowvec endog_update_slow( arma::rowvec exog, arma::rowvec endog_old, arma::mat coeffs, 
                             int n_exog, int n_endog, int N,
                             arma::rowvec upper, arma::rowvec lower, bool cheby=false ){
 // Uses the updating rule defined by coeffs, upper, lower, and cheby to update
@@ -60,6 +60,44 @@ arma::rowvec endog_update( arma::rowvec exog, arma::rowvec endog_old, arma::mat 
   for( int i=0; i < n_out ; i++ ){
     temp = poly_eval( coeffs.col(i), X, N, lower, upper, cheby ) ;
     out(i) = temp(0) ;
+        // Update each of the endogenous states
+  }
+  return out ;
+}
+
+
+// [[Rcpp::export]]
+arma::rowvec endog_update( arma::rowvec exog, arma::rowvec endog_old, 
+                            arma::mat coeffs, int n_exog, int n_endog, int N,
+                            arma::rowvec upper, arma::rowvec lower, bool cheby=false ){
+// Uses the updating rule defined by coeffs, upper, lower, and cheby to update
+// the endogenous states
+  
+  int K = n_exog + n_endog ;
+  int M = 1 ;
+      // The number of dimensions and points of X
+  mat X_in = zeros( M, K ) ;
+      // The point to evaluate at
+  X_in.row(0).head(n_exog) = exog ;
+  X_in.row(0).tail(n_endog) = endog_old ;
+      // Fill in the evaluation point
+  int n_out = coeffs.n_cols ;
+      // The number of points to output
+  mat X = X_limits( X_in, lower, upper, M, K ) ; 
+      // Rescale to the unit sphere if required
+  umat indices = idx_create( N, K ) ;
+      // The matrix of orders
+  mat basis = ones( N + 1, K ) ;
+  basis = cheby ? cheby_create( X.row(0), N, K ) : ordinary_create( X.row(0), N, K ) ;
+      // The matrix of basis polynomials
+  int n_terms = indices.n_rows ;
+      // The number of terms in the expansion
+  
+  rowvec out = zeros<rowvec>( n_out ) ;
+      // Intialize output vector
+      
+  for( int i=0; i < n_out ; i++ ){
+    out(i) =  poly_eval_core( coeffs.col(i), basis, indices, n_terms, K, M ) ;
         // Update each of the endogenous states
   }
   return out ;

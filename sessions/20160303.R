@@ -39,6 +39,15 @@ for( i in 1:13)
   coeff.init.cont[,i] <- coeff_reg( sol.irbc$X.cont[,8+i], sol.irbc$X.cont[,c(1,2,7,8)], 
                                     opt$N, opt$lower, opt$upper, opt$cheby )
 
+# ## Profiling
+# Rprof(NULL)
+# opt$iter <- 1
+# Rprof('03mar.Rprof')
+# sol.irbc.2 <- sol.irbc.iterate( coeff.init, opt, params, coeff.init.cont )
+# Rprof(NULL)
+# summaryRprof('03mar.Rprof')
+# stop()
+
 ## Solve the model
 sol.irbc.2 <- sol.irbc.iterate( coeff.init, opt, params, coeff.init.cont )
 rep.irbc.2 <- report.data( sol.irbc.2 )
