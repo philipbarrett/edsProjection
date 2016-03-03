@@ -99,6 +99,8 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
     
     ######## 2. ITERATE OVER RULES FOR X TO SOLVE CONTEMPORANEOUS EQUATIONS ########
     
+    if( debug.flag ) browser()
+    
     message('  Solving for the controls:' )
     i.c <- 1
     c.diff <- 2 * c.tol
@@ -109,6 +111,8 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
     cont.sim <- cont_sim( X, coeff.cont, N, n.endog, n.exog, upper, lower, cheby )
     X.cont <- cbind( X, cont.sim )
         # Compute the new simulation for the controls
+    
+        #### ADD TOTAL EQUATION ERRORS HERE ####
     
     while( i.c <= c.iter & c.diff > c.tol ){
       
@@ -230,7 +234,17 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
         ## The difference to the new estimate
     message('  Outer maximum normalized difference = ', round( diff, 5 ) , "\n" )
         # The overall change
-    
+    eq.err.n <- euler_hat_grid( coeff.n, coeff.cont, X.cont, lags, params, n.exog, 
+                                 n.endog, n.cont, rho, sig.eps, 0, N, upper, lower, cheby, 
+                                 matrix(0,1,1,), TRUE, n.quad ) - 
+                    X.cont[, c( n.exog + 1:n.endog, 
+                                ( 1 + lags ) * ( n.exog + n.endog ) + 3:4 ) ]
+    eq.err.cont <- contemp_eqns_irbc_grid( X.cont, lags, params, n.exog, n.endog, n.cont ) - 
+          X.cont[, ( 1 + lags ) * ( n.exog + n.endog ) + 1:n.cont ]
+    max.eq.err <- max( apply( abs( eq.err.n ), 2, mean ), 
+                       apply( abs( eq.err.cont ), 2, mean ) )
+    message('  Maximum average absolute equation error = ', round(max.eq.err, 4) )
+  
     endog.init <- apply( matrix( X[, n.exog + 1:n.endog ], ncol=n.endog), 2, mean )
     i.iter <- i.iter + 1
         # Housekeeping
@@ -269,6 +283,7 @@ sol.irbc.check <- function( sol, params=NULL, opt=NULL ){
   n.check <- 10000
   n.burn <- 1000
   n.quad <- 8
+  kappa <- 101
       # The check and burn numbers.  Also do high-precision integration.
   
   n.exog <- opt$n.exog
@@ -285,11 +300,11 @@ sol.irbc.check <- function( sol, params=NULL, opt=NULL ){
   sig.eps <- params$sig.eps
       # Copy from parameters
   
-  exog.sim <- sapply( 1:n.exog, function(i) ar1_sim( n.check + n.burn, 
+  exog.sim <- sapply( 1:n.exog, function(i) ar1_sim( kappa * n.check + n.burn, 
                                                      rho[i], sig.eps[i] ) )
       # The exogenous simulation
   endog.sim <- endog_sim( n.check, exog.sim, sol$coeff, N, upper, lower, 
-                          c(0,0), cheby, 1, n.burn, (lags>0) )
+                          c(0,0), cheby, kappa, n.burn, (lags>0) )
       # The endogenous simulation (Here set kappa=1)
   cont.sim <- cont_sim( endog.sim, sol$coeff.cont, N, n.endog, n.exog, upper, lower, cheby )
       # The controls

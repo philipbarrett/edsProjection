@@ -2,7 +2,7 @@
 params <- list( alpha = .85, gamma = 5, P1.bar=1, P2.bar=1, betta=.99,
                 rho=c(.95,.95), sig.eps=c(.01,.01), eta=1 )
 # Parameters
-lower <- sd.x<- sqrt( params$sig.eps / ( 1 - params$rho ^ 2 ) )
+lower <- sd.x<- params$sig.eps / sqrt( ( 1 - params$rho ^ 2 ) )
 upper <- c(  3 * sd.x, rep( 1, 2 ) )
 lower <- -upper
 # Bounds

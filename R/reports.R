@@ -98,13 +98,49 @@ report.corr <- function( rep.data, loc=NULL ){
     out.df[i,3:5] <- cht.generic( X, Y, v.x.lab[i], v.y.lab[i], v.file[i], loc.chts )
   }
   
-  write( print(xtable(out.df, digits=c( NA, NA,NA, 6, 2, 2)), include.rownames=F), file = paste0( loc, 'reports/correl.tex' ) )
+  write( print(xtable(out.df, digits=c( NA, NA,NA, 6, 2, 2), 
+                      caption='Main cross-correlations of the model'), 
+               include.rownames=F), file = paste0( loc, 'reports/correl.tex' ) )
   
-  # Add here the chart for home/total assets + a 45 degree line
+  # UIP Regression here
+#   q <- rep.data$r.cont[,14]
+  e.e <- rep.data$e.cont[,13] - rep.data$cont.sim[,13]
+  r.diff <- rep.data$cont.sim[,3] - rep.data$cont.sim[,4]
+#   write( print(xtable(summary( lm( q~r.diff ) ), digits=3, caption='Real UIP regression') ), 
+#          file = paste0( loc, 'reports/UIP.tex' ) )
+  write( print(xtable(summary( lm( e.e~r.diff ) ), digits=3, caption='Nominal UIP regression')), 
+         file = paste0( loc, 'reports/UIP_nom.tex' ) )
+  pdf(paste0( loc, 'charts/uip.pdf') )
+  plot( r.diff, e.e, xlab='Domestic bond premium', 
+        ylab='Expected exchange rate growth')
+  abline( 0, 1, lty=2, col='blue' )
+  dev.off()
+  
+  # Chart for home/total assets + a 45 degree line
   pdf(paste0( loc, 'charts/assets.pdf') )
-  plot( rep.data$endog.sim[,3] - rep.data$endog.sim[,4] * exp( rep.data$cont.sim[,13] ),
-        rep.data$endog.sim[,3], xlab='Total assets', ylab='Domestically held assets' )
+  tot.assets <- rep.data$endog.sim[,3] - rep.data$endog.sim[,4] * exp( rep.data$cont.sim[,13] )
+  dom.assets <- rep.data$endog.sim[,3]
+  plot( tot.assets, dom.assets, xlab='Total assets', 
+        ylab='Domestically held assets' )
   abline( 0, .5, lty=2, col='blue' )
+  fit <- lm( dom.assets ~ tot.assets )
+  abline( fit, lty=2, col='red' )
+  legend( 'topleft', c('22.5 degree line', 'Regression line'),
+          col=c('blue', 'red'), lty=2, bty='n' )
+  dev.off()
+  write( print( xtable( summary( fit ), digits=3, 
+                        caption = 'Regression of domestic on total assets' ) ), 
+         file = paste0( loc, 'reports/assets.tex' ) )
+
+  # Asset densities
+  pdf(paste0( loc, 'charts/debt_dist.pdf') )
+  plot( density( rep.data$endog.sim[,3] ), col='red', xlab='Domestic assets', ylab='Density' )
+  lines( density( rep.data$endog.sim[,4] ),col='blue' )
+  abline( v=mean(rep.data$endog.sim[,3]), lty=2, col='red' )
+  abline( v=mean(rep.data$endog.sim[,4]), lty=2, col='blue' )
+  legend( 'topright', 
+          c('Country 1','Country 2','Country 1 mean','Country 2 mean'), 
+          lty=c(1,1,2,2), col=c('red','blue','red','blue') )
   dev.off()
   
   # Add the log10 errors here
@@ -171,16 +207,22 @@ report.create <- function( sol, rep.data=NULL, loc=NULL ){
   write( paste0( 'Sample std dev & ', v.sd[1], ' & ', v.sd[2], ' & ', v.sd[3], ' & ', 
                  v.sd[4], ' \\\\ '), 
          file=out.file, append=T )
-  write( '\\end{tabular} \n\\caption{Model parameters} \n\\end{table} \n\n', file=out.file, append=T )
+  write( '\\end{tabular} \n\\caption{Model standard deviations} \n\\end{table} \n\n', file=out.file, append=T )
   
   ## Euler eq decomp
-  write( '\n***Euler equation decomposition to go here***\n', file=out.file, append=T)
-  
+#   write( '\\input{UIP.tex}', file=out.file, append=T )
+  report.chart.latex('../charts/uip.pdf', out.file)
+  write( '\\input{UIP_nom.tex}', file=out.file, append=T )
+  write( '\n\\clearpage\n', file=out.file, append=T )
+
   ## Charts
   report.chart.latex('../charts/err.pdf', out.file)
-  for( i in 1:13) report.chart.latex( paste0('../charts/chart', i, '.pdf'), out.file)
   report.chart.latex('../charts/assets.pdf', out.file)
-  
+  write( '\\input{assets.tex}', file=out.file, append=T )
+  report.chart.latex('../charts/debt_dist.pdf', out.file)
+  write( '\n\\clearpage\n', file=out.file, append=T )
+  for( i in 1:13) report.chart.latex( paste0('../charts/chart', i, '.pdf'), out.file)
+    
   ## Footer
   write( '\\end{document}', file=out.file, append=T )
   
