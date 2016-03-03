@@ -144,9 +144,9 @@ arma::rowvec contemp_eqns_irbc(
   double p1_bar = std::log( P1_bar ) ;
   double p2_bar = std::log( P2_bar ) ;
 
-  rowvec out( 9 ) ;
+  rowvec out( cont.n_elem ) ;
       // Initialize the output vector.  Defines the equations for:
-      //   c_1, c_2, x_11, x_22, x_12, x_21, p_1, p_2, p_12, p_21, e_12
+      //   c_1, c_2, r_1, r_2, x_11, x_22, x_12, x_21, p_1, p_2, p_12, p_21, e_12
 
   rowvec A = exp( exog.row(0) ) ;
   double A_1 = A(0) ;
@@ -178,20 +178,20 @@ arma::rowvec contemp_eqns_irbc(
     std::log( std::max( 
       A_1 * P1_bar - B_11 * std::exp( - r_1 ) + B_11_lag 
       + std::exp( e_12 ) * ( B_22 * std::exp( - r_2 )  - B_22_lag ),
-      1e-08 ) ) ;
+      1e-14 ) ) ;
       // Prices level in country 1
   double p_2  = - c_2 + 
-    std::log( std::max(
+    std::log( std::max( 
       A_2 * P2_bar - B_22 * std::exp( - r_2 ) + B_22_lag 
       + std::exp( - e_12 ) * ( B_11 * std::exp( - r_1 )  - B_11_lag ),
-      1e-08 ) ) ;
+      1e-14 ) ) ;
       // Price level in country 2
       // The (log) price levels impled by the budget constraints
   double x_11_new = c_1 + eta * ( p_1 - p1_bar + log_alpha ) ;
   double x_22_new = c_2 + eta * ( p_2 - p2_bar + log_alpha ) ;
       // The resulting factor demands from the remaining optimality condition
-  out << c_1 << c_2 << r_1 << r_2 << x_11_new << x_22_new << x_12 << x_21 << p_1 << p_2 
-                 << p_12 << p_21 << e_12 << endr ;
+  out << c_1 << c_2 << r_1 << r_2 << x_11_new << x_22_new << x_12 << x_21 
+             << p_1 << p_2 << p_12 << p_21 << e_12 << endr ;
       // The output vector    
   return( out ) ;
 }
