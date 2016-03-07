@@ -44,9 +44,9 @@ report.data <- function( sol ){
 ###### CHARTS #######
 cht.generic <- function( X, Y, xlab, ylab, file, loc ){
   pdf( paste0( loc, file, '.pdf' ) )
-  plot( X, Y, xlab=xlab, ylab=ylab )
+  plot( X, Y, xlab=xlab, ylab=ylab, pch=19, col= alpha('black', 0.15) )
   dev.off()
-  return( c( cov(X,Y), cor(X,Y), lm(Y~X)$coefficients['X'] ) )
+  return( c( cov(X,Y), cor(X,Y), lm(Y~X)$coefficients[-1] ) )
 }
   
 report.corr <- function( rep.data, loc=NULL ){
@@ -98,7 +98,7 @@ report.corr <- function( rep.data, loc=NULL ){
     out.df[i,3:5] <- cht.generic( X, Y, v.x.lab[i], v.y.lab[i], v.file[i], loc.chts )
   }
   
-  write( print(xtable(out.df, digits=c( NA, NA,NA, 6, 2, 2), 
+  write( print(xtable(out.df, digits=c( NA, NA,NA, 6, 2, 2 ), 
                       caption='Main cross-correlations of the model'), 
                include.rownames=F), file = paste0( loc, 'reports/correl.tex' ) )
   
@@ -112,7 +112,7 @@ report.corr <- function( rep.data, loc=NULL ){
          file = paste0( loc, 'reports/UIP_nom.tex' ) )
   pdf(paste0( loc, 'charts/uip.pdf') )
   plot( r.diff, e.e, xlab='Domestic bond premium', 
-        ylab='Expected exchange rate growth')
+        ylab='Expected exchange rate growth', pch=19, col= alpha('black', 0.15) )
   abline( 0, 1, lty=2, col='blue' )
   dev.off()
   
@@ -122,7 +122,7 @@ report.corr <- function( rep.data, loc=NULL ){
                     rep.data$endog.sim[,4] * exp( rep.data$cont.sim[,13] - rep.data$cont.sim[,4] )
   dom.assets <- rep.data$endog.sim[,3] * exp( - rep.data$cont.sim[,3] )
   plot( tot.assets, dom.assets, xlab='Total assets', 
-        ylab='Domestically held assets' )
+        ylab='Domestically held assets', pch=19, col= alpha('black', 0.15) )
   abline( 0, .5, lty=2, col='blue' )
   fit <- lm( dom.assets ~ tot.assets )
   abline( fit, lty=2, col='red' )
@@ -182,13 +182,13 @@ report.create <- function( sol, rep.data=NULL, loc=NULL ){
   
   
   ## Parameters table
-  write( '\\begin{table}[htb]\n\\centering\n\\begin{tabular}{cccccccc}', file=out.file, append=T )
-  write( '$\\alpha$ & $\\beta$ & $\\gamma$ & $\\eta$ & $\\rho$ & $\\sigma_\\epsilon$ & $\\bar{p}_1$ & $\\bar{p}_2$ \\\\', 
+  write( '\\begin{table}[htb]\n\\centering\n\\begin{tabular}{ccccccccc}', file=out.file, append=T )
+  write( '$\\alpha$ & $\\beta$ & $\\gamma$ & $\\eta$ & $\\rho$ & $\\sigma_\\epsilon$ & $\\bar{p}_1$ & $\\bar{p}_2$ & $N$ \\\\', 
          file=out.file, append=T )
   write( '\\hline', file=out.file, append=T )
   write( paste0( sol$params$alpha , ' & ', sol$params$betta , ' & ', sol$params$gamma , ' & ',
                  sol$params$eta , ' & ', sol$params$rho[1] , ' & ', sol$params$sig.eps[1] , ' & ',
-                 sol$params$P1.bar , ' & ', sol$params$P2.bar ), 
+                 sol$params$P1.bar , ' & ', sol$params$P2.bar, ' & ', sol$opt$N ), 
          file=out.file, append=T )
   write( '\\end{tabular} \n\\caption{Model parameters} \n\\end{table} \n\n', file=out.file, append=T )
 

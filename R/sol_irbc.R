@@ -112,8 +112,6 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
     X.cont <- cbind( X, cont.sim )
         # Compute the new simulation for the controls
     
-        #### ADD TOTAL EQUATION ERRORS HERE ####
-    
     while( i.c <= c.iter & c.diff > c.tol ){
       
       ### 2.3 Compute the **values** of the controls satisfying the
