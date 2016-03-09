@@ -165,8 +165,17 @@ arma::rowvec contemp_eqns_irbc(
   double x_21 = std::log( std::max( A_1 - std::exp( x_11 ), 1e-08 ) ) ;
   double x_12 = std::log( std::max( A_2 - std::exp( x_22 ), 1e-08 ) ) ;
       // Goods market clearing.  Guards to make sure that logs don't fail here.
-  double c_1 = alpha * x_11 + ( 1 - alpha ) * x_12 ;
-  double c_2 = alpha * x_22 + ( 1 - alpha ) * x_21 ;
+  double c_1, c_2 ;
+  if( eta == 1.0 ){
+    c_1 = alpha * x_11 + ( 1 - alpha ) * x_12 ;
+    c_2 = alpha * x_22 + ( 1 - alpha ) * x_21 ;
+  }else{
+    c_1 = eta / ( eta - 1 ) * std::log( alpha * std::exp( ( 1 - 1 / eta ) * x_11 ) +
+              ( 1 - alpha ) * std::exp( ( 1 - 1 / eta ) * x_12 ) ) ;
+    c_2 = eta / ( eta - 1 ) * std::log( alpha * std::exp( ( 1 - 1 / eta ) * x_22 ) +
+              ( 1 - alpha ) * std::exp( ( 1 - 1 / eta ) * x_21 ) ) ;
+  }
+  
       // Consumption aggregators
 
   double p_12 = log_1_alpha - log_alpha + p1_bar + ( x_11 - x_12 ) / eta ;

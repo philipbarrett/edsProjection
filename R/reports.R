@@ -69,7 +69,7 @@ report.corr <- function( rep.data, loc=NULL ){
   v.x.cont <- c( rep( F, 7 ), rep( T, 6 ) )
       # Whether the x index is a control or not
   v.x.idx <- c( rep( 1, 11 ), 13, 14 )
-  v.y.idx <- c( 9, 10, 1, 13, 14, 4, 15, 13, 14, 9, 10, 9, 10 )
+  v.y.idx <- c( 9, 10, 1, 13, 14, 3, 15, 13, 14, 9, 10, 9, 10 )
       # The indices      
   v.x.lab <- c( rep( 'Income growth', 7 ), rep( 'Consumption growth', 4), 
                 'Nom exchange rate growth', 'Real exchange rate growth' )
@@ -144,11 +144,25 @@ report.corr <- function( rep.data, loc=NULL ){
           lty=c(1,1,2,2), col=c('red','blue','red','blue') )
   dev.off()
   
-  # Add the log10 errors here
+  # The log10 errors
   pdf(paste0( loc, 'charts/err.pdf') )
   plot( 1:ncol(rep.data$err), log( apply( abs( rep.data$err ), 2, mean ), 10 ),
         xlab='Equation number', ylab='Log(10) mean absolute error' )
   dev.off()
+
+  # The relationship between the real exchange rate and consumptio n differentials
+  pdf(paste0( loc, 'charts/cons_diff.pdf') )
+  cons.diff <- ( rep.data$r.cont[, 3] - rep.data$cont.sim[, 3] ) - 
+                    ( rep.data$r.cont[, 4] - rep.data$cont.sim[, 4] )
+  q.gth <- rep.data$r.cont[, 14] - rep.data$cont.sim[, 14]
+  plot( cons.diff, q.gth, xlab='International consumption differential growth', 
+        ylab='Real exchange rate growth', pch=19, col= alpha('black', 0.15) )
+  fit.cons.diff <- lm( q.gth ~ cons.diff )
+  abline( fit.cons.diff, lty=2, col='red' )
+  dev.off()
+  write( print( xtable( summary( fit.cons.diff ), digits=3, 
+          caption = 'Regression of real exchange rate on international consumption differential' ) ), 
+          file = paste0( loc, 'reports/cons_diff.tex' ) )
   
   return( out.df )  
 }
@@ -210,8 +224,14 @@ report.create <- function( sol, rep.data=NULL, loc=NULL ){
          file=out.file, append=T )
   write( '\\end{tabular} \n\\caption{Model standard deviations} \n\\end{table} \n\n', file=out.file, append=T )
   
-  ## Euler eq decomp
+  ## Consumption differential
 #   write( '\\input{UIP.tex}', file=out.file, append=T )
+  report.chart.latex('../charts/cons_diff.pdf', out.file)
+  write( '\\input{cons_diff.tex}', file=out.file, append=T )
+  write( '\n\\clearpage\n', file=out.file, append=T )
+
+  ## UIP
+  #   write( '\\input{UIP.tex}', file=out.file, append=T )
   report.chart.latex('../charts/uip.pdf', out.file)
   write( '\\input{UIP_nom.tex}', file=out.file, append=T )
   write( '\n\\clearpage\n', file=out.file, append=T )

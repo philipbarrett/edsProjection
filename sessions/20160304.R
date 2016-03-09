@@ -1,5 +1,7 @@
-### A Very simple parameter setting
+library(xtable)
+library(scales)
 
+### A Very simple parameter setting
 params <- list( alpha = .75, gamma = 2, P1.bar=1, P2.bar=1, betta=.95,
                 rho=c(.25,.25), sig.eps=c(.03,.03), eta=1 )
 
@@ -17,7 +19,7 @@ opt <- list( lags=1, n.exog=2, n.endog=2, n.cont=13, N=1, cheby=FALSE,
              sr=TRUE, adapt.gain=TRUE, adapt.exp=15, image=TRUE,
              sym.reg=TRUE )
 
-coeff.init <- matrix( 0, 5, 2 )
+coeff.init <- matrix( .02, 5, 2 )
 coeff.init[2,] <- c( -.01,.02)
 coeff.init[3,] <- c( .02,-.01)
 coeff.init[4,] <- c( -.02,.01)
@@ -44,7 +46,7 @@ opt$sym.reg <- TRUE
 
 # Rough solution
 opt$iter <- 12
-sol.irbc.N.1.b <- sol.irbc.iterate( coeff.init, opt, params, coeff.init.cont, debug.flag = F )
+sol.irbc.N.1.b <- sol.irbc.iterate( coeff.init, opt, params, coeff.cont.init, debug.flag = F )
 
 # Finer solution
 opt$n.gain <- .02
@@ -63,7 +65,7 @@ coeff.cont.init[ c(1,2,4,7,11), ] <- sol.irbc.N.1.b$coeff.cont
 opt$l.sym.ave <- list( sym=list( c(2,4), c(3,6), c(7,11), c(8,13), c(9,12), c(10,15) ),
                         ave=c(1,5,14) )
 opt$iter <- 20
-# Try a nonlinear solution
+    # Try a nonlinear solution
 sol.irbc.N.1.b.nl <- sol.irbc.iterate( coeff.init, opt, params, coeff.cont.init )
 rep.irbc.N.1.b.nl <- report.data( sol.irbc.N.1.b.nl )
 report.create( sol.irbc.N.1.b.nl, rep.irbc.N.1.b.nl )
@@ -209,4 +211,58 @@ rep.irbc.7.b <- report.data( sol.irbc.7.b )
 report.create( sol.irbc.7.b, rep.irbc.7.b )
 rep.irbc.7.b.nl <- report.data( sol.irbc.7.b.nl )
 report.create( sol.irbc.7.b.nl, rep.irbc.7.b.nl )
+    # Report
+
+### Try eta > 1 ###
+params <- sol.irbc.N.1.b$params
+opt <- sol.irbc.N.1.b$opt
+opt$n.gain <- .025
+opt$iter <- 6
+params$eta <- 1.2
+sol.irbc.8.b <- sol.irbc.iterate( sol.irbc.N.1.b$coeff, opt, params, sol.irbc.N.1.b$coeff.cont )
+    # Linear solution
+opt$N <- 2
+coeff.init <- matrix( 0, 15, 2 )
+coeff.init[ c(1,2,4,7,11), ] <- sol.irbc.8.b$coeff
+coeff.cont.init <- matrix( 0, 15, 13 )
+coeff.cont.init[ c(1,2,4,7,11), ] <- sol.irbc.8.b$coeff.cont
+opt$l.sym.ave <- list( sym=list( c(2,4), c(3,6), c(7,11), c(8,13), c(9,12), c(10,15) ),
+                       ave=c(1,5,14) )
+opt$iter <- 30
+opt$n.gain <- .02
+sol.irbc.8.b.nl <- sol.irbc.iterate( coeff.init, opt, params, coeff.cont.init )
+    # The nonlinear solution
+rep.irbc.8.b <- report.data( sol.irbc.8.b )
+report.create( sol.irbc.8.b, rep.irbc.8.b )
+rep.irbc.8.b.nl <- report.data( sol.irbc.8.b.nl )
+report.create( sol.irbc.8.b.nl, rep.irbc.8.b.nl )
+    # Report
+
+### Increase eta a little more ###
+opt <- sol.irbc.8.b$opt
+opt$n.gain <- .02
+opt$iter <- 6
+params$eta <- 1.3
+sol.irbc.9.b <- sol.irbc.iterate( sol.irbc.8.b$coeff, opt, params, sol.irbc.8.b$coeff.cont )
+    # Linear solution
+opt$N <- 2
+opt$c.gain <- .1
+opt$c.iter <- 200
+    # Actually prevents divergence in the control solution!
+opt$adapt.exp <- 50
+    # Likewise
+coeff.init <- matrix( 0, 15, 2 )
+coeff.init[ c(1,2,4,7,11), ] <- sol.irbc.9.b$coeff
+coeff.cont.init <- matrix( 0, 15, 13 )
+coeff.cont.init[ c(1,2,4,7,11), ] <- sol.irbc.9.b$coeff.cont
+opt$l.sym.ave <- list( sym=list( c(2,4), c(3,6), c(7,11), c(8,13), c(9,12), c(10,15) ),
+                       ave=c(1,5,14) )
+opt$iter <- 25
+opt$n.gain <- .02
+sol.irbc.9.b.nl <- sol.irbc.iterate( coeff.init, opt, params, coeff.cont.init )
+    # The nonlinear solution
+rep.irbc.9.b <- report.data( sol.irbc.9.b )
+report.create( sol.irbc.9.b, rep.irbc.9.b )
+rep.irbc.9.b.nl <- report.data( sol.irbc.9.b.nl )
+report.create( sol.irbc.9.b.nl, rep.irbc.9.b.nl )
     # Report
