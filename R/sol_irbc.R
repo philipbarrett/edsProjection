@@ -50,6 +50,7 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
   
   #### Extract parameters ####
   rho <- params$rho
+  params$alphahat <- params$share ^ params$eta
   sig.eps <- params$sig.eps
   n.terms <- idx_count( N, n.exog + n.endog )
   
@@ -278,9 +279,9 @@ sol.irbc.check <- function( sol, params=NULL, opt=NULL ){
   if( is.null(opt) ) opt <- sol$opt
       # Assign the options and params when required
   
-  n.check <- 10000
+  n.check <- 20000
   n.burn <- 1000
-  n.quad <- 8
+  n.quad <- 7
   kappa <- 101
       # The check and burn numbers.  Also do high-precision integration.
   

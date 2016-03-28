@@ -135,10 +135,10 @@ arma::rowvec contemp_eqns_irbc(
 
 
   // Extract parameters
-  double alpha = params["alpha"] ;
+  double alphahat = params["alphahat"] ;
   double eta = params["eta"] ;
-  double log_alpha = std::log( alpha ) ;
-  double log_1_alpha = std::log( 1 - alpha ) ;
+  double log_alphahat = std::log( alphahat ) ;
+  double log_1_alphahat = std::log( 1 - alphahat ) ;
   double P1_bar = params["P1.bar"] ;
   double P2_bar = params["P2.bar"] ;
   double p1_bar = std::log( P1_bar ) ;
@@ -167,19 +167,19 @@ arma::rowvec contemp_eqns_irbc(
       // Goods market clearing.  Guards to make sure that logs don't fail here.
   double c_1, c_2 ;
   if( eta == 1.0 ){
-    c_1 = alpha * x_11 + ( 1 - alpha ) * x_12 ;
-    c_2 = alpha * x_22 + ( 1 - alpha ) * x_21 ;
+    c_1 = alphahat * x_11 + ( 1 - alphahat ) * x_12 ;
+    c_2 = alphahat * x_22 + ( 1 - alphahat ) * x_21 ;
   }else{
-    c_1 = eta / ( eta - 1 ) * std::log( alpha * std::exp( ( 1 - 1 / eta ) * x_11 ) +
-              ( 1 - alpha ) * std::exp( ( 1 - 1 / eta ) * x_12 ) ) ;
-    c_2 = eta / ( eta - 1 ) * std::log( alpha * std::exp( ( 1 - 1 / eta ) * x_22 ) +
-              ( 1 - alpha ) * std::exp( ( 1 - 1 / eta ) * x_21 ) ) ;
+    c_1 = eta / ( eta - 1 ) * std::log( alphahat * std::exp( ( 1 - 1 / eta ) * x_11 ) +
+              ( 1 - alphahat ) * std::exp( ( 1 - 1 / eta ) * x_12 ) ) ;
+    c_2 = eta / ( eta - 1 ) * std::log( alphahat * std::exp( ( 1 - 1 / eta ) * x_22 ) +
+              ( 1 - alphahat ) * std::exp( ( 1 - 1 / eta ) * x_21 ) ) ;
   }
   
       // Consumption aggregators
 
-  double p_12 = log_1_alpha - log_alpha + p1_bar + ( x_11 - x_12 ) / eta ;
-  double p_21 = log_1_alpha - log_alpha + p2_bar + ( x_22 - x_21 ) / eta ;
+  double p_12 = log_1_alphahat - log_alphahat + p1_bar + ( x_11 - x_12 ) / eta ;
+  double p_21 = log_1_alphahat - log_alphahat + p2_bar + ( x_22 - x_21 ) / eta ;
       // The cross-country price levels.  From factor optimality.
   double e_12 = .5 * ( p1_bar - p2_bar + p_12 - p_21 ) ;
       // The nominal exchange rate
@@ -196,8 +196,8 @@ arma::rowvec contemp_eqns_irbc(
       1e-14 ) ) ;
       // Price level in country 2
       // The (log) price levels impled by the budget constraints
-  double x_11_new = c_1 + eta * ( p_1 - p1_bar + log_alpha ) ;
-  double x_22_new = c_2 + eta * ( p_2 - p2_bar + log_alpha ) ;
+  double x_11_new = c_1 + eta * ( p_1 - p1_bar + log_alphahat ) ;
+  double x_22_new = c_2 + eta * ( p_2 - p2_bar + log_alphahat ) ;
       // The resulting factor demands from the remaining optimality condition
   out << c_1 << c_2 << r_1 << r_2 << x_11_new << x_22_new << x_12 << x_21 
              << p_1 << p_2 << p_12 << p_21 << e_12 << endr ;

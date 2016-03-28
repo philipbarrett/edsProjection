@@ -6,18 +6,6 @@
 # 29feb2016
 #########################################################################
 
-## TO DO:
-## 1. Create list with: endog sim, cont sim, error, expected conts, 
-##     lead conts [DONE]
-## 1a. Return the realized shocks for the exogenous variables.
-## 2. Generic charting function [DONE]
-## 3. Apply to a set of charts.  Save output.
-## 4. Compute the correlations
-## 5. Create latex tables of correlations
-## 6. Create latex table of parameters
-## 7. Create wrapper tex file and compile into a single latex report.
-## 8. Wrap for a single solution
-
 report.data <- function( sol ){
 # Computes the list of data used in the report
   opt <- sol$opt
@@ -196,13 +184,14 @@ report.create <- function( sol, rep.data=NULL, loc=NULL ){
   
   
   ## Parameters table
-  write( '\\begin{table}[htb]\n\\centering\n\\begin{tabular}{ccccccccc}', file=out.file, append=T )
-  write( '$\\alpha$ & $\\beta$ & $\\gamma$ & $\\eta$ & $\\rho$ & $\\sigma_\\epsilon$ & $\\bar{p}_1$ & $\\bar{p}_2$ & $N$ \\\\', 
+  write( '\\begin{table}[htb]\n\\centering\n\\begin{tabular}{cccccccccc}', file=out.file, append=T )
+  write( 'Share & $\\hat\\alpha$ & $\\beta$ & $\\gamma$ & $\\eta$ & $\\rho$ & $\\sigma_\\epsilon$ & $\\bar{p}_1$ & $\\bar{p}_2$ & $N$ \\\\', 
          file=out.file, append=T )
   write( '\\hline', file=out.file, append=T )
-  write( paste0( sol$params$alpha , ' & ', sol$params$betta , ' & ', sol$params$gamma , ' & ',
-                 sol$params$eta , ' & ', sol$params$rho[1] , ' & ', sol$params$sig.eps[1] , ' & ',
-                 sol$params$P1.bar , ' & ', sol$params$P2.bar, ' & ', sol$opt$N ), 
+  write( paste0( sol$params$share, ' & ', round( sol$params$alphahat, 3) , ' & ', sol$params$betta , ' & ', 
+                 sol$params$gamma , ' & ',sol$params$eta , ' & ', sol$params$rho[1] , ' & ', 
+                 sol$params$sig.eps[1] , ' & ', sol$params$P1.bar , ' & ', sol$params$P2.bar, ' & ',
+                 sol$opt$N ), 
          file=out.file, append=T )
   write( '\\end{tabular} \n\\caption{Model parameters} \n\\end{table} \n\n', file=out.file, append=T )
 
@@ -234,7 +223,15 @@ report.create <- function( sol, rep.data=NULL, loc=NULL ){
   #   write( '\\input{UIP.tex}', file=out.file, append=T )
   report.chart.latex('../charts/uip.pdf', out.file)
   write( '\\input{UIP_nom.tex}', file=out.file, append=T )
-  write( '\n\\clearpage\n', file=out.file, append=T )
+
+  ## Law of one price
+  loop <- log( sol$params$P1.bar ) - rep.data$cont.sim[,11 ] + 
+            log( sol$params$P2.bar ) - rep.data$cont.sim[,12 ]
+  write( print(xtable(summaryfunction( loop ), digits=6, 
+                    caption='Check on the law of one price (should all be zero)'), 
+             include.rownames=F), file = paste0( loc, 'reports/loop.tex' ) )
+  write( '\\input{loop.tex}', file=out.file, append=T )
+#   write( '\n\\clearpage\n', file=out.file, append=T )
 
   ## Charts
   report.chart.latex('../charts/err.pdf', out.file)
@@ -251,4 +248,18 @@ report.create <- function( sol, rep.data=NULL, loc=NULL ){
   system( paste0( 'pdflatex ', st.time, '.tex' ) )
 }
 
-
+summaryfunction= function (x){
+  if( is.numeric(x)!=TRUE) {stop("Supplied X is not numeric")}
+  mysummary = data.frame(
+    "Min." =as.numeric( min(x)),
+    "1st Qu." = quantile(x)[2],
+    "Median" = median(x),
+    "Mean" = mean(x),
+    "3rd Qu." = quantile(x)[4],
+    "Max." = max(x),
+    row.names=""
+    
+  )
+  names(mysummary) = c("Min.","1st Qu.","Median","Mean","3rd Qu.","Max.")
+  return( mysummary )
+}
