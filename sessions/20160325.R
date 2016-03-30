@@ -188,4 +188,106 @@ print( paste0( "err = ", round( max(apply( abs( rep.betta.2$err ), 2, mean )) * 
 l.betta[[4]] <- list( sol.1=sol.betta.1, rep.1=rep.betta.1, sol.2=sol.betta.2, rep.2=rep.betta.2 )
     # Assign to the list
 
-save( sol.base.1, sol.base.2, rep.base.1, rep.base.2, l.betta, file='betta_change.rdata')
+save( params, opt, sol.base.1, sol.base.2, rep.base.1, rep.base.2, l.betta, file='betta_change.rdata')
+
+### 2.4 betta = .925 ###
+params$betta <- .925
+    # Change parameters
+opt$l.sym.ave <- list( sym=list(c(2,3),c(4,5) ), ave=c(1) )
+opt$n.gain <- .1
+opt$iter <- 31
+opt$N <- 1
+sol.betta.1 <- sol.irbc.iterate( sol.base.1$coeff, opt, params, sol.base.1$coeff.cont )
+rep.betta.1 <- report.data( sol.betta.1 )
+print( paste0( "err = ", round( max(apply( abs( rep.betta.1$err ), 2, mean )) * 100, 4), "pp" ) )
+    # The linear solution
+opt$N <- 2
+coeff.init.2[ c(1,2,4,7,11), ] <- sol.betta.1$coeff
+coeff.cont.init.2[ c(1,2,4,7,11), ] <- sol.betta.1$coeff.cont
+opt$l.sym.ave <- list( sym=list( c(2,4), c(3,6), c(7,11), c(8,13), c(9,12), c(10,15) ),
+                       ave=c(1,5,14) )
+opt$iter <- 40
+opt$n.gain <- .1
+sol.betta.2 <- sol.irbc.iterate( coeff.init.2, opt, params, coeff.cont.init.2 )
+rep.betta.2 <- report.data( sol.betta.2 )
+print( paste0( "err = ", round( max(apply( abs( rep.betta.2$err ), 2, mean )) * 100, 4), "pp" ) )
+    # The nonlinear solution
+l.betta[[5]] <- list( sol.1=sol.betta.1, rep.1=rep.betta.1, sol.2=sol.betta.2, rep.2=rep.betta.2 )
+    # Assign to the list
+
+### 2.5 betta = .9 ###
+params$betta <- .9
+    # Change parameters
+opt$l.sym.ave <- list( sym=list(c(2,3),c(4,5) ), ave=c(1) )
+opt$n.gain <- .05
+opt$iter <- 26
+opt$N <- 1
+sol.betta.1 <- sol.irbc.iterate( l.betta[[5]]$sol.1$coeff, opt, params, l.betta[[5]]$sol.1$coeff.cont )
+rep.betta.1 <- report.data( sol.betta.1 )
+print( paste0( "err = ", round( max(apply( abs( rep.betta.1$err ), 2, mean )) * 100, 4), "pp" ) )
+    # The linear solution
+opt$N <- 2
+coeff.init.2[ c(1,2,4,7,11), ] <- sol.betta.1$coeff
+coeff.cont.init.2[ c(1,2,4,7,11), ] <- sol.betta.1$coeff.cont
+opt$l.sym.ave <- list( sym=list( c(2,4), c(3,6), c(7,11), c(8,13), c(9,12), c(10,15) ),
+                       ave=c(1,5,14) )
+opt$iter <- 65
+opt$n.gain <- .1
+sol.betta.2 <- sol.irbc.iterate( coeff.init.2, opt, params, coeff.cont.init.2 )
+rep.betta.2 <- report.data( sol.betta.2 )
+print( paste0( "err = ", round( max(apply( abs( rep.betta.2$err ), 2, mean )) * 100, 4), "pp" ) )
+    # The nonlinear solution
+l.betta[[6]] <- list( sol.1=sol.betta.1, rep.1=rep.betta.1, sol.2=sol.betta.2, rep.2=rep.betta.2 )
+    # Assign to the list
+
+### 2.5 betta = .85 ###
+params$betta <- .85
+    # Change parameters
+opt$l.sym.ave <- list( sym=list(c(2,3),c(4,5) ), ave=c(1) )
+opt$n.gain <- .075
+opt$iter <- 16
+opt$N <- 1
+sol.betta.1 <- sol.irbc.iterate( l.betta[[6]]$sol.1$coeff, opt, params, l.betta[[6]]$sol.1$coeff.cont )
+rep.betta.1 <- report.data( sol.betta.1 )
+print( paste0( "err = ", round( max(apply( abs( rep.betta.1$err ), 2, mean )) * 100, 4), "pp" ) )
+    # The linear solution
+opt$N <- 2
+coeff.init.2[ c(1,2,4,7,11), ] <- sol.betta.1$coeff
+coeff.cont.init.2[ c(1,2,4,7,11), ] <- sol.betta.1$coeff.cont
+opt$l.sym.ave <- list( sym=list( c(2,4), c(3,6), c(7,11), c(8,13), c(9,12), c(10,15) ),
+                       ave=c(1,5,14) )
+opt$iter <- 65
+opt$n.gain <- .1
+sol.betta.2 <- sol.irbc.iterate( coeff.init.2, opt, params, coeff.cont.init.2 )
+rep.betta.2 <- report.data( sol.betta.2 )
+print( paste0( "err = ", round( max(apply( abs( rep.betta.2$err ), 2, mean )) * 100, 4), "pp" ) )
+    # The nonlinear solution
+l.betta[[7]] <- list( sol.1=sol.betta.1, rep.1=rep.betta.1, sol.2=sol.betta.2, rep.2=rep.betta.2 )
+
+### 2.5 betta = .8 ###
+params$betta <- .8
+    # Change parameters
+opt$l.sym.ave <- list( sym=list(c(2,3),c(4,5) ), ave=c(1) )
+opt$n.gain <- .075
+opt$iter <- 14
+opt$N <- 1
+sol.betta.1 <- sol.irbc.iterate( l.betta[[7]]$sol.1$coeff, opt, params, l.betta[[7]]$sol.1$coeff.cont )
+rep.betta.1 <- report.data( sol.betta.1 )
+print( paste0( "err = ", round( max(apply( abs( rep.betta.1$err ), 2, mean )) * 100, 4), "pp" ) )
+    # The linear solution
+opt$N <- 2
+coeff.init.2[ c(1,2,4,7,11), ] <- sol.betta.1$coeff
+coeff.cont.init.2[ c(1,2,4,7,11), ] <- sol.betta.1$coeff.cont
+opt$l.sym.ave <- list( sym=list( c(2,4), c(3,6), c(7,11), c(8,13), c(9,12), c(10,15) ),
+                       ave=c(1,5,14) )
+opt$iter <- 65
+opt$n.gain <- .1
+sol.betta.2 <- sol.irbc.iterate( coeff.init.2, opt, params, coeff.cont.init.2 )
+rep.betta.2 <- report.data( sol.betta.2 )
+print( paste0( "err = ", round( max(apply( abs( rep.betta.2$err ), 2, mean )) * 100, 4), "pp" ) )
+    # The nonlinear solution
+l.betta[[8]] <- list( sol.1=sol.betta.1, rep.1=rep.betta.1, sol.2=sol.betta.2, rep.2=rep.betta.2 )
+
+save( params, opt, sol.base.1, sol.base.2, rep.base.1, rep.base.2, l.betta, file='betta_change.rdata')
+
+
