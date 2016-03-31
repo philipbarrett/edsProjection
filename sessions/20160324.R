@@ -370,7 +370,7 @@ print( paste0( "err = ", round( max(apply( abs( rep.rho.2$err ), 2, mean )) * 10
 l.rho[[10]] <- list( sol.1=sol.rho.1, rep.1=rep.rho.1, sol.2=sol.rho.2, rep.2=rep.rho.2 )
     # Assign to the list                        
 
-save( l.rho, file='rho_change.rdata' )
+save( l.rho, file='~/Dropbox/outsize/irbc/rho_change.rdata' )
 
 ### 2.11 rho = .6 ###
 params$rho <- c(.6, .6 )
@@ -486,7 +486,7 @@ l.rho[[14]] <- list( sol.1=sol.rho.1, rep.1=rep.rho.1, sol.2=sol.rho.2, rep.2=re
 # report.create( sol.rho.2, rep.rho.2 )
 
 
-save( l.rho, file='rho_change.rdata' )
+save( l.rho, file='~/Dropbox/outsize/irbc/rho_change.rdata' )
 
 ### 2.15 rho = .8 ###
 

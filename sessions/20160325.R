@@ -83,7 +83,7 @@ sol.base.2 <- sol.irbc.iterate( coeff.init.2, opt, params, coeff.cont.init.2 )
 rep.base.2 <- report.data( sol.base.2 )
 print( paste0( "err = ", round( max(apply( abs( rep.base.2$err ), 2, mean )) * 100, 4), "pp" ) )
 
-save( sol.base.1, sol.base.2, rep.base.1, rep.base.2, file='betta_change.rdata')
+save( sol.base.1, sol.base.2, rep.base.1, rep.base.2, file='~/Dropbox/outsize/irbc/betta_change.rdata')
 
 ##### 2. TRY CHANGING BETTA #####
 l.betta <- list()
@@ -188,7 +188,7 @@ print( paste0( "err = ", round( max(apply( abs( rep.betta.2$err ), 2, mean )) * 
 l.betta[[4]] <- list( sol.1=sol.betta.1, rep.1=rep.betta.1, sol.2=sol.betta.2, rep.2=rep.betta.2 )
     # Assign to the list
 
-save( params, opt, sol.base.1, sol.base.2, rep.base.1, rep.base.2, l.betta, file='betta_change.rdata')
+save( params, opt, sol.base.1, sol.base.2, rep.base.1, rep.base.2, l.betta, file='~/Dropbox/outsize/irbc/betta_change.rdata')
 
 ### 2.4 betta = .925 ###
 params$betta <- .925
@@ -288,6 +288,6 @@ print( paste0( "err = ", round( max(apply( abs( rep.betta.2$err ), 2, mean )) * 
     # The nonlinear solution
 l.betta[[8]] <- list( sol.1=sol.betta.1, rep.1=rep.betta.1, sol.2=sol.betta.2, rep.2=rep.betta.2 )
 
-save( params, opt, sol.base.1, sol.base.2, rep.base.1, rep.base.2, l.betta, file='betta_change.rdata')
+save( params, opt, sol.base.1, sol.base.2, rep.base.1, rep.base.2, l.betta, file='~/Dropbox/outsize/irbc/betta_change.rdata')
 
 
