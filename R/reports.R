@@ -44,44 +44,56 @@ report.corr <- function( rep.data, loc=NULL ){
   loc.chts <- paste0( loc, 'charts/' )
   
   ## Create real exchange rate ##
-  rep.data$cont.sim <- cbind( rep.data$cont.sim, rep.data$cont.sim[,13] - 
-                                rep.data$cont.sim[,9] + rep.data$cont.sim[,10] )
+  rep.data$cont.sim <- cbind( rep.data$cont.sim, 
+                        rep.data$cont.sim[,13] - rep.data$cont.sim[,9] + rep.data$cont.sim[,10],
+                        rep.data$cont.sim[,4] + rep.data$e.cont[,13] - rep.data$cont.sim[,13])
   rep.data$r.cont <- cbind( rep.data$r.cont, 
-                        rep.data$r.cont[,13] - rep.data$r.cont[,9] + rep.data$r.cont[,10],
-                        rep.data$cont.sim[,4] + rep.data$e.cont[,13] - rep.data$cont.sim[,13] )
+                        rep.data$r.cont[,13] - rep.data$r.cont[,9] + rep.data$r.cont[,10] )
       # Create real exchange rates and add the foreign one mult by expected
-      # appreciation.  Also total assets
+      # appreciation.
   
-  v.y.gth <- c( rep( T, 5 ), F, F, rep( T, 6 ) )
-      # Indicator for growth for Y
-  v.x.cont <- c( rep( F, 7 ), rep( T, 6 ) )
+  v.x.gth <- c( rep( T, 13 ), rep( F, 3 ) )
+  v.y.gth <- c( rep( T, 5 ), F, F, rep( T, 6 ), rep(F,3) )
+      # Indicator for growth for X & Y
+  v.x.cont <- c( rep( F, 7 ), rep( T, 6 ), F, T, T )
       # Whether the x index is a control or not
-  v.x.idx <- c( rep( 1, 11 ), 13, 14 )
-  v.y.idx <- c( 9, 10, 1, 13, 14, 3, 15, 13, 14, 9, 10, 9, 10 )
-      # The indices      
-  v.x.lab <- c( rep( 'Income growth', 7 ), rep( 'Consumption growth', 4), 
-                'Nom exchange rate growth', 'Real exchange rate growth' )
+  v.x.idx <- c( rep( 1, 11 ), 13, 14, rep(1,3) )
+  v.y.idx <- c( 9, 10, 1, 13, 14, 3, 15, 13, 14, 9, 10, 9, 10, 1, 13, 14 )
+      # The indices
+  v.x.lab <- c( rep( 'Technology growth', 7 ), rep( 'Consumption growth', 4), 
+                'Nom exchange rate growth', 'Real exchange rate growth',
+                'Technology', rep( 'Consumption', 2 ) )
       # The x labels
   v.y.lab <- c( 'Domestic inflation', 'Foreign inflation', 'Consumption growth',
                 'Nom ex rate growth', 'Real ex rate growth',
                 'Log dom int rate', 'Log: (for int) * (NER gth)', 
                 'Nom ex rate gth', 'Real ex rate gth', 'Dom inflation',
-                'For inflation', 'Dom inflation', 'For inflation' )
+                'For inflation', 'Dom inflation', 'For inflation',
+                'Consumption', 'Nom ex rate', 'Real ex rate' )
       # The y labels
-  v.file <- paste0( 'chart', 1:13 )
+  v.file <- paste0( 'chart', 1:16 )
       # The vector of file names
   out.df <- data.frame( x = v.x.lab, y = v.y.lab, cov=NA, cor=NA, reg=NA )
       # Empty dataframe
-  for( i in 1:13 ){
-    if( v.x.cont[i] ){
-      X <- rep.data$r.cont[, v.x.idx[i]] - rep.data$cont.sim[, v.x.idx[i]]
+  for( i in 1:16 ){
+    if( v.x.gth[i] ){
+      if( v.x.cont[i] ){
+        X <- rep.data$r.cont[, v.x.idx[i]] - rep.data$cont.sim[, v.x.idx[i]]
+      }else{
+        X <- rep.data$r.exog[, v.x.idx[i]] - rep.data$endog.sim[, v.x.idx[i]]
+      }
     }else{
-      X <- rep.data$r.exog[, v.x.idx[i]] - rep.data$endog.sim[, v.x.idx[i]]
+      if( v.x.cont[i] ){
+        X <- rep.data$cont.sim[, v.x.idx[i]]
+      }else{
+        X <- rep.data$endog.sim[, v.x.idx[i]]
+      }
     }
+    
     if( v.y.gth[i] ){
       Y <- rep.data$r.cont[, v.y.idx[i]] - rep.data$cont.sim[, v.y.idx[i]]
     }else{
-      Y <- rep.data$r.cont[, v.y.idx[i]]
+      Y <- rep.data$cont.sim[, v.y.idx[i]]
     }
     out.df[i,3:5] <- cht.generic( X, Y, v.x.lab[i], v.y.lab[i], v.file[i], loc.chts )
   }
@@ -106,9 +118,9 @@ report.corr <- function( rep.data, loc=NULL ){
   
   # Chart for home/total assets + a 45 degree line
   pdf(paste0( loc, 'charts/assets.pdf') )
-  tot.assets <- rep.data$endog.sim[,3] * exp( - rep.data$cont.sim[,3] ) -
-                    rep.data$endog.sim[,4] * exp( rep.data$cont.sim[,13] - rep.data$cont.sim[,4] )
-  dom.assets <- rep.data$endog.sim[,3] * exp( - rep.data$cont.sim[,3] )
+  tot.assets <- rep.data$endog.sim[,3] -
+                    rep.data$endog.sim[,4] * exp( rep.data$cont.sim[,13] )
+  dom.assets <- rep.data$endog.sim[,3] # * exp( - rep.data$cont.sim[,3] )
   plot( tot.assets, dom.assets, xlab='Total assets', 
         ylab='Domestically held assets', pch=19, col= alpha('black', 0.15) )
   abline( 0, .5, lty=2, col='blue' )
@@ -120,6 +132,19 @@ report.corr <- function( rep.data, loc=NULL ){
   write( print( xtable( summary( fit ), digits=3, 
                         caption = 'Regression of domestic on total assets' ) ), 
          file = paste0( loc, 'reports/assets.tex' ) )
+  
+  asset.ratio <- rep.data$endog.sim[,3] / ( rep.data$endog.sim[,3] - rep.data$endog.sim[,4] * exp( rep.data$cont.sim[,13] ) )
+  asset.diff <- rep.data$endog.sim[,3] + rep.data$endog.sim[,4] * exp( rep.data$cont.sim[,13] )
+  write( print( xtable( summaryfunction( asset.ratio[abs(asset.ratio)<1000] ), digits=3, 
+                      caption = 'Ratio of home to total assets' ) ), 
+       file = paste0( loc, 'reports/assetRatio.tex' ) )
+      # Drop the outliers for the asset ratio
+  write( print( xtable( summaryfunction( asset.diff ), digits=3, 
+                      caption = 'Difference between home and foreign assets' ) ), 
+       file = paste0( loc, 'reports/assetDiff.tex' ) )
+  write( print( xtable( summaryfunction( tot.assets ), digits=3, 
+                      caption = 'Total assets' ) ), 
+       file = paste0( loc, 'reports/assetTot.tex' ) )
 
   # Asset densities
   pdf(paste0( loc, 'charts/debt_dist.pdf') )
@@ -219,27 +244,32 @@ report.create <- function( sol, rep.data=NULL, loc=NULL ){
   write( '\\input{cons_diff.tex}', file=out.file, append=T )
   write( '\n\\clearpage\n', file=out.file, append=T )
 
+  ## Law of one price
+  loop <- log( sol$params$P1.bar ) - rep.data$cont.sim[,11 ] + 
+    log( sol$params$P2.bar ) - rep.data$cont.sim[,12 ]
+  write( print(xtable(summaryfunction( loop ), digits=6, 
+                      caption='Check on the law of one price (should all be zero)'), 
+               include.rownames=F), file = paste0( loc, 'reports/loop.tex' ) )
+  write( '\\input{loop.tex}', file=out.file, append=T )
+
   ## UIP
   #   write( '\\input{UIP.tex}', file=out.file, append=T )
   report.chart.latex('../charts/uip.pdf', out.file)
   write( '\\input{UIP_nom.tex}', file=out.file, append=T )
 
-  ## Law of one price
-  loop <- log( sol$params$P1.bar ) - rep.data$cont.sim[,11 ] + 
-            log( sol$params$P2.bar ) - rep.data$cont.sim[,12 ]
-  write( print(xtable(summaryfunction( loop ), digits=6, 
-                    caption='Check on the law of one price (should all be zero)'), 
-             include.rownames=F), file = paste0( loc, 'reports/loop.tex' ) )
-  write( '\\input{loop.tex}', file=out.file, append=T )
+
 #   write( '\n\\clearpage\n', file=out.file, append=T )
 
   ## Charts
   report.chart.latex('../charts/err.pdf', out.file)
   report.chart.latex('../charts/assets.pdf', out.file)
   write( '\\input{assets.tex}', file=out.file, append=T )
+  write( '\\input{assetRatio.tex}', file=out.file, append=T )
+  write( '\\input{assetDiff.tex}', file=out.file, append=T )
+  write( '\\input{assetTot.tex}', file=out.file, append=T )
   report.chart.latex('../charts/debt_dist.pdf', out.file)
   write( '\n\\clearpage\n', file=out.file, append=T )
-  for( i in 1:13) report.chart.latex( paste0('../charts/chart', i, '.pdf'), out.file)
+  for( i in 1:16) report.chart.latex( paste0('../charts/chart', i, '.pdf'), out.file)
     
   ## Footer
   write( '\\end{document}', file=out.file, append=T )
