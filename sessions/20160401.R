@@ -224,7 +224,6 @@ l.eta[[7]] <- list( sol.2=sol.eta.2, rep.2=rep.eta.2 )
 ### 2.5 eta = 1.9 ###
 params$eta <- 2
     # Change parameters
-opt$n.gain <- .01
 sol.eta.2 <- sol.irbc.iterate( l.eta[[7]]$sol.2$coeff, opt, params, l.eta[[7]]$sol.2$coeff.cont )
 rep.eta.2 <- report.data( sol.eta.2 )
 print( paste0( "err = ", round( max(apply( abs( rep.eta.2$err ), 2, mean )) * 100, 4), "pp" ) )
