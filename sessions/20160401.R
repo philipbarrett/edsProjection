@@ -168,33 +168,67 @@ print( paste0( "err = ", round( max(apply( abs( rep.eta.2$err ), 2, mean )) * 10
 l.eta[[3]] <- list( sol.1=sol.eta.1, rep.1=rep.eta.1, sol.2=sol.eta.2, rep.2=rep.eta.2 )
     # Assign to the list
 
-### 2.2 eta = 1.75 ###
-params$eta <- 1.75
+### 2.2 eta = 1.7 ###
+params$eta <- 1.7
     # Change parameters
-opt$l.sym.ave <- list( sym=list(c(2,3),c(4,5) ), ave=c(1) )
-opt$n.gain <- .01
-opt$k.gain <- .05
-opt$iter <- 4
-opt$N <- 1
-# sol.eta.1 <- sol.irbc.iterate( l.eta[[3]]$sol.1$coeff, opt, params, l.eta[[3]]$sol.1$coeff.cont )
-# rep.eta.1 <- report.data( sol.eta.1 )
-# print( paste0( "err = ", round( max(apply( abs( rep.eta.1$err ), 2, mean )) * 100, 4), "pp" ) )
-#     # The linear solution
-### Linear solution fails
+  ## NB: Linear solution is a disaster
 opt$N <- 2
-coeff.init.2 <- l.eta[[3]]$sol.2$coeff
-coeff.cont.init.2 <- l.eta[[3]]$sol.2$coeff.cont
-opt$l.sym.ave <- list( sym=list( c(2,4), c(3,6), c(7,11), c(8,13), c(9,12), c(10,15) ),
-                       ave=c(1,5,14) )
-opt$iter <- 40
-opt$n.gain <- .075
-opt$k.gain <- .05
+opt$adapt.gain <- FALSE
+opt$n.gain <- .02
+opt$c.gain <- .25
+opt$c.iter <- 100
+opt$c.tol <- 1e-09
+opt$k.gain <- .5
+opt$k.iter <- 40
+opt$k.tol <- 1e-07
+opt$iter <- 22
 opt$tol <- 1e-06
-sol.eta.2 <- sol.irbc.iterate( coeff.init.2, opt, params, coeff.cont.init.2 )
+sol.eta.2 <- sol.irbc.iterate( l.eta[[3]]$sol.2$coeff, opt, params, l.eta[[3]]$sol.2$coeff.cont )
 rep.eta.2 <- report.data( sol.eta.2 )
 print( paste0( "err = ", round( max(apply( abs( rep.eta.2$err ), 2, mean )) * 100, 4), "pp" ) )
     # The nonlinear solution
 l.eta[[4]] <- list( sol.2=sol.eta.2, rep.2=rep.eta.2 )
-# Assign to the list
+    # Assign to the list
+
+### 2.3 eta = 1.75 ###
+params$eta <- 1.75
+    # Change parameters
+opt$k.iter <- 40
+opt$iter <- 37
+sol.eta.2 <- sol.irbc.iterate( l.eta[[4]]$sol.2$coeff, opt, params, l.eta[[4]]$sol.2$coeff.cont )
+rep.eta.2 <- report.data( sol.eta.2 )
+print( paste0( "err = ", round( max(apply( abs( rep.eta.2$err ), 2, mean )) * 100, 4), "pp" ) )
+    # The nonlinear solution
+l.eta[[5]] <- list( sol.2=sol.eta.2, rep.2=rep.eta.2 )
+
+### 2.4 eta = 1.8 ###
+params$eta <- 1.8
+    # Change parameters
+opt$iter <- 60
+sol.eta.2 <- sol.irbc.iterate( l.eta[[5]]$sol.2$coeff, opt, params, l.eta[[5]]$sol.2$coeff.cont )
+rep.eta.2 <- report.data( sol.eta.2 )
+print( paste0( "err = ", round( max(apply( abs( rep.eta.2$err ), 2, mean )) * 100, 4), "pp" ) )
+    # The nonlinear solution
+l.eta[[6]] <- list( sol.2=sol.eta.2, rep.2=rep.eta.2 )
+
+### 2.5 eta = 1.9 ###
+params$eta <- 1.9
+    # Change parameters
+opt$k.tol <- 1e-06
+sol.eta.2 <- sol.irbc.iterate( l.eta[[6]]$sol.2$coeff, opt, params, l.eta[[6]]$sol.2$coeff.cont )
+rep.eta.2 <- report.data( sol.eta.2 )
+print( paste0( "err = ", round( max(apply( abs( rep.eta.2$err ), 2, mean )) * 100, 4), "pp" ) )
+    # The nonlinear solution
+l.eta[[7]] <- list( sol.2=sol.eta.2, rep.2=rep.eta.2 )
+
+### 2.5 eta = 1.9 ###
+params$eta <- 2
+    # Change parameters
+opt$n.gain <- .01
+sol.eta.2 <- sol.irbc.iterate( l.eta[[7]]$sol.2$coeff, opt, params, l.eta[[7]]$sol.2$coeff.cont )
+rep.eta.2 <- report.data( sol.eta.2 )
+print( paste0( "err = ", round( max(apply( abs( rep.eta.2$err ), 2, mean )) * 100, 4), "pp" ) )
+    # The nonlinear solution
+l.eta[[8]] <- list( sol.2=sol.eta.2, rep.2=rep.eta.2 )
 
 save( l.eta, sol.base.1, sol.base.2, rep.base.1, rep.base.2, file='~/Dropbox/outsize/irbc/eta_change.rdata')
