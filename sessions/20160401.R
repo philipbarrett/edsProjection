@@ -4,6 +4,12 @@ library(scales)
 library(edsProjection)
 setwd("~/code/2016/edsProjection")
 
+
+
+######### NEED TO RERUN THIS WITH THE WIDER BOUNDS ON B #########
+# eg. upper <- c(  3 * sd.x, rep( 1, 2 ) )
+
+
 ##### 0. INITIALIZATION #####
 
 ### 0.1 Baseline parameters ###
@@ -11,7 +17,8 @@ params <- list( share = .75, gamma = 2, P1.bar=1, P2.bar=1, betta=.95,
                 rho=c(.5,.5), sig.eps=c(.01,.01), eta=1 )
 
 sd.x <- params$sig.eps / sqrt( ( 1 - params$rho ^ 2 ) )
-upper <- c(  3 * sd.x, rep( .5, 2 ) )
+# upper <- c(  3 * sd.x, rep( .5, 2 ) )  #  Old version
+upper <- c(  3 * sd.x, rep( 1, 2 ) )  #  New version
 lower <- -upper
 
 opt <- list( lags=1, n.exog=2, n.endog=2, n.cont=13, N=1, cheby=FALSE,
@@ -87,8 +94,6 @@ save( sol.base.1, sol.base.2, rep.base.1, rep.base.2, file='~/Dropbox/outsize/ir
 
 ##### 2. TRY CHANGING ETA #####
 l.eta <- list()
-
-#### NEED TO RERUN THIS WITH THE WIDER BOUNDS ON B ####
 
 ### 2.1 eta = 1.25 ###
 params$eta <- 1.25

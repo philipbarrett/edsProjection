@@ -36,7 +36,10 @@ key.stats.sol <- function( rep.data ){
   names(home.bias.coeff) <- NA
   dom.mean <- mean( dom.assets )
   for.mean <- mean( for.assets )
-      # The statistics for home bias
+  abs.tot.assets <- mean( abs( tot.assets ) )
+  asset.diff <- mean( rep.data$endog.sim[,3] * exp( - rep.data$cont.sim[,3] ) +
+    rep.data$endog.sim[,4] * exp( rep.data$cont.sim[,13] - rep.data$cont.sim[,4] ) )
+      # The statistics for home bias.  Last one is difference in assets (sum as use neg've for assets)
   
   e.e <- rep.data$e.cont[,13] - rep.data$cont.sim[,13]
   r.diff <- rep.data$cont.sim[,3] - rep.data$cont.sim[,4]
@@ -47,7 +50,7 @@ key.stats.sol <- function( rep.data ){
   
   return( c( cov.q.c=cov.q.c, cor.q.c=cor.q.c, cov.q.c.gth=cov.q.c.gth, cor.q.c.gth=cor.q.c.gth, 
              home.bias.coeff=home.bias.coeff, dom.mean=dom.mean, for.mean=for.mean, 
-             uip.coeff=uip.coeff, err.pp=err ) )
+             uip.coeff=uip.coeff, err.pp=err, asset.diff=asset.diff, abs.tot.assets=abs.tot.assets ) )
 }
 
 key.stats <- function( l.sol, sol.base, base.rep, st.param ){
