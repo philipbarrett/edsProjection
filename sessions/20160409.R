@@ -1,4 +1,4 @@
-
+rm(list=ls())
 setwd("/home/philip/Dropbox/2016/Research/IRBC puzzles/reports/param_experiments")
 
 plot.stat <- function( st.param, stats, st.var, y.lab, file.name ){
@@ -24,18 +24,19 @@ stats <- key.stats( l.eta, sol.base.2, rep.base.2, 'eta' )
 sapply( 1:length(v.st.var), function(i) plot.stat( 'eta', stats, v.st.var[i], 
                                                    v.y.lab[i], v.file.name[i] ) )
 
+rm(l.eta)
 load('/home/philip/Dropbox/outsize/irbc/gamma_change.rdata')
 stats <- key.stats( l.gamma, sol.base.2, rep.base.2, 'gamma' )
 sapply( 1:length(v.st.var), function(i) plot.stat( 'gamma', stats, v.st.var[i], 
                                                    v.y.lab[i], v.file.name[i] ) )
 
-
+rm(l.gamma)
 load('/home/philip/Dropbox/outsize/irbc/keyStats.rdata')
 load('/home/philip/Dropbox/outsize/irbc/rho_change.rdata')
 stats <- key.stats( l.rho, sol.base.2, rep.base.2, 'rho' )
 sapply( 1:length(v.st.var), function(i) plot.stat( 'rho', stats, v.st.var[i], 
                                                    v.y.lab[i], v.file.name[i] ) )
-
+rm(l.rho)
 load('/home/philip/Dropbox/outsize/irbc/betta_change.rdata')
 stats <- key.stats( lapply( c(1:3,5:8), function(i) l.betta[[i]] ), sol.base.2, rep.base.2, 'betta' )
 sapply( 1:length(v.st.var), function(i) plot.stat( 'betta', stats, v.st.var[i], 

@@ -60,9 +60,9 @@ report.corr <- function( rep.data, loc=NULL ){
   v.x.idx <- c( rep( 1, 11 ), 13, 14, rep(1,3) )
   v.y.idx <- c( 9, 10, 1, 13, 14, 3, 15, 13, 14, 9, 10, 9, 10, 1, 13, 14 )
       # The indices
-  v.x.lab <- c( rep( 'Technology growth', 7 ), rep( 'Consumption growth', 4), 
+  v.x.lab <- c( rep( 'Productivity growth', 7 ), rep( 'Consumption growth', 4), 
                 'Nom exchange rate growth', 'Real exchange rate growth',
-                'Technology', rep( 'Consumption', 2 ) )
+                'Productivity', rep( 'Consumption', 2 ) )
       # The x labels
   v.y.lab <- c( 'Domestic inflation', 'Foreign inflation', 'Consumption growth',
                 'Nom ex rate growth', 'Real ex rate growth',
@@ -108,7 +108,12 @@ report.corr <- function( rep.data, loc=NULL ){
   r.diff <- rep.data$cont.sim[,3] - rep.data$cont.sim[,4]
 #   write( print(xtable(summary( lm( q~r.diff ) ), digits=3, caption='Real UIP regression') ), 
 #          file = paste0( loc, 'reports/UIP.tex' ) )
-  write( print(xtable(summary( lm( e.e~r.diff ) ), digits=3, caption='Nominal UIP regression')), 
+
+  lm.e.e.r.diff <- lm( e.e~r.diff )
+  lm.e.e.r.diff.1 <- lm( e.e~r.diff + offset( r.diff ) )
+      # UIP regressions (second tests if r.diff coeff is 1)
+
+  write( print(xtable(summary( lm.e.e.r.diff.1 ), digits=3, caption='Nominal UIP regression (test for $\\beta=1$)')), 
          file = paste0( loc, 'reports/UIP_nom.tex' ) )
   pdf(paste0( loc, 'charts/uip.pdf') )
   plot( r.diff, e.e, xlab='Domestic bond premium', 

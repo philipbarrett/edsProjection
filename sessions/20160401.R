@@ -226,7 +226,7 @@ print( paste0( "err = ", round( max(apply( abs( rep.eta.2$err ), 2, mean )) * 10
     # The nonlinear solution
 l.eta[[7]] <- list( sol.2=sol.eta.2, rep.2=rep.eta.2 )
 
-### 2.5 eta = 1.9 ###
+### 2.5 eta = 2 ###
 params$eta <- 2
     # Change parameters
 sol.eta.2 <- sol.irbc.iterate( l.eta[[7]]$sol.2$coeff, opt, params, l.eta[[7]]$sol.2$coeff.cont )
