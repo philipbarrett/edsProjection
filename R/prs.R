@@ -4,18 +4,27 @@
 
 ## To do: Turn this into a function
 
-prs.sol.sim <- function( n.pds, n.burn, params, opt ){
+prs.sol.sim <- function( n.pds, n.sample, n.burn, params ){
 # Produce a simulation from the perfect risk-sharing problem
   
-  alpha <- params$alpha
+  alpha <- params$share
   eta <- params$eta
   betta <- params$betta
   p1.bar <- log( params$P1.bar )
   p2.bar <- log( params$P2.bar )
       # Extract parameters
+  n.sim <- n.pds * n.sample + n.burn
   
-  a <- cbind( ar1_sim( n.pds + n.burn, params$rho[1], params$sig.eps[1] ),
-              ar1_sim( n.pds + n.burn, params$rho[2], params$sig.eps[2] ) )
+  a.1 <- ar1_sim( n.sim, params$rho[1], params$sig.eps[1] )
+  a.2 <- ar1_sim( n.sim, params$rho[2], params$sig.eps[2] )
+      # Full technology simulation
+  a <- matrix( NA, n.pds, 2 )
+  idx <- n.burn + 1:n.pds * n.sample
+      # Indices of the subsample
+  a[,1] <- a.1[idx]
+  a[,2] <- a.2[idx]
+#   a <- cbind( ar1_sim( n.pds + n.burn, params$rho[1], params$sig.eps[1] ),
+#               ar1_sim( n.pds + n.burn, params$rho[2], params$sig.eps[2] ) )
       # The vector of (log) shocks
   x.11 <- log( alpha ) + a[,1]
   x.12 <- log( 1 - alpha ) + a[,2]
@@ -38,26 +47,12 @@ prs.sol.sim <- function( n.pds, n.burn, params, opt ){
   r.2 <- c( -log(betta) + params$gamma * ( c.2[-1] - c.2[-length(c.2)] ) + 
               p.2[-1] - p.2[-length(p.1)], NA )
       # Nominal interest rates
-#   B.11 <- rep( 1, n.burn + n.pds )
-#   B.22 <- rep( 1, n.burn + n.pds )
-#       # Initialize the simulation for B
-#   for( i in 2:(n.burn+n.pds)){
-#     B.11[i] <- ( exp(a[i,1]) + ( 1 - exp( e.12[i] ) ) * B.11[i-1] - 
-#                    exp( p.1[i] + c.1[i] ) ) / 
-#                       ( exp( - r.1[i] ) - exp( e.12[i] - r.2[i] ) )
-#     B.22[i] <- ( exp(a[i,2]) + ( 1 - exp( - e.12[i] ) ) * B.22[i-1] - 
-#                    exp( p.2[i] + c.2[i] ) ) /
-#                   ( exp( - r.2[i] ) - exp( - e.12[i] - r.1[i] ) )
-#   }
-#       # Compute debt holdings from the budget constraint (and B.11=B.22)
-  
-  states.t <- cbind( a ) #, B.11, B.22 )
-  states <- cbind( states.t, rbind( rep(NA,2), states.t[-nrow(states.t),] ) )
+  states <- cbind( a, a.1[idx-1], a.2[idx-1] )
       # Forming the states with lags
   cont <- cbind( c.1, c.2, r.1, r.2, x.11, x.22, x.12, x.21, 
                  p.1, p.2, p.12, p.21, e.12 )
       # The controls
-  return( list( states=states[-(1:n.burn),], cont=cont[-(1:n.burn),] ) )
+  return( list( states=states, cont=cont ) )
 }
 
 prs.sol.cont.a <- function( sol, opt ){
