@@ -120,6 +120,8 @@ print( paste0( "err = ", round( max(apply( abs( rep.eta.2$err ), 2, mean )) * 10
     # Ave abs err .7bp
 l.sol[[9]] <- list( sol.2=sol.eta.2, rep.2=rep.eta.2 )
 
+save( l.sol, file='~/Dropbox/outsize/irbc/eta_high.rdata')
+
 
 ##### 5. NOW UP ETA A LITTLE #####
 
@@ -128,10 +130,10 @@ params$eta <- 4
 sol.eta.2 <- sol.irbc.iterate( l.sol[[9]]$sol.2$coeff, opt, params, l.sol[[9]]$sol.2$coeff.cont )
 
 
-rep.eta.2 <- report.data( sol.eta.2 )
-print( paste0( "err = ", round( max(apply( abs( rep.eta.2$err ), 2, mean )) * 100, 4), "pp" ) )
-    # Ave abs err = .6 bp
-l.sol[[7]] <- list( sol.2=sol.eta.2, rep.2=rep.eta.2 )
+# rep.eta.2 <- report.data( sol.eta.2 )
+# print( paste0( "err = ", round( max(apply( abs( rep.eta.2$err ), 2, mean )) * 100, 4), "pp" ) )
+#     # Ave abs err = .6 bp
+# l.sol[[7]] <- list( sol.2=sol.eta.2, rep.2=rep.eta.2 )
 
 
 ### Other ideas: Increase rho or sig_eps

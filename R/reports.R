@@ -140,6 +140,7 @@ report.corr <- function( rep.data, loc=NULL ){
   
   asset.ratio <- rep.data$endog.sim[,3] / ( rep.data$endog.sim[,3] - rep.data$endog.sim[,4] * exp( rep.data$cont.sim[,13] ) )
   asset.diff <- rep.data$endog.sim[,3] + rep.data$endog.sim[,4] * exp( rep.data$cont.sim[,13] )
+  asset.diff.2 <- rep.data$endog.sim[,4] + rep.data$endog.sim[,3] / exp( rep.data$cont.sim[,13] )
   write( print( xtable( summaryfunction( asset.ratio[abs(asset.ratio)<1000] ), digits=3, 
                       caption = 'Ratio of home to total assets' ) ), 
        file = paste0( loc, 'reports/assetRatio.tex' ) )
@@ -152,14 +153,38 @@ report.corr <- function( rep.data, loc=NULL ){
        file = paste0( loc, 'reports/assetTot.tex' ) )
 
   # Asset densities
+
   pdf(paste0( loc, 'charts/debt_dist.pdf') )
-  plot( density( rep.data$endog.sim[,3] ), col='red', xlab='Domestic assets', ylab='Density' )
+  plot( density( rep.data$endog.sim[,3] ), col='red', xlab='Domestic assets', ylab='Density', main='' )
   lines( density( rep.data$endog.sim[,4] ),col='blue' )
-  abline( v=mean(rep.data$endog.sim[,3]), lty=2, col='red' )
-  abline( v=mean(rep.data$endog.sim[,4]), lty=2, col='blue' )
+  abline( v=0, lty=2 )
+#   abline( v=mean(rep.data$endog.sim[,3]), lty=2, col='red' )
+#   abline( v=mean(rep.data$endog.sim[,4]), lty=2, col='blue' )
   legend( 'topright', 
-          c('Country 1','Country 2','Country 1 mean','Country 2 mean'), 
-          lty=c(1,1,2,2), col=c('red','blue','red','blue') )
+          c('Country 1','Country 2' ), 
+          lty=c(1,1), col=c('red','blue'), bty='n' )
+  dev.off()
+
+  pdf(paste0( loc, 'charts/debt_dist_diff.pdf') )
+  plot( density( asset.diff ), col='red', xlab='Domestic less foreign assets', ylab='Density', main='' )
+#   lines( density( tot.assets ),col='black' )
+  lines( density( asset.diff.2 ),col='blue' )
+  abline( v=0, lty=2 )
+#     abline( v=mean(asset.diff), lty=2, col='red' )
+#     abline( v=mean(asset.diff), lty=2, col='blue' )
+#     abline( v=mean(tot.assets), lty=2 )
+  legend( 'topright', c('Country 1','Country 2'), lty=c(1,1), col=c('red','blue'), bty='n' )
+  dev.off()
+
+  pdf(paste0( loc, 'charts/debt_dist_jon_stop_busting_my_balls_for_this_chart_already.pdf') )
+  plot( density( rep.data$endog.sim[,3] ), col='red', xlab='Country 1 assets', ylab='Density', main='' )
+  lines( density( -rep.data$endog.sim[,4] ),col='blue' )
+  abline( v=0, lty=2 )
+  #   abline( v=mean(rep.data$endog.sim[,3]), lty=2, col='red' )
+  #   abline( v=mean(rep.data$endog.sim[,4]), lty=2, col='blue' )
+  legend( 'topright', 
+          c('Country 1','Country 2'), 
+          lty=c(1,1), col=c('red','blue'), bty='n' )
   dev.off()
   
   # The log10 errors
@@ -273,6 +298,8 @@ report.create <- function( sol, rep.data=NULL, loc=NULL ){
   write( '\\input{assetDiff.tex}', file=out.file, append=T )
   write( '\\input{assetTot.tex}', file=out.file, append=T )
   report.chart.latex('../charts/debt_dist.pdf', out.file)
+  report.chart.latex('../charts/debt_dist_diff.pdf', out.file)
+  report.chart.latex('../charts/debt_dist_jon_stop_busting_my_balls_for_this_chart_already.pdf', out.file)
   write( '\n\\clearpage\n', file=out.file, append=T )
   for( i in 1:16) report.chart.latex( paste0('../charts/chart', i, '.pdf'), out.file)
     
