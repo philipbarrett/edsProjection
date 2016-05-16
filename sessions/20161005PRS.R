@@ -21,8 +21,8 @@ cor( 1 / q.check, prs.sim$cont[,'c.2'] )
 
 
 pdf( '~/Dropbox//2016//Research//IRBC puzzles/Paper/graphs/baselineCharts_20160429/clouds/c_e_CM.pdf')
-plot( exp( prs.sim$cont[,'c.1'] ), 
-      q.check, pch=19, col= alpha('black', 0.15),
+  f1 <- kde2d(exp( prs.sim$cont[,'c.1'] ), q.check, n=500 )
+  filled.contour( f1, color.palette =  colorRampPalette(c("white", "black")),
       xlab='Consumption', ylab='Real ex. rate')
 dev.off()
 
@@ -39,11 +39,11 @@ q.sim <- l.sol[[4]]$rep.2$cont.sim[,13] - l.sol[[4]]$rep.2$cont.sim[,9] + l.sol[
 
 # plot( l.sol[[4]]$rep.2$cont.sim[,1], q.sim, pch=19, col= alpha('black', 0.15) )
 
-pdf( '~/Dropbox//2016//Research//IRBC puzzles/Paper/graphs/baselineCharts_20160429/clouds/c_e_levels.pdf')
-plot( exp( l.sol[[4]]$rep.2$cont.sim[,1] ), 
-      exp( q.sim ), pch=19, col= alpha('black', 0.15),
-      xlab='Consumption', ylab='Real ex. rate')
-dev.off()
+# pdf( '~/Dropbox//2016//Research//IRBC puzzles/Paper/graphs/baselineCharts_20160429/clouds/c_e_levels.pdf')
+# plot( exp( l.sol[[4]]$rep.2$cont.sim[,1] ), 
+#       exp( q.sim ), pch=19, col= alpha('black', 0.15),
+#       xlab='Consumption', ylab='Real ex. rate')
+# dev.off()
 
 cor(exp( l.sol[[4]]$rep.2$cont.sim[,1] ), exp( q.sim ) )
 

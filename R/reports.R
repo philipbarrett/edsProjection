@@ -155,25 +155,28 @@ report.corr <- function( rep.data, loc=NULL ){
   # Asset densities
 
   pdf(paste0( loc, 'charts/debt_dist.pdf') )
-  plot( density( rep.data$endog.sim[,3] ), col='red', xlab='Domestic assets', ylab='Density', main='' )
-  lines( density( rep.data$endog.sim[,4] ),col='blue' )
+  plot( density( rep.data$endog.sim[,3] ), col='red', xlab='Assets', ylab='Density', 
+                  main='', xlim=c(-.5,.5), lwd=2 )
+  lines( density( - rep.data$endog.sim[,4] * exp( rep.data$cont.sim[,13] ) ),col='blue', lwd=2 )
+  lines( density( tot.assets ),col='black', lwd=2 )
   abline( v=0, lty=2 )
 #   abline( v=mean(rep.data$endog.sim[,3]), lty=2, col='red' )
 #   abline( v=mean(rep.data$endog.sim[,4]), lty=2, col='blue' )
   legend( 'topright', 
-          c('Country 1','Country 2' ), 
-          lty=c(1,1), col=c('red','blue'), bty='n' )
+          c('Domestic assets','Foreign assets', 'Total assets' ), 
+          lty=1, col=c('red','blue', 'black'), bty='n', lwd=2 )
   dev.off()
 
   pdf(paste0( loc, 'charts/debt_dist_diff.pdf') )
-  plot( density( asset.diff ), col='red', xlab='Domestic less foreign assets', ylab='Density', main='' )
+  plot( density( asset.diff ), col='black', xlab='Domestic less foreign assets', 
+                  ylab='Density', main='', lwd=2 )
 #   lines( density( tot.assets ),col='black' )
-  lines( density( asset.diff.2 ),col='blue' )
+  # lines( density( asset.diff.2 ),col='blue' )
   abline( v=0, lty=2 )
 #     abline( v=mean(asset.diff), lty=2, col='red' )
 #     abline( v=mean(asset.diff), lty=2, col='blue' )
 #     abline( v=mean(tot.assets), lty=2 )
-  legend( 'topright', c('Country 1','Country 2'), lty=c(1,1), col=c('red','blue'), bty='n' )
+# legend( 'topright', c('Country 1','Country 2'), lty=c(1,1), col=c('red','blue'), bty='n' )
   dev.off()
 
   pdf(paste0( loc, 'charts/debt_dist_jon_stop_busting_my_balls_for_this_chart_already.pdf') )
