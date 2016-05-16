@@ -21,15 +21,16 @@ cor( 1 / q.check, prs.sim$cont[,'c.2'] )
 
 
 pdf( '~/Dropbox//2016//Research//IRBC puzzles/Paper/graphs/baselineCharts_20160429/clouds/c_e_CM.pdf')
-  f1 <- kde2d(exp( prs.sim$cont[,'c.1'] ), q.check, n=500 )
+  f1 <- kde2d(exp( prs.sim$cont[,'c.1'] ), q.check, n=250 )
   filled.contour( f1, color.palette =  colorRampPalette(c("white", "black")),
-      xlab='Consumption', ylab='Real ex. rate')
+      xlab='Consumption', ylab='Real ex. rate', ylim=c(.9,1.1))
 dev.off()
 
 pdf( '~/Dropbox//2016//Research//IRBC puzzles/Paper/graphs/baselineCharts_20160429/clouds/c_e_CM_diff.pdf')
-plot( diff( prs.sim$cont[,'c.1'] ), 
-      diff(log(q.check)), pch=19, col= alpha('black', 0.15),
-      xlab='Consumption growth', ylab='Real ex. rate growth')
+  f1 <- kde2d( diff( prs.sim$cont[,'c.1'] ), diff(log(q.check)), n=250 )
+  filled.contour( f1, color.palette =  colorRampPalette(c("white", "black")),
+                  xlab='Consumption growth', ylab='Real ex. rate growth', 
+                  xlim=c(-.04,.04) )
 dev.off()
 
 
