@@ -1,0 +1,12 @@
+% Dynare code for the Adams-Barrett model.
+% Based on Alan Sutherland's code for Devreuz-Sutherland 2008
+
+% Variable and parameter declarations
+
+var A1 A2 NFA Z1 Z2 Y1 Y2 C1 C2 P1 P2 P11 P22 P12 P21 X11 X22 X12 X21 Q E cg cd rb1 rb2; 
+
+varexo ep1 ep2 zeta;
+
+parameters BT RH rho1 rho2 eta alph p1bar p2bar sigeps1 sigeps2;
+
+% Parameter values
