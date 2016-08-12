@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % AUTO-GENERATED CODE FROM DYNARE.R 
-% CREATED  2016-08-11-181821 
+% CREATED  2016-08-12-121449 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % Dynare code for the Adams-Barrett model.
@@ -234,3 +234,10 @@ alpha_tilde=inv(R2*SIGMA*D2'*R1'-R2*SIGMA*R2'*D1)*R2*SIGMA*D2';
                 Rx5k=R5k+R1k*gamma'*R2;
                 delta(k,:)=RH*R2k*SIGMA*Gx5'+RH*G2*SIGMA*Rx5k'+rs(k)*Rb3;
                 end
+
+%%% Save output for R manipulation %%%
+ghx =oo_.dr.ghx;
+ghu =oo_.dr.ghu;
+nvar=M_.endo_nbr;
+nsk=M_.nstatic;
+save( 'Rvars.mat', 'ghx', 'ghu', 'nvar', 'nsk', 'delta', 'gamma', 'nu', 'varo', 'na', 'nx' )

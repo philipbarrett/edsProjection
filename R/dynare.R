@@ -60,5 +60,23 @@ mod.create <- function( params ){
 }
 
 mod.run <- function(){
+# Runs the DS model
   system( 'matlab -nojvm < matlab/launcher.m' )
 }
+
+mod.read <- function(){
+# Reads the saved parameteres from the DS-style solution
+  return( readMat('matlab/Rvars.mat') )
+}
+
+
+
+
+
+
+
+
+
+
+
+

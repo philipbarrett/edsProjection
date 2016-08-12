@@ -6,4 +6,6 @@ src/*.so
 src/*.dll
 *.rprof
 matlab/adamsBarrett*
+matlab/old*
+*.mat
 !matlab/adamsBarrett.mod

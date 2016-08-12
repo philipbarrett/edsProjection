@@ -917,6 +917,18 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// simDS
+arma::mat simDS(arma::mat u, List mod);
+RcppExport SEXP edsProjection_simDS(SEXP uSEXP, SEXP modSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat >::type u(uSEXP);
+    Rcpp::traits::input_parameter< List >::type mod(modSEXP);
+    __result = Rcpp::wrap(simDS(u, mod));
+    return __result;
+END_RCPP
+}
 // euler_hat
 arma::mat euler_hat(arma::mat coeffs, arma::mat coeffs_cont, arma::mat X, std::string model, int lags, List params, int n_exog, int n_endog, int n_cont, arma::rowvec rho, arma::rowvec sig_eps, int n_integ, int N, arma::rowvec upper, arma::rowvec lower, bool cheby, arma::mat exog_innov_mc, bool quad, int n_nodes);
 RcppExport SEXP edsProjection_euler_hat(SEXP coeffsSEXP, SEXP coeffs_contSEXP, SEXP XSEXP, SEXP modelSEXP, SEXP lagsSEXP, SEXP paramsSEXP, SEXP n_exogSEXP, SEXP n_endogSEXP, SEXP n_contSEXP, SEXP rhoSEXP, SEXP sig_epsSEXP, SEXP n_integSEXP, SEXP NSEXP, SEXP upperSEXP, SEXP lowerSEXP, SEXP chebySEXP, SEXP exog_innov_mcSEXP, SEXP quadSEXP, SEXP n_nodesSEXP) {
