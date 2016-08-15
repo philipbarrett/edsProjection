@@ -69,7 +69,20 @@ mod.read <- function(){
   return( readMat('matlab/Rvars.mat') )
 }
 
-
+mod.gen <- function(params, lower, upper, nsim=1e6, burn=1e4 ){
+# Generates the coefficient matrices 
+  mod.create(params)
+      # Create the model
+  mod.run()
+      # Run the model
+  mod <- mod.read()
+      # The model save file as a list
+  sim <- stoch_simDS( mod, params$sig.eps, params$betta, nsim, burn, 0 )
+      # The simulation (Change the hard-coded zero if the index of y1 is other than 1)
+  colnames(sim) <- c( sub("\\s+$", "", (unlist(mod$varo))), 'af1' )
+      # Name the columns of the simulation
+  browser()
+}
 
 
 

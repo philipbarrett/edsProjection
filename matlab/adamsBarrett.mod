@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % AUTO-GENERATED CODE FROM DYNARE.R 
-% CREATED  2016-08-12-121449 
+% CREATED  2016-08-12-184415 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % Dynare code for the Adams-Barrett model.
@@ -124,7 +124,7 @@ end;
 
 % Stage 1: calculate zero-order asset holdings
 % check(qz_zero_threshold=1e-12);
-stoch_simul(order=1,nomoments,irf=0) ; %,noprint,nomoments,irf=0);
+stoch_simul(order=1,nomoments,noprint,irf=0) ;
 
 BB=oo_.dr.ghu;
 nvar=M_.endo_nbr;
@@ -132,7 +132,8 @@ nu=M_.exo_nbr-1;
 ordo=oo_.dr.order_var;
 
 for i=1:nvar
-varo{i,1} = M_.endo_names(ordo(i),:);
+  varo{i,1} = M_.endo_names(ordo(i),:);
+  ys(i) = oo_.dr.ys(ordo(i),:);
 end
 
 SIGMA=M_.Sigma_e(1:nu,1:nu);
@@ -172,7 +173,7 @@ alpha_tilde=inv(R2*SIGMA*D2'*R1'-R2*SIGMA*R2'*D1)*R2*SIGMA*D2';
                 % Stage 2: calculate portfolio (first-order) and excess return (third-order) dynamics 
                 % The gamma vector
                 
-                stoch_simul(order=2,nomoments,irf=0);
+                stoch_simul(order=2,nomoments, noprint,irf=0);
                 
                 BB=oo_.dr.ghu;
                 EE=oo_.dr.ghxu;
@@ -240,4 +241,4 @@ ghx =oo_.dr.ghx;
 ghu =oo_.dr.ghu;
 nvar=M_.endo_nbr;
 nsk=M_.nstatic;
-save( 'Rvars.mat', 'ghx', 'ghu', 'nvar', 'nsk', 'delta', 'gamma', 'nu', 'varo', 'na', 'nx' )
+save( 'Rvars.mat', 'ghx', 'ghu', 'nvar', 'nsk', 'delta', 'gamma', 'nu', 'varo', 'na', 'nx', 'ys', 'alpha_tilde' )

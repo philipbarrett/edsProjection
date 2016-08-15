@@ -205,8 +205,12 @@ irf_create <- function(pds, n_sim, N, shk_idx, rho, sig_eps, coeffs, upper, lowe
     .Call('edsProjection_irf_create', PACKAGE = 'edsProjection', pds, n_sim, N, shk_idx, rho, sig_eps, coeffs, upper, lower, init, n_endog, n_exog, shk, cheby)
 }
 
-simDS <- function(u, mod) {
-    .Call('edsProjection_simDS', PACKAGE = 'edsProjection', u, mod)
+simDS <- function(u, mod, betta, y1_idx = 0L) {
+    .Call('edsProjection_simDS', PACKAGE = 'edsProjection', u, mod, betta, y1_idx)
+}
+
+stoch_simDS <- function(mod, sigma, betta, pds = 1e6L, burn = 1e4L, y1_idx = 0L) {
+    .Call('edsProjection_stoch_simDS', PACKAGE = 'edsProjection', mod, sigma, betta, pds, burn, y1_idx)
 }
 
 euler_hat <- function(coeffs, coeffs_cont, X, model, lags, params, n_exog, n_endog, n_cont, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad = TRUE, n_nodes = 0L) {

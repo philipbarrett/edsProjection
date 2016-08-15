@@ -918,14 +918,32 @@ BEGIN_RCPP
 END_RCPP
 }
 // simDS
-arma::mat simDS(arma::mat u, List mod);
-RcppExport SEXP edsProjection_simDS(SEXP uSEXP, SEXP modSEXP) {
+arma::mat simDS(arma::mat u, List mod, double betta, int y1_idx);
+RcppExport SEXP edsProjection_simDS(SEXP uSEXP, SEXP modSEXP, SEXP bettaSEXP, SEXP y1_idxSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
     Rcpp::traits::input_parameter< arma::mat >::type u(uSEXP);
     Rcpp::traits::input_parameter< List >::type mod(modSEXP);
-    __result = Rcpp::wrap(simDS(u, mod));
+    Rcpp::traits::input_parameter< double >::type betta(bettaSEXP);
+    Rcpp::traits::input_parameter< int >::type y1_idx(y1_idxSEXP);
+    __result = Rcpp::wrap(simDS(u, mod, betta, y1_idx));
+    return __result;
+END_RCPP
+}
+// stoch_simDS
+arma::mat stoch_simDS(List mod, arma::rowvec sigma, double betta, int pds, int burn, int y1_idx);
+RcppExport SEXP edsProjection_stoch_simDS(SEXP modSEXP, SEXP sigmaSEXP, SEXP bettaSEXP, SEXP pdsSEXP, SEXP burnSEXP, SEXP y1_idxSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< List >::type mod(modSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type sigma(sigmaSEXP);
+    Rcpp::traits::input_parameter< double >::type betta(bettaSEXP);
+    Rcpp::traits::input_parameter< int >::type pds(pdsSEXP);
+    Rcpp::traits::input_parameter< int >::type burn(burnSEXP);
+    Rcpp::traits::input_parameter< int >::type y1_idx(y1_idxSEXP);
+    __result = Rcpp::wrap(stoch_simDS(mod, sigma, betta, pds, burn, y1_idx));
     return __result;
 END_RCPP
 }
