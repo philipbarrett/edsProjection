@@ -79,8 +79,20 @@ mod.gen <- function(params, lower, upper, nsim=1e6, burn=1e4 ){
       # The model save file as a list
   sim <- stoch_simDS( mod, params$sig.eps, params$betta, nsim, burn, 0 )
       # The simulation (Change the hard-coded zero if the index of y1 is other than 1)
-  colnames(sim) <- c( sub("\\s+$", "", (unlist(mod$varo))), 'af1' )
+  nn <- c( sub("\\s+$", "", (unlist(mod$varo))), 'af1' )
+  colnames(sim) <- nn
       # Name the columns of the simulation
+  endog.order <- c( 'NFA', 'Z1', 'Z2' )
+  cont.order <- c( 'C1', 'C2', 'rb1', 'rb2', 'X11', 'X22', 'X12', 'X21', 
+                   'P1', 'P2', 'P11', 'P22', 'P12', 'P21', 'E', 'Q', 'af1',
+                   'Y1', 'Y2', 'cd', 'cg' )
+      # Variable names for the DS-style solution
+  sim.exog <- sim[, c('A1','A2')]
+  sim.endog <- sim[, endog.order]
+  sim.cont <- sim[, cont.order]
+      # Separate out the exogenous and endogenous states and the static variables
+  
+  
   browser()
 }
 

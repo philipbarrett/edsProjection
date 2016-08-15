@@ -21,7 +21,8 @@ arma::mat euler_hat_grid(
             int n_exog, int n_endog, int n_cont,
             arma::rowvec rho, arma::rowvec sig_eps, int n_integ,
             int N, arma::rowvec upper, arma::rowvec lower, bool cheby,
-            arma::mat exog_innov_mc, bool quad=true, int n_nodes=0 ){
+            arma::mat exog_innov_mc, bool quad=true, int n_nodes=0,
+            std::string model="irbc" ){
 // Creates the vector of errors on the Euler equations
 
   int n_pts = X.n_rows ;
@@ -59,6 +60,25 @@ arma::mat euler_hat_grid(
         // Monte Carlo integration
   }
   
+  /** Define the model function **/
+  rowvec euler_hat_fn( 
+              arma::rowvec exog, arma::rowvec endog, arma::rowvec cont,
+              arma::mat exog_innov_integ, double betta,
+              double gamma, arma::mat coeffs_cont, 
+              int n_exog, int n_endog, int n_cont,
+              arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
+              arma::rowvec lower, bool cheby, arma::rowvec weights,
+              bool print_rhs ) ;
+      // Pointer to model evaluation function
+  
+  if( model == "irbc" )
+    euler_hat_fn = euler_hat_irbc ;
+        // The first attempt at the Adams-Barrett model
+  if( model == "DS" )
+    euler_hat_fn = euler_hat_ds ;
+        // The Devreux-Sutherland version
+  
+  
   /** Now compute the model errors **/
   for( int i = 0 ; i < n_pts ; i++ ){
   // Loop over the evaluation points
@@ -69,7 +89,7 @@ arma::mat euler_hat_grid(
     if( n_cont > 0 )
       cont = X.row(i).tail( n_cont ) ;
         // The controls
-    err.row(i) = euler_hat_irbc(
+    err.row(i) = euler_hat_fn(
                     exog, endog, cont, nodes, betta, gamma,
                     coeffs_cont, n_exog, n_endog, n_cont, rho, 
                     n_integ, N, upper, lower, cheby, weights, false ) ;

@@ -35,6 +35,7 @@ arma::mat euler_hat( arma::mat coeffs, arma::mat coeffs_cont,
       // here - just passing a useless empty container
   mat err = zeros(n_pts, n_endog + n_cont ) ;
       // Becuase there are as many equations as endogenous variables
+      // (states & controls)
 
   /** Create the integration nodes and weights **/
   n_integ = quad ? pow( n_nodes, n_exog ) : n_integ ;
@@ -85,6 +86,8 @@ arma::mat euler_hat( arma::mat coeffs, arma::mat coeffs_cont,
         // The two-country neoclassical growth model with controls
   if( model == "irbc" )
     euler_hat_fn = irbc_reg ;
+        // First attempt at the Adams-Barrett IRBC model
+        
   
   /** Now compute the model errors **/
   for( int i = 0 ; i < n_pts ; i++ ){

@@ -62,3 +62,13 @@ cor( q.check, prs.sim$cont[,'e.12'] )
 
 sd(prs.sim$cont[,'c.1'] ) * 100
 sd(l.sol[[4]]$rep.2$cont.sim[,1] ) * 100
+
+
+ql <- quantile( apply( 100 * 100 * abs(l.sol[[4]]$rep.2$err), 1, max ), c( .5, .75, .9, .95, .99 ))
+
+pdf( '~/Dropbox//2016//Research//IRBC puzzles/Paper/graphs/baselineCharts_20160429/err_plot.pdf')
+  plot( density( 100^2 * apply( abs(l.sol[[4]]$rep.2$err), 1, max ), n=512*8, from=1e-08 ), 
+        xlim=c(0, 5), main='', xlab='Basis points (pp/100)', lwd=2 )
+  abline( v=ql, lty=2 )
+  text( ql, .4, paste0( 'p=', c(0.5, 0.75, 0.9, 0.95, 0.99 ) ), srt=90, pos=2 )
+dev.off()

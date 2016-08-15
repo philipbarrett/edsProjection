@@ -77,7 +77,7 @@ arma::mat stoch_simDS( List mod, arma::rowvec sigma,
 // Computes a long stochastic simulation for the DS-style model
   
   int nshk = sigma.n_elem ;
-  mat u = ( ones(pds+burn) * sigma ) % randu(pds+burn,nshk) ;
+  mat u = ( ones(pds+burn) * sigma ) % randn(pds+burn,nshk) ;
       // The matrix of shocks
   mat sim = simDS( u, mod, betta, y1_idx) ;
       // Create the simulation
