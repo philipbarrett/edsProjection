@@ -69,12 +69,20 @@ mod.read <- function(){
   return( readMat('matlab/Rvars.mat') )
 }
 
-mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE ){
+mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.nodes=3 ){
 # Generates the coefficient matrices and vector of equation errors
   
-  ### 1. Run and extract the model ###
+  ### 0. Hard-coding ###
   N <- 1
       # The order of the model
+  n.lag <- 1
+      # Number of lags
+  n.fwd <- 4
+      # Number of Euler equations
+  
+  ### 1. Run and extract the model ###
+  message('Creating & solving dynare model')
+      # Screen updating
   mod.create(params)
       # Create the model
   mod.run()
@@ -88,6 +96,8 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE ){
   mod$ys <- c( mod$ys, mod$alpha.tilde )
   names(mod$ys) <- mod$varo
       # Assign names
+  message("Mean home asset holding = ", round( mod$alpha.tilde, 4 ) )
+  
   exog.order <- c('A1','A2')
   endog.order <- c( 'NFA', 'Z1', 'Z2' )
   cont.order <- c( 'C1', 'C2', 'rb1', 'rb2', 'X11', 'X22', 'X12', 'X21', 
@@ -104,6 +114,8 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE ){
       # Numbers of types of variables
   
   ### 2. Run regressions to generate coefficients ###
+  message('Generating coefficient rules for error evaluation')
+      # Screen updating
   sd.x <- params$sig.eps / sqrt( ( 1 - params$rho ^ 2 ) )
       # The standard deviation of the exogenous state
   upper <- c(  3 * sd.x, mod$ys[endog.order] + .25 )
@@ -131,12 +143,13 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE ){
     browser()
         # Do checks in debug - looks fine to me! :)
   }
-  
   ds.sol <- list( endog.coeff=endog.coeff, cont.coeff=cont.coeff, 
                   upper=upper, lower=lower )
       # Details of the Devreux-Sutherland solution
   
   ### 3. Evaluate equation errors ###
+  message('Evaluating errors from the dynare solution')
+      # Screen updating
   X <- cbind( sim.exog[-1,], sim.endog[-1,], sim.exog[-nsim,], sim.endog[-nsim,], 
               sim.cont[-1,] )
       # Redefine X for evaluating the errors
@@ -146,13 +159,65 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE ){
                                       n.cont, extra.args, "ds" )
       # The controls + NFA predictions
   colnames(cont.nfa) <- c( cont.order, 'NFA' )
+      # Rename the columns
+  cont.pred <- cont.nfa[,1:n.cont]
+      # The control predictors (Q and af1 to be added after the Euler eqs)
+  cont.err <- abs( sim.cont[-1,] - cont.pred )[,(!cont.order %in% c('Q', 'af1') )]
+      # The errors on the static equations
+  nfa.err <- abs( cont.nfa[, 1+n.cont] - sim.endog[-1,'NFA'] )
+      # The NFA error
   
-  browser()
+  euler.pred <- euler_hat_grid( endog.coeff, cont.coeff, X, n.lag, params,
+                                n.exog, n.endog, n.cont, n.fwd, params$rho, 
+                                params$sig.eps, 0, N, upper, lower, cheby,
+                                matrix(0,1,1), TRUE, n.nodes, "ds" )
+      # Generate predictions from the Euler equation errors
+  euler.orig <- cbind( sim.endog[-1,'Z1'], sim.cont[-1,'af1'], 
+                       sim.endog[-1,'Z2'], sim.cont[-1,'Q'] )
+  euler.err <- abs( euler.pred - euler.orig )
+      # The Euler equation errors
+  err <- apply( cbind( cont.err, nfa.err, euler.err ), 1, max )
+      # Extract the distribution of maximum equation errors
   
-  ## Euler equation errors here
+  ### 4. Now for the alternative-state representation ###
+  # States are now A1, A2, NFA, and af1
+  endog.order.alt <- c( 'NFA', 'af1' )
+  cont.order.alt <- c( 'C1', 'C2', 'rb1', 'rb2', 'X11', 'X22', 'X12', 'X21', 
+                   'P1', 'P2', 'P11', 'P22', 'P12', 'P21', 'Z1', 'Z2', 'E', 'Q', 
+                   'Y1', 'Y2', 'cd', 'cg' )
+      # Variable names for the DSalternative-state respresentation
+  sim.endog.alt <- sim[, endog.order.alt]
+  sim.cont.alt <- sim[, cont.order.alt]
+      # Separate out the exogenous and endogenous states and the static variables
+  n.endog <- length( endog.order.alt )
+  n.cont <- length( cont.order.alt )
+      # Numbers of types of variables
+  message('Generating coefficient rules for alternative-state representation')
+      # Screen updating
+  upper <- c(  3 * sd.x, mod$ys[endog.order.alt] + .5 )
+  lower <- c( -3 * sd.x, mod$ys[endog.order.alt] - .5 )
+      # The bounds of the states
+  endog.reg <- sim.endog.alt[-nsim,]
+  exog.reg <- sim.exog[-1,]
+  X <- cbind( exog.reg, endog.reg )
+      # The X-variables for the regressions
+  n.X <- 1 + length(endog.order.alt) + length(exog.order) 
+      # The number of X variables is the number of states plus one (the constant
+      # term)
+  endog.coeff <- matrix( 0, n.X, n.endog )
+  cont.coeff <- matrix( 0, n.X, n.cont )
+      # The coefficient matrices  
   
-  
-  return( list( ds.sol=ds.sol, err=NA, alt.states=NA ) )
+  for(i in 1:n.endog) endog.coeff[,i] <- coeff_reg( sim.endog.alt[,i][-1], X, N,
+                                                    lower, upper, cheby )
+  for(i in 1:n.cont) cont.coeff[,i] <- coeff_reg( sim.cont.alt[,i][-1], X, N, 
+                                                  lower, upper, cheby )
+      # Populate the coefficient matrices
+  alt.sol <- list( endog.coeff=endog.coeff, cont.coeff=cont.coeff, 
+                  upper=upper, lower=lower )
+      # Details of the alternative solution
+
+  return( list( mod=mod, ds.sol=ds.sol, err=err, alt.sol=alt.sol ) )
 }
 
 

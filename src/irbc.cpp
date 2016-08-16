@@ -52,7 +52,7 @@ arma::rowvec euler_hat_irbc(
                   arma::rowvec exog, arma::rowvec endog, arma::rowvec cont,
                   arma::mat exog_innov_integ, double betta, 
                   double gamma, arma::mat coeffs_cont, 
-                  int n_exog, int n_endog, int n_cont,
+                  int n_exog, int n_endog, int n_cont, int n_fwd,
                   arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
                   arma::rowvec lower, bool cheby, arma::rowvec weights,
                   bool print_rhs=false ){
@@ -82,8 +82,8 @@ arma::rowvec euler_hat_irbc(
         // Multiply the most recent exogenous draw by the appropriate rho and
         // add the innovation
   
-  rowvec integral = zeros<rowvec>( n_endog + 2 ) ;
-  mat integrand = zeros( n_integ, n_endog + 2 ) ;
+  rowvec integral = zeros<rowvec>( n_fwd ) ;
+  mat integrand = zeros( n_integ, n_fwd ) ;
       // Initialize the right hand side.
       // Add the extra two columns for the extra equations for the prices 
       // r1 and r2
@@ -170,10 +170,13 @@ arma::rowvec contemp_eqns_irbc(
     c_1 = alphahat * x_11 + ( 1 - alphahat ) * x_12 ;
     c_2 = alphahat * x_22 + ( 1 - alphahat ) * x_21 ;
   }else{
+/**** THIS LINE LOOKS WRONG: (1 - share) ^ eta != 1 - share ^ eta :( ****/
     c_1 = eta / ( eta - 1 ) * std::log( alphahat * std::exp( ( 1 - 1 / eta ) * x_11 ) +
               ( 1 - alphahat ) * std::exp( ( 1 - 1 / eta ) * x_12 ) ) ;
     c_2 = eta / ( eta - 1 ) * std::log( alphahat * std::exp( ( 1 - 1 / eta ) * x_22 ) +
               ( 1 - alphahat ) * std::exp( ( 1 - 1 / eta ) * x_21 ) ) ;
+/**** THIS LINE LOOKS WRONG: (1 - share) ^ eta != 1 - share ^ eta :( ****/
+              
   }
   
       // Consumption aggregators
@@ -210,7 +213,7 @@ arma::rowvec irbc_reg(
                   arma::mat exog, arma::mat endog, arma::rowvec cont,
                   arma::mat exog_innov_integ, 
                   List params, arma::mat coeffs, arma::mat coeffs_cont, 
-                  int n_exog, int n_endog, int n_cont,
+                  int n_exog, int n_endog, int n_cont, int n_fwd,
                   arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
                   arma::rowvec lower, bool cheby, arma::rowvec weights, 
                   List extra_args, bool print_rhs=false ){
@@ -223,7 +226,7 @@ arma::rowvec irbc_reg(
       // Initialize the output
   out.head(n_endog+2) = 
         euler_hat_irbc( exog, endog, cont, exog_innov_integ, betta, gamma, 
-                            coeffs_cont, n_exog, n_endog, n_cont,
+                            coeffs_cont, n_exog, n_endog, n_cont, n_fwd,
                             rho, n_integ, N, upper, lower, cheby, weights,
                             print_rhs ) ;
       // The endogenous states

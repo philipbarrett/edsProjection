@@ -29,7 +29,7 @@ arma::rowvec euler_hat_ds(
                   arma::rowvec exog, arma::rowvec endog, arma::rowvec cont,
                   arma::mat exog_innov_integ, double betta,
                   double gamma, arma::mat coeffs_cont, 
-                  int n_exog, int n_endog, int n_cont,
+                  int n_exog, int n_endog, int n_cont, int n_fwd,
                   arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
                   arma::rowvec lower, bool cheby, arma::rowvec weights,
                   bool print_rhs ) ;

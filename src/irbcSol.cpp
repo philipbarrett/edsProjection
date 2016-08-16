@@ -19,7 +19,7 @@
 arma::mat euler_hat_grid( 
             arma::mat coeffs, arma::mat coeffs_cont, 
             arma::mat X, int lags, List params, 
-            int n_exog, int n_endog, int n_cont,
+            int n_exog, int n_endog, int n_cont, int n_fwd,
             arma::rowvec rho, arma::rowvec sig_eps, int n_integ,
             int N, arma::rowvec upper, arma::rowvec lower, bool cheby,
             arma::mat exog_innov_mc, bool quad=true, int n_nodes=0,
@@ -33,8 +33,8 @@ arma::mat euler_hat_grid(
   rowvec cont = zeros<rowvec>( std::max( n_cont, 1 ) ) ;
       // Temporary containers used in the loop.  Make cont bigger than size 0
       // here - just passing a useless empty container
-  mat err = zeros(n_pts, 4 ) ;
-      // Becuase there are four Euler equations
+  mat err = zeros(n_pts, n_fwd ) ;
+      // Becuase n_fwd is the number of forward-looking expectational equations
   double betta = params["betta"] ;
   double gamma = params["gamma"] ;
 
@@ -66,7 +66,7 @@ arma::mat euler_hat_grid(
              arma::rowvec exog, arma::rowvec endog, arma::rowvec cont,
                   arma::mat exog_innov_integ, double betta, 
                   double gamma, arma::mat coeffs_cont, 
-                  int n_exog, int n_endog, int n_cont,
+                  int n_exog, int n_endog, int n_cont, int n_fwd,
                   arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
                   arma::rowvec lower, bool cheby, arma::rowvec weights,
                   bool print_rhs ) ;
@@ -92,7 +92,7 @@ arma::mat euler_hat_grid(
         // The controls
     err.row(i) = euler_hat_fn(
                     exog, endog, cont, nodes, betta, gamma,
-                    coeffs_cont, n_exog, n_endog, n_cont, rho, 
+                    coeffs_cont, n_exog, n_endog, n_cont, n_fwd, rho, 
                     n_integ, N, upper, lower, cheby, weights, false ) ;
   }   // The error on the states according to the Euler equations
   
@@ -105,7 +105,7 @@ arma::mat contemp_eqns_irbc_grid( arma::mat X, int lags, List params,
                           std::string model="irbc" ){
 // Computes contemp_eqns_irbc on the state/control grid
  
-  int fwd = extra_args["n.fwd"] ;
+  int n_fwd = extra_args["n.fwd"] ;
       // Number of forward-looking equations
   int n_pts = X.n_rows ;
       // The number of points at which the error is assessed
@@ -114,7 +114,7 @@ arma::mat contemp_eqns_irbc_grid( arma::mat X, int lags, List params,
   rowvec cont = zeros<rowvec>( std::max( n_cont, 1 ) ) ;
       // Temporary containers used in the loop.  Make cont bigger than size 0
       // here - just passing a useless empty container
-  mat err = zeros(n_pts, n_cont + fwd - n_endog ) ;
+  mat err = zeros(n_pts, n_cont + n_fwd - n_endog ) ;
       // The number of static equations to be solved is the number of
       // controls plus one for each state that cannot be paired with a control.
   

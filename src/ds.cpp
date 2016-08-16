@@ -50,7 +50,7 @@ arma::rowvec euler_hat_ds(
                   arma::rowvec exog, arma::rowvec endog, arma::rowvec cont,
                   arma::mat exog_innov_integ, double betta, 
                   double gamma, arma::mat coeffs_cont, 
-                  int n_exog, int n_endog, int n_cont,
+                  int n_exog, int n_endog, int n_cont, int n_fwd,
                   arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
                   arma::rowvec lower, bool cheby, arma::rowvec weights,
                   bool print_rhs=false ){
@@ -76,8 +76,8 @@ arma::rowvec euler_hat_ds(
         // Multiply the most recent exogenous draw by the appropriate rho and
         // add the innovation
   
-  rowvec integral = zeros<rowvec>( n_endog + 2 ) ;
-  mat integrand = zeros( n_integ, n_endog + 2 ) ;
+  rowvec integral = zeros<rowvec>( n_fwd ) ;
+  mat integrand = zeros( n_integ, n_fwd ) ;
       // Initialize the right hand side.
       // Add the extra two columns for the extra equations for the prices 
       // r1 and r2
@@ -95,13 +95,14 @@ arma::rowvec euler_hat_ds(
     Rcout << "weights:" << weights << std::endl ;
     Rcout << "integral: " << integral << std::endl ;
     Rcout << "integral(0) - 1 = " << integral(0) - 1 << std::endl ;
+    
   }
   
   rowvec out(4) ;
   out(0) = z1  - ( gamma * c1 - rho_pref + std::log( integral(0) ) ) ;
   out(1) = af1 - ( gamma * c1 - rho_pref + std::log( integral(1) ) ) ;
   out(2) = z2  - ( gamma * c2 - rho_pref + std::log( integral(2) ) ) ;
-  out(2) = q   - ( gamma * c2 - rho_pref + std::log( integral(3) ) ) ;
+  out(3) = q   - ( gamma * c2 - rho_pref + std::log( integral(3) ) ) ;
       // The predictors.  Set up z1, Z_2 s.t. if current consumption is too high
       // for the Euler equation to hold then z1 decreases.  This will pull down 
       // on consumption in the contemporaneous block later.  Similarly, for af1:
@@ -189,11 +190,11 @@ arma::rowvec contemp_eqns_ds(
   double rb1 = - p_1 - z1_lag ;
   double rb2 = e - p_2 - z2_lag ;
       // Realized returns
-  double y_1 = A(0)- p_1 ;
-  double y_2 = A(1) - p_2 ;
+  double y_1 = std::log( A_1 ) - p_1 ;
+  double y_2 = std::log( A_2 ) - p_2 ;
       // Real incomes
   double NFA = std::exp( rb2 ) * NFA_lag + std::exp( y_1 ) - std::exp( c_1 ) +
-                  std::exp( y_1_ss ) * betta * af1 * std::exp( rb1 - rb2 ) ;
+          std::exp( y_1_ss ) * betta * af1 * ( std::exp( rb1 ) - std::exp( rb2 )  ) ;
       // Net foreign assets
   double cd = c_1 - c_2 - q / gamma ;
       // Conditional expectation zero

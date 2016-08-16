@@ -5,8 +5,8 @@ integrand_ds <- function(endog, exog_lead, gamma, coeffs_cont, n_exog, n_endog, 
     .Call('edsProjection_integrand_ds', PACKAGE = 'edsProjection', endog, exog_lead, gamma, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby)
 }
 
-euler_hat_ds <- function(exog, endog, cont, exog_innov_integ, betta, gamma, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
-    .Call('edsProjection_euler_hat_ds', PACKAGE = 'edsProjection', exog, endog, cont, exog_innov_integ, betta, gamma, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
+euler_hat_ds <- function(exog, endog, cont, exog_innov_integ, betta, gamma, coeffs_cont, n_exog, n_endog, n_cont, n_fwd, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
+    .Call('edsProjection_euler_hat_ds', PACKAGE = 'edsProjection', exog, endog, cont, exog_innov_integ, betta, gamma, coeffs_cont, n_exog, n_endog, n_cont, n_fwd, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
 }
 
 contemp_eqns_ds <- function(exog, endog, cont, params, extra_args) {
@@ -65,20 +65,20 @@ integrand_irbc <- function(endog, exog_lead, gamma, coeffs_cont, n_exog, n_endog
     .Call('edsProjection_integrand_irbc', PACKAGE = 'edsProjection', endog, exog_lead, gamma, coeffs_cont, n_exog, n_endog, n_cont, N, upper, lower, cheby)
 }
 
-euler_hat_irbc <- function(exog, endog, cont, exog_innov_integ, betta, gamma, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
-    .Call('edsProjection_euler_hat_irbc', PACKAGE = 'edsProjection', exog, endog, cont, exog_innov_integ, betta, gamma, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
+euler_hat_irbc <- function(exog, endog, cont, exog_innov_integ, betta, gamma, coeffs_cont, n_exog, n_endog, n_cont, n_fwd, rho, n_integ, N, upper, lower, cheby, weights, print_rhs = FALSE) {
+    .Call('edsProjection_euler_hat_irbc', PACKAGE = 'edsProjection', exog, endog, cont, exog_innov_integ, betta, gamma, coeffs_cont, n_exog, n_endog, n_cont, n_fwd, rho, n_integ, N, upper, lower, cheby, weights, print_rhs)
 }
 
 contemp_eqns_irbc <- function(exog, endog, cont, params, extra_args) {
     .Call('edsProjection_contemp_eqns_irbc', PACKAGE = 'edsProjection', exog, endog, cont, params, extra_args)
 }
 
-irbc_reg <- function(exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, extra_args, print_rhs = FALSE) {
-    .Call('edsProjection_irbc_reg', PACKAGE = 'edsProjection', exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, rho, n_integ, N, upper, lower, cheby, weights, extra_args, print_rhs)
+irbc_reg <- function(exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, n_fwd, rho, n_integ, N, upper, lower, cheby, weights, extra_args, print_rhs = FALSE) {
+    .Call('edsProjection_irbc_reg', PACKAGE = 'edsProjection', exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, n_fwd, rho, n_integ, N, upper, lower, cheby, weights, extra_args, print_rhs)
 }
 
-euler_hat_grid <- function(coeffs, coeffs_cont, X, lags, params, n_exog, n_endog, n_cont, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad = TRUE, n_nodes = 0L, model = "irbc") {
-    .Call('edsProjection_euler_hat_grid', PACKAGE = 'edsProjection', coeffs, coeffs_cont, X, lags, params, n_exog, n_endog, n_cont, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad, n_nodes, model)
+euler_hat_grid <- function(coeffs, coeffs_cont, X, lags, params, n_exog, n_endog, n_cont, n_fwd, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad = TRUE, n_nodes = 0L, model = "irbc") {
+    .Call('edsProjection_euler_hat_grid', PACKAGE = 'edsProjection', coeffs, coeffs_cont, X, lags, params, n_exog, n_endog, n_cont, n_fwd, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad, n_nodes, model)
 }
 
 contemp_eqns_irbc_grid <- function(X, lags, params, n_exog, n_endog, n_cont, extra_args, model = "irbc") {
