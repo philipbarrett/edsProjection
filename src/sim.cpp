@@ -123,7 +123,7 @@ arma::mat endog_sim( int n_out, arma::mat exog_sim, arma::mat coeffs, int N,
       // Number of columns
   mat out = zeros<mat>( n_out, n_col ) ;
       // The vector of outputs
-      
+
   if( burn > 0 ){
     for( int i = 0 ; i < burn ; i ++ ){
       endog_old = endog_new ;
@@ -132,16 +132,18 @@ arma::mat endog_sim( int n_out, arma::mat exog_sim, arma::mat coeffs, int N,
     }
   }     // Create the inital point via simulation
   
+  
   int out_row = 0 ;
       // The counter for the row of the output matrix
   for( int i = 0 ; i < n_pds ; i ++ ){
     endog_old = endog_new ;
     endog_new = endog_update( exog_sim.row(i+burn), endog_old, coeffs, n_exog, n_endog, 
                               N, upper, lower, cheby ) ;
+                              
     if( i == out_row * kappa ){
-      out.row(out_row).subvec(0,n_endog-1) = exog_sim.row(i+burn) ;
+      out.row(out_row).subvec(0,n_exog-1) = exog_sim.row(i+burn) ;
           // Record the exogenous variable
-      out.row(out_row).subvec(n_endog,n_endog+n_exog-1) = endog_new ;
+      out.row(out_row).subvec(n_exog,n_endog+n_exog-1) = endog_new ;
           // Record the endogenous variable
       if( lag ){
         if( i == 0 & burn == 0 ){
@@ -149,7 +151,7 @@ arma::mat endog_sim( int n_out, arma::mat exog_sim, arma::mat coeffs, int N,
         }else{
           out.row(out_row).subvec(n_endog+n_exog,n_endog+2*n_exog-1) = exog_sim.row(i+burn-1) ;          
         }
-        out.row(out_row).subvec(2*n_endog+n_exog,2*(n_endog+n_exog)-1) = endog_old ;
+        out.row(out_row).subvec(2*n_exog+n_endog,2*(n_endog+n_exog)-1) = endog_old ;
       }   // Save the lagged variables where required
       out_row ++ ;
           // Increment the output row

@@ -31,6 +31,6 @@ arma::mat euler_hat_grid(
 //                            int n_exog, int n_endog, int n_cont ) ;
 
 arma::mat contemp_eqns_irbc_grid( arma::mat X, int lags, List params,
-                                  int n_exog, int n_endog, int n_cont ) ;
+          int n_exog, int n_endog, int n_cont, List extra_args, std::string model ) ;
 
 #endif

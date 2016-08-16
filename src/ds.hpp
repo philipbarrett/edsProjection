@@ -35,7 +35,7 @@ arma::rowvec euler_hat_ds(
                   bool print_rhs ) ;
 
 arma::rowvec contemp_eqns_ds( 
-                arma::mat exog, arma::mat endog, arma::rowvec cont, List params ) ;
+    arma::mat exog, arma::mat endog, arma::rowvec cont, List params, List extra_args ) ;
 
 // arma::rowvec irbc_reg( 
 //                   arma::mat exog, arma::mat endog, arma::rowvec cont,

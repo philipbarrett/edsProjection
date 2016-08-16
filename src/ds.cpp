@@ -83,7 +83,7 @@ arma::rowvec euler_hat_ds(
       // r1 and r2
       
   for( int i = 0 ; i < n_integ ; i++ ){
-    integrand.row(i) = integrand_irbc( endog, exog_lead.row(i), gamma, 
+    integrand.row(i) = integrand_ds( endog, exog_lead.row(i), gamma, 
                                       coeffs_cont, n_exog, n_endog, 
                                       n_cont, N, upper, lower, cheby ) ;
   }   // Compute the integral
@@ -116,7 +116,7 @@ arma::rowvec euler_hat_ds(
 // [[Rcpp::export]]
 arma::rowvec contemp_eqns_ds( 
   arma::mat exog, arma::mat endog, arma::rowvec cont, List params, 
-  double y_1_ss=0 ){
+  List extra_args ){
 // Updates the controls in the contemporaneous block of the model
 
 // Takes as given: z1, z2, af1, q, and guesses for x12, x21
@@ -125,23 +125,25 @@ arma::rowvec contemp_eqns_ds(
 
 
   // Extract parameters
-  double alpha = params["alpha"] ;
+  double alpha = params["share"] ;
   double log_alpha = std::log(alpha) ;
   double log_1_alpha = std::log(1-alpha) ;
-  double alphahat = params["alphahat"] ;
   double betta = params["betta"] ;
   double eta = params["eta"] ;
-  double log_alphahat = std::log( alphahat ) ;
-  double log_1_alphahat = std::log( 1 - alphahat ) ;
+  double alphahat = pow( alpha, 1 / eta )  ;
+  double alphahat_1 = pow( 1 - alpha, 1 / eta )  ;
+  double gamma = params["gamma"] ;
   double P1_bar = params["P1.bar"] ;
   double P2_bar = params["P2.bar"] ;
   double p1_bar = std::log( P1_bar ) ;
   double p2_bar = std::log( P2_bar ) ;
+  double y_1_ss = extra_args["y1.ss"] ;
 
-  rowvec out( cont.n_elem ) ;
-      // Initialize the output vector.  Defines the equations for:
+  rowvec out( cont.n_elem + 1 ) ;
+      // Initialize the output vector.  Need to add one spot for NFA.
+      // Defines the equations for:
       //   c_1, c_2, rb1, rb2, x_11, x_22, x_12, x_21, p_1, p_2, 
-      //   p_11, p_22, p_12, p_21, e_12, q, y_1, y_2, cd, cg
+      //   p_11, p_22, p_12, p_21, e_12, y_1, y_2, cd, cg, nfa
 
   rowvec A = exp( exog.row(0) ) ;
   double A_1 = A(0) ;
@@ -162,13 +164,13 @@ arma::rowvec contemp_eqns_ds(
       // Goods market clearing.  Guards to make sure that logs don't fail here.
   double c_1, c_2 ;
   if( eta == 1.0 ){
-    c_1 = alpha * x_11 + ( 1 - alphahat ) * x_12 ;
-    c_2 = alpha * x_22 + ( 1 - alphahat ) * x_21 ;
+    c_1 = alpha * x_11 + ( 1 - alpha ) * x_12 ;
+    c_2 = alpha * x_22 + ( 1 - alpha ) * x_21 ;
   }else{
     c_1 = eta / ( eta - 1 ) * std::log( alphahat * std::exp( ( 1 - 1 / eta ) * x_11 ) +
-              ( 1 - alphahat ) * std::exp( ( 1 - 1 / eta ) * x_12 ) ) ;
+              alphahat_1 * std::exp( ( 1 - 1 / eta ) * x_12 ) ) ;
     c_2 = eta / ( eta - 1 ) * std::log( alphahat * std::exp( ( 1 - 1 / eta ) * x_22 ) +
-              ( 1 - alphahat ) * std::exp( ( 1 - 1 / eta ) * x_21 ) ) ;
+              alphahat_1 * std::exp( ( 1 - 1 / eta ) * x_21 ) ) ;
   }
   
       // Consumption aggregators
@@ -178,31 +180,33 @@ arma::rowvec contemp_eqns_ds(
       // Producer prices
   double p_1 = p_11 - 1 / eta * ( log_alpha + c_1 - x_11 ) ;
   double p_2 = p_22 - 1 / eta * ( log_alpha + c_2 - x_22 ) ;
-      // Aggregate price levels
+      // Aggregate price levels, from factor demands
   double e = q + p_1 - p_2 ;
       // The nominal exchange rate
-  double p_12 = e + p_22 ;
-  double p_21 = e + p_11 ;
+  double p_12 = p_22 + e ;
+  double p_21 = p_11 - e ;
       // Imported goods prices
   double rb1 = - p_1 - z1_lag ;
-  double rb2 = e - p_1 - z2_lag ;
+  double rb2 = e - p_2 - z2_lag ;
       // Realized returns
-  double y_1 = A_1 - p_1 ;
-  double y_2 = A_2 - p_2 ;
+  double y_1 = A(0)- p_1 ;
+  double y_2 = A(1) - p_2 ;
       // Real incomes
   double NFA = std::exp( rb2 ) * NFA_lag + std::exp( y_1 ) - std::exp( c_1 ) +
-                  std::exp( y1_ss ) * betta * af1 * std::exp( rb1 - rb2 ) ;
+                  std::exp( y_1_ss ) * betta * af1 * std::exp( rb1 - rb2 ) ;
       // Net foreign assets
-  
-  /** NEED TO REWRITE FROM HERE **/
+  double cd = c_1 - c_2 - q / gamma ;
+      // Conditional expectation zero
+  double cg = .5 * ( c_1 + c_2 ) ;
   
   // NFA = exp(rb2)*NFA(-1) + exp(Y1) - exp(C1) + exp(STEADY_STATE(Y1))*( BT*af1*(exp(rb1) - exp(rb2)) + zeta );
       
-  double x_11_new = c_1 + eta * ( p_1 - p1_bar + log_alphahat ) ;
-  double x_22_new = c_2 + eta * ( p_2 - p2_bar + log_alphahat ) ;
+  double x_12_new = c_1 + log_1_alpha + eta * ( p_1 - p_12 ) ;
+  double x_21_new = c_2 + log_1_alpha + eta * ( p_2 - p_21 ) ;
       // The resulting factor demands from the remaining optimality condition
-  out << c_1 << c_2 << r_1 << r_2 << x_11_new << x_22_new << x_12 << x_21 
-             << p_1 << p_2 << p_12 << p_21 << e_12 << endr ;
+  out << c_1 << c_2 << rb1 << rb2 << x_11 << x_22 << x_12_new << x_21_new
+             << p_1 << p_2 << p_11 << p_22 << p_12 << p_21 << e << q
+             << af1 << y_1 << y_2 << cd << cg << NFA << endr ;
       // The output vector    
   return( out ) ;
 }

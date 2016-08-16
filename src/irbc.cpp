@@ -127,7 +127,7 @@ arma::rowvec euler_hat_irbc(
 
 // [[Rcpp::export]]
 arma::rowvec contemp_eqns_irbc( 
-  arma::mat exog, arma::mat endog, arma::rowvec cont, List params ){
+  arma::mat exog, arma::mat endog, arma::rowvec cont, List params, List extra_args ){
 // Updates the controls in the contemporaneous block of the model
 // Takes as given: B11, B22, r1, r2, and guesses for x11, x22
 // Outputs values of the contemporaneous controls consistent with these, as well
@@ -213,7 +213,7 @@ arma::rowvec irbc_reg(
                   int n_exog, int n_endog, int n_cont,
                   arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
                   arma::rowvec lower, bool cheby, arma::rowvec weights, 
-                  bool print_rhs=false ){
+                  List extra_args, bool print_rhs=false ){
 // Computes the dependent variables for the regression problem.  Aggregates both
 // the states and controls.
   double betta = params["betta"] ;
@@ -228,7 +228,7 @@ arma::rowvec irbc_reg(
                             print_rhs ) ;
       // The endogenous states
   out.tail(n_cont-2) = 
-        contemp_eqns_irbc( exog, endog, cont, params ) ;
+        contemp_eqns_irbc( exog, endog, cont, params, extra_args ) ;
       // The controls
   return out ;
 }

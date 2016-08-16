@@ -11,6 +11,7 @@
 
 #include "irbcSol.hpp"
 #include "irbc.hpp"
+#include "ds.hpp"
 #include "sim.hpp"
 #include "quad.hpp"
 
@@ -61,20 +62,20 @@ arma::mat euler_hat_grid(
   }
   
   /** Define the model function **/
-  rowvec euler_hat_fn( 
-              arma::rowvec exog, arma::rowvec endog, arma::rowvec cont,
-              arma::mat exog_innov_integ, double betta,
-              double gamma, arma::mat coeffs_cont, 
-              int n_exog, int n_endog, int n_cont,
-              arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
-              arma::rowvec lower, bool cheby, arma::rowvec weights,
-              bool print_rhs ) ;
+  rowvec (*euler_hat_fn)( 
+             arma::rowvec exog, arma::rowvec endog, arma::rowvec cont,
+                  arma::mat exog_innov_integ, double betta, 
+                  double gamma, arma::mat coeffs_cont, 
+                  int n_exog, int n_endog, int n_cont,
+                  arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
+                  arma::rowvec lower, bool cheby, arma::rowvec weights,
+                  bool print_rhs ) ;
       // Pointer to model evaluation function
   
   if( model == "irbc" )
     euler_hat_fn = euler_hat_irbc ;
         // The first attempt at the Adams-Barrett model
-  if( model == "DS" )
+  if( model == "ds" )
     euler_hat_fn = euler_hat_ds ;
         // The Devreux-Sutherland version
   
@@ -100,9 +101,12 @@ arma::mat euler_hat_grid(
 
 // [[Rcpp::export]]
 arma::mat contemp_eqns_irbc_grid( arma::mat X, int lags, List params,
-                                  int n_exog, int n_endog, int n_cont ){
+                          int n_exog, int n_endog, int n_cont, List extra_args,
+                          std::string model="irbc" ){
 // Computes contemp_eqns_irbc on the state/control grid
  
+  int fwd = extra_args["n.fwd"] ;
+      // Number of forward-looking equations
   int n_pts = X.n_rows ;
       // The number of points at which the error is assessed
   mat exog = zeros( 1 + lags, n_exog ) ;
@@ -110,9 +114,23 @@ arma::mat contemp_eqns_irbc_grid( arma::mat X, int lags, List params,
   rowvec cont = zeros<rowvec>( std::max( n_cont, 1 ) ) ;
       // Temporary containers used in the loop.  Make cont bigger than size 0
       // here - just passing a useless empty container
-  mat err = zeros(n_pts, n_cont ) ;
-      // Even though two controls are determined by the Euler equation we still
-      // return them through this function.
+  mat err = zeros(n_pts, n_cont + fwd - n_endog ) ;
+      // The number of static equations to be solved is the number of
+      // controls plus one for each state that cannot be paired with a control.
+  
+    /** Define the model function **/
+  rowvec (*contemp_eqns_fn)( 
+             arma::mat exog, arma::mat endog, arma::rowvec cont, List params, 
+             List extra_args ) ;
+      // Pointer to model evaluation function
+  
+  if( model == "irbc" )
+    contemp_eqns_fn = contemp_eqns_irbc ;
+        // The first attempt at the Adams-Barrett model
+  if( model == "ds" )
+    contemp_eqns_fn = contemp_eqns_ds ;
+        // The Devreux-Sutherland version
+  
   
   /** Now compute the model errors **/
   for( int i = 0 ; i < n_pts ; i++ ){
@@ -127,7 +145,7 @@ arma::mat contemp_eqns_irbc_grid( arma::mat X, int lags, List params,
     if( n_cont > 0 )
       cont = X.row(i).tail( n_cont ) ;
         // The controls
-    err.row(i) = contemp_eqns_irbc( exog, endog, cont, params ) ;
+    err.row(i) = contemp_eqns_fn( exog, endog, cont, params, extra_args ) ;
   }   // The error on the contemporaneous block
   return err ;
 }

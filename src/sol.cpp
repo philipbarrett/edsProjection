@@ -84,9 +84,9 @@ arma::mat euler_hat( arma::mat coeffs, arma::mat coeffs_cont,
   if( model == "ngm2.cont" )
     euler_hat_fn = ngm_reg_2 ;
         // The two-country neoclassical growth model with controls
-  if( model == "irbc" )
-    euler_hat_fn = irbc_reg ;
-        // First attempt at the Adams-Barrett IRBC model
+//  if( model == "irbc" )
+//    euler_hat_fn = irbc_reg ;
+//        // First attempt at the Adams-Barrett IRBC model
         
   
   /** Now compute the model errors **/
