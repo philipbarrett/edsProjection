@@ -121,8 +121,9 @@ arma::rowvec contemp_eqns_ds(
 // Updates the controls in the contemporaneous block of the model
 
 // Takes as given: z1, z2, af1, q, and guesses for x12, x21
-// Outputs values of the contemporaneous controls consistent with these, as well
-// as predictors (i.e. new guesses) for x12 and x21
+// Outputs values of the contemporaneous controls and the next-period states under 
+// the LoM consistent with these, as well as predictors (i.e. new guesses) for 
+// x12 and x21.
 
 
   // Extract parameters
@@ -140,16 +141,18 @@ arma::rowvec contemp_eqns_ds(
   double p2_bar = std::log( P2_bar ) ;
   double y_1_ss = extra_args["y1.ss"] ;
 
-  rowvec out( cont.n_elem + 1 ) ;
+  rowvec out( cont.n_elem + endog.n_cols ) ;
       // Initialize the output vector.  Need to add one spot for NFA.
       // Defines the equations for:
       //   c_1, c_2, rb1, rb2, x_11, x_22, x_12, x_21, p_1, p_2, 
-      //   p_11, p_22, p_12, p_21, e_12, y_1, y_2, cd, cg, nfa
+      //   p_11, p_22, p_12, p_21, e_12, af1, y_1, y_2, cd, cg, nfa
 
   rowvec A = exp( exog.row(0) ) ;
   double A_1 = A(0) ;
   double A_2 = A(1) ;
   double NFA_lag = endog(1,0) ;
+  double z1 = endog(0,1) ;
+  double z2 = endog(0,2) ;
   double z1_lag = endog(1,1) ;
   double z2_lag = endog(1,2) ;
       // Extract the states
@@ -205,9 +208,10 @@ arma::rowvec contemp_eqns_ds(
   double x_12_new = c_1 + log_1_alpha + eta * ( p_1 - p_12 ) ;
   double x_21_new = c_2 + log_1_alpha + eta * ( p_2 - p_21 ) ;
       // The resulting factor demands from the remaining optimality condition
-  out << c_1 << c_2 << rb1 << rb2 << x_11 << x_22 << x_12_new << x_21_new
+  out << NFA << z1 << z2 <<  // Return states first
+         c_1 << c_2 << rb1 << rb2 << x_11 << x_22 << x_12_new << x_21_new
              << p_1 << p_2 << p_11 << p_22 << p_12 << p_21 << e << q
-             << af1 << y_1 << y_2 << cd << cg << NFA << endr ;
+             << af1 << y_1 << y_2 << cd << cg << endr ;
       // The output vector    
   return( out ) ;
 }

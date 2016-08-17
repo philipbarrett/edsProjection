@@ -114,7 +114,7 @@ arma::mat contemp_eqns_irbc_grid( arma::mat X, int lags, List params,
   rowvec cont = zeros<rowvec>( std::max( n_cont, 1 ) ) ;
       // Temporary containers used in the loop.  Make cont bigger than size 0
       // here - just passing a useless empty container
-  mat err = zeros(n_pts, n_cont + n_fwd - n_endog ) ;
+  mat err = zeros(n_pts, n_cont + n_endog ) ;
       // The number of static equations to be solved is the number of
       // controls plus one for each state that cannot be paired with a control.
   

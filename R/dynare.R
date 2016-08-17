@@ -104,6 +104,8 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
                    'P1', 'P2', 'P11', 'P22', 'P12', 'P21', 'E', 'Q', 'af1',
                    'Y1', 'Y2', 'cd', 'cg' )
       # Variable names for the DS-style solution
+  fwd.order <- c( 'Z1', 'af1', 'Z2', 'Q')
+      # The forward-looking equation variables
   sim.exog <- sim[, exog.order]
   sim.endog <- sim[, endog.order]
   sim.cont <- sim[, cont.order]
@@ -155,67 +157,58 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
       # Redefine X for evaluating the errors
   extra.args <- list(n.fwd=4, y1.ss=mod$ys['Y1'])
       # The number of forward-looking equations
-  cont.nfa <- contemp_eqns_irbc_grid( X, 1, params, n.exog, n.endog, 
+  pred <- contemp_eqns_irbc_grid( X, 1, params, n.exog, n.endog, 
                                       n.cont, extra.args, "ds" )
-      # The controls + NFA predictions
-  colnames(cont.nfa) <- c( cont.order, 'NFA' )
+      # The contemporaneous predictors
+  colnames(pred) <- c( endog.order, cont.order )
       # Rename the columns
-  cont.pred <- cont.nfa[,1:n.cont]
       # The control predictors (Q and af1 to be added after the Euler eqs)
-  cont.err <- abs( sim.cont[-1,] - cont.pred )[,(!cont.order %in% c('Q', 'af1') )]
-      # The errors on the static equations
-  nfa.err <- abs( cont.nfa[, 1+n.cont] - sim.endog[-1,'NFA'] )
-      # The NFA error
-  
-  euler.pred <- euler_hat_grid( endog.coeff, cont.coeff, X, n.lag, params,
-                                n.exog, n.endog, n.cont, n.fwd, params$rho, 
-                                params$sig.eps, 0, N, upper, lower, cheby,
-                                matrix(0,1,1), TRUE, n.nodes, "ds" )
+  pred[,fwd.order] <- euler_hat_grid( endog.coeff, cont.coeff, X, n.lag, params,
+                                      n.exog, n.endog, n.cont, n.fwd, params$rho, 
+                                      params$sig.eps, 0, N, upper, lower, cheby,
+                                      matrix(0,1,1), TRUE, n.nodes, "ds" )
       # Generate predictions from the Euler equation errors
-  euler.orig <- cbind( sim.endog[-1,'Z1'], sim.cont[-1,'af1'], 
-                       sim.endog[-1,'Z2'], sim.cont[-1,'Q'] )
-  euler.err <- abs( euler.pred - euler.orig )
-      # The Euler equation errors
-  err <- apply( cbind( cont.err, nfa.err, euler.err ), 1, max )
+  err <- apply( abs( pred - cbind( sim.endog[-1,], sim.cont[-1,] ) ), 1, max )
       # Extract the distribution of maximum equation errors
   
-  ### 4. Now for the alternative-state representation ###
-  # States are now A1, A2, NFA, and af1
-  endog.order.alt <- c( 'NFA', 'af1' )
-  cont.order.alt <- c( 'C1', 'C2', 'rb1', 'rb2', 'X11', 'X22', 'X12', 'X21', 
-                   'P1', 'P2', 'P11', 'P22', 'P12', 'P21', 'Z1', 'Z2', 'E', 'Q', 
-                   'Y1', 'Y2', 'cd', 'cg' )
-      # Variable names for the DSalternative-state respresentation
-  sim.endog.alt <- sim[, endog.order.alt]
-  sim.cont.alt <- sim[, cont.order.alt]
-      # Separate out the exogenous and endogenous states and the static variables
-  n.endog <- length( endog.order.alt )
-  n.cont <- length( cont.order.alt )
-      # Numbers of types of variables
-  message('Generating coefficient rules for alternative-state representation')
-      # Screen updating
-  upper <- c(  3 * sd.x, mod$ys[endog.order.alt] + .5 )
-  lower <- c( -3 * sd.x, mod$ys[endog.order.alt] - .5 )
-      # The bounds of the states
-  endog.reg <- sim.endog.alt[-nsim,]
-  exog.reg <- sim.exog[-1,]
-  X <- cbind( exog.reg, endog.reg )
-      # The X-variables for the regressions
-  n.X <- 1 + length(endog.order.alt) + length(exog.order) 
-      # The number of X variables is the number of states plus one (the constant
-      # term)
-  endog.coeff <- matrix( 0, n.X, n.endog )
-  cont.coeff <- matrix( 0, n.X, n.cont )
-      # The coefficient matrices  
-  
-  for(i in 1:n.endog) endog.coeff[,i] <- coeff_reg( sim.endog.alt[,i][-1], X, N,
-                                                    lower, upper, cheby )
-  for(i in 1:n.cont) cont.coeff[,i] <- coeff_reg( sim.cont.alt[,i][-1], X, N, 
-                                                  lower, upper, cheby )
-      # Populate the coefficient matrices
-  alt.sol <- list( endog.coeff=endog.coeff, cont.coeff=cont.coeff, 
-                  upper=upper, lower=lower )
-      # Details of the alternative solution
+#   ### 4. Now for the alternative-state representation ###
+#   # States are now A1, A2, NFA, and af1
+#   endog.order.alt <- c( 'NFA', 'af1' )
+#   cont.order.alt <- c( 'C1', 'C2', 'rb1', 'rb2', 'X11', 'X22', 'X12', 'X21', 
+#                    'P1', 'P2', 'P11', 'P22', 'P12', 'P21', 'Z1', 'Z2', 'E', 'Q', 
+#                    'Y1', 'Y2', 'cd', 'cg' )
+#       # Variable names for the DSalternative-state respresentation
+#   sim.endog.alt <- sim[, endog.order.alt]
+#   sim.cont.alt <- sim[, cont.order.alt]
+#       # Separate out the exogenous and endogenous states and the static variables
+#   n.endog <- length( endog.order.alt )
+#   n.cont <- length( cont.order.alt )
+#       # Numbers of types of variables
+#   message('Generating coefficient rules for alternative-state representation')
+#       # Screen updating
+#   upper <- c(  3 * sd.x, mod$ys[endog.order.alt] + .5 )
+#   lower <- c( -3 * sd.x, mod$ys[endog.order.alt] - .5 )
+#       # The bounds of the states
+#   endog.reg <- sim.endog.alt[-nsim,]
+#   exog.reg <- sim.exog[-1,]
+#   X <- cbind( exog.reg, endog.reg )
+#       # The X-variables for the regressions
+#   n.X <- 1 + length(endog.order.alt) + length(exog.order) 
+#       # The number of X variables is the number of states plus one (the constant
+#       # term)
+#   endog.coeff <- matrix( 0, n.X, n.endog )
+#   cont.coeff <- matrix( 0, n.X, n.cont )
+#       # The coefficient matrices  
+#   
+#   for(i in 1:n.endog) endog.coeff[,i] <- coeff_reg( sim.endog.alt[,i][-1], X, N,
+#                                                     lower, upper, cheby )
+#   for(i in 1:n.cont) cont.coeff[,i] <- coeff_reg( sim.cont.alt[,i][-1], X, N, 
+#                                                   lower, upper, cheby )
+#       # Populate the coefficient matrices
+#   alt.sol <- list( endog.coeff=endog.coeff, cont.coeff=cont.coeff, 
+#                   upper=upper, lower=lower )
+#       # Details of the alternative solution
+  alt.sol <- NA
 
   return( list( mod=mod, ds.sol=ds.sol, err=err, alt.sol=alt.sol ) )
 }

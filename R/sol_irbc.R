@@ -54,6 +54,8 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
   sig.eps <- params$sig.eps
   n.terms <- idx_count( N, n.exog + n.endog )
   
+  if( debug.flag ) browser()
+  
   ##### Create the exogenous simulation ####
   set.seed(1234)
   exog.sim <- sapply( 1:n.exog, function(i) ar1_sim( n.sim * kappa + burn, 
@@ -68,6 +70,9 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
   state.select <- 1:(n.exog)
   if( lags > 0 ) for( j in 1:lags ) state.select <- c( state.select, j*n.state + n.exog + 1:n.endog )
       # The states selected for the EDS algorithm
+  contemp.select <- c( n.exog+1:n.endog, (1+lags)*(n.endog+n.exog)+1:n.cont )
+      # The indices of the contemporaenous variables
+  extra.args <- list( n.fwd=opt$n.fwd, y1.ss=opt$ys['Y1'] )
   
   while( i.iter < iter & diff > tol ){
   # Main outer loop
@@ -113,29 +118,33 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
     X.cont <- cbind( X, cont.sim )
         # Compute the new simulation for the controls
     
+    
     while( i.c <= c.iter & c.diff > c.tol ){
       
       ### 2.3 Compute the **values** of the controls satisfying the
       ### contemporaneous block
-      cont.hat <- contemp_eqns_irbc_grid( X.cont, lags, params, n.exog, n.endog, n.cont )
+      contemp <- contemp_eqns_irbc_grid( X.cont, lags, params, n.exog, n.endog, 
+                                          n.cont, extra.args, opt$model )
           # The predictors in the contemporaneous block
-      c.diff <- max( abs( cont.hat - cont.sim ) )
+      c.diff <- max( abs( X.cont[,contemp.select] - contemp ) )
       i.c <- i.c + 1
           # Update the loop controls. Level diff because in logs
-      cont.sim <- c.gain * cont.hat + ( 1 - c.gain ) * cont.sim
+      X.cont[,contemp.select] <- 
+                      c.gain * contemp + ( 1 - c.gain ) * X.cont[,contemp.select]
           # Compute the new coefficients on the consumption rule from the consumption predictors
-      X.cont <- cbind( X, cont.sim )
-          # Update the coefficients and the grid controls
       if( adapt.gain ) c.gain <- max( exp( - adapt.exp * c.diff ), c.gain )
           # Update the gain where required
     }
     
-    message('  Control rules complete.\n    Iterations = ', i.c,  
+    message('  Contemporaneous block complete.\n    Iterations = ', i.c,  
             '\n    Difference = ', round( c.diff, 5 ),
             '\n    Adaptive gain = ', round( c.gain, 5 ) )
     
+    
+    ############ REWRITE FROM HERE ONWARDS ############
+    
     ### 2.4 Update the control rules and grid values ###
-    for(i in 1:n.cont) coeff.cont[,i] <- coeff_reg( cont.sim[,i], X[, state.select], 
+    for(i in 1:n.cont) coeff.cont[,i] <- coeff_reg( contemp[,n.endog+i], X[, state.select], 
                                                   N, lower, upper, cheby )
         # Update the coefficients on the other controls in accordance with the
         # solutions for consumption and intermediates.
@@ -145,7 +154,6 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
     cont.sim <- cont_sim( X, coeff.cont, N, n.endog, n.exog, upper, lower, cheby )
     X.cont <- cbind( X, cont.sim )
         # Compute the new simulation for the controls
-    
     
     
     ######## 3. ITERATE OVER RULES FOR B AND R TO SOLVE EULER EQUATIONS ########
