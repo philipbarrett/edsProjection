@@ -79,6 +79,9 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
       # Number of lags
   n.fwd <- 4
       # Number of Euler equations
+  n.sample <- 2000
+      # The number of rows of the simulation to sample for the coefficient rules
+      # & such
   
   ### 1. Run and extract the model ###
   message('Creating & solving dynare model')
@@ -153,7 +156,7 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
   message('Evaluating errors from the dynare solution')
       # Screen updating
   X <- cbind( sim.exog[-1,], sim.endog[-1,], sim.exog[-nsim,], sim.endog[-nsim,], 
-              sim.cont[-1,] )
+              sim.cont[-1,] )[sample(nrow(X),size=n.sample,replace=TRUE),]
       # Redefine X for evaluating the errors
   extra.args <- list(n.fwd=4, y1.ss=mod$ys['Y1'])
       # The number of forward-looking equations
@@ -168,8 +171,14 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
                                       params$sig.eps, 0, N, upper, lower, cheby,
                                       matrix(0,1,1), TRUE, n.nodes, "ds" )
       # Generate predictions from the Euler equation errors
-  err <- apply( abs( pred - cbind( sim.endog[-1,], sim.cont[-1,] ) ), 1, max )
+  err <- apply( pred - X[,c(n.exog+1:n.endog, 
+                          (1+n.lag)*(n.exog+n.endog)+1:n.cont)], 1, max )
       # Extract the distribution of maximum equation errors
+  
+  ###### TODO:  THINK ABOUT THE ERROR SUMMARIES I WANT #####
+  
+  
+  
   
 #   ### 4. Now for the alternative-state representation ###
 #   # States are now A1, A2, NFA, and af1
