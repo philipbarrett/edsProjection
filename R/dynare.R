@@ -133,22 +133,22 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
   n.X <- 1 + length(endog.order) + length(exog.order) 
       # The number of X variables is the number of states plus one (the constant
       # term)
-  endog.coeff <- matrix( 0, n.X, n.endog )
-  cont.coeff <- matrix( 0, n.X, n.cont )
+  coeff <- matrix( 0, n.X, n.endog )
+  coeff.cont <- matrix( 0, n.X, n.cont )
       # The coefficient matrices  
-  for(i in 1:n.endog) endog.coeff[,i] <- coeff_reg( sim.endog[,i][-1], X, N,
+  for(i in 1:n.endog) coeff[,i] <- coeff_reg( sim.endog[,i][-1], X, N,
                                                     lower, upper, cheby )
-  for(i in 1:n.cont) cont.coeff[,i] <- coeff_reg( sim.cont[,i][-1], X, N, 
+  for(i in 1:n.cont) coeff.cont[,i] <- coeff_reg( sim.cont[,i][-1], X, N, 
                                                   lower, upper, cheby )
       # Populate the coefficient matrices
 
   if(check){
-    sim.endog.alt <- endog_sim( nsim, sim.exog, endog.coeff, N, upper, lower, 
+    sim.endog.alt <- endog_sim( nsim, sim.exog, coeff, N, upper, lower, 
                                    sim.endog[1,], cheby, 1, 0, TRUE )
     browser()
         # Do checks in debug - looks fine to me! :)
   }
-  ds.sol <- list( endog.coeff=endog.coeff, cont.coeff=cont.coeff, 
+  ds.sol <- list( coeff=coeff, coeff.cont=coeff.cont, 
                   upper=upper, lower=lower )
       # Details of the Devreux-Sutherland solution
   
@@ -166,19 +166,21 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
   colnames(pred) <- c( endog.order, cont.order )
       # Rename the columns
       # The control predictors (Q and af1 to be added after the Euler eqs)
-  pred[,fwd.order] <- euler_hat_grid( endog.coeff, cont.coeff, X, n.lag, params,
+  pred[,fwd.order] <- euler_hat_grid( coeff, coeff.cont, X, n.lag, params,
                                       n.exog, n.endog, n.cont, n.fwd, params$rho, 
                                       params$sig.eps, 0, N, upper, lower, cheby,
                                       matrix(0,1,1), TRUE, n.nodes, "ds" )
       # Generate predictions from the Euler equation errors
-  err <- apply( pred - X[,c(n.exog+1:n.endog, 
-                          (1+n.lag)*(n.exog+n.endog)+1:n.cont)], 1, max )
-      # Extract the distribution of maximum equation errors
-  
-  ###### TODO:  THINK ABOUT THE ERROR SUMMARIES I WANT #####
-  
-  
-  
+  err <- pred - X[,c(n.exog+1:n.endog, 
+                          (1+n.lag)*(n.exog+n.endog)+1:n.cont)]
+  bias <- mean(err)
+  aad <- mean(abs(err))
+  max.abs.err.dist <- apply( abs( err ), 1, max )
+        # The distribution of maximum equation errors
+  l.err <- list( bias=bias, aad=aad, 
+                 max.abs.err.dist=max.abs.err.dist,
+                 err=err)
+        # The list of different error measures
   
 #   ### 4. Now for the alternative-state representation ###
 #   # States are now A1, A2, NFA, and af1
@@ -205,21 +207,21 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
 #   n.X <- 1 + length(endog.order.alt) + length(exog.order) 
 #       # The number of X variables is the number of states plus one (the constant
 #       # term)
-#   endog.coeff <- matrix( 0, n.X, n.endog )
-#   cont.coeff <- matrix( 0, n.X, n.cont )
+#   coeff <- matrix( 0, n.X, n.endog )
+#   coeff.cont <- matrix( 0, n.X, n.cont )
 #       # The coefficient matrices  
 #   
-#   for(i in 1:n.endog) endog.coeff[,i] <- coeff_reg( sim.endog.alt[,i][-1], X, N,
+#   for(i in 1:n.endog) coeff[,i] <- coeff_reg( sim.endog.alt[,i][-1], X, N,
 #                                                     lower, upper, cheby )
-#   for(i in 1:n.cont) cont.coeff[,i] <- coeff_reg( sim.cont.alt[,i][-1], X, N, 
+#   for(i in 1:n.cont) coeff.cont[,i] <- coeff_reg( sim.cont.alt[,i][-1], X, N, 
 #                                                   lower, upper, cheby )
 #       # Populate the coefficient matrices
-#   alt.sol <- list( endog.coeff=endog.coeff, cont.coeff=cont.coeff, 
+#   alt.sol <- list( coeff=coeff, coeff.cont=coeff.cont, 
 #                   upper=upper, lower=lower )
 #       # Details of the alternative solution
   alt.sol <- NA
 
-  return( list( mod=mod, ds.sol=ds.sol, err=err, alt.sol=alt.sol ) )
+  return( list( mod=mod, ds.sol=ds.sol, l.err=l.err, alt.sol=alt.sol ) )
 }
 
 

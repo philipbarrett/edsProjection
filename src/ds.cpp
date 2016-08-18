@@ -99,10 +99,10 @@ arma::rowvec euler_hat_ds(
   }
   
   rowvec out(4) ;
-  out(0) = z1  - ( gamma * c1 - rho_pref + std::log( integral(0) ) ) ;
-  out(1) = af1 - ( gamma * c1 - rho_pref + std::log( integral(1) ) ) ;
-  out(2) = z2  - ( gamma * c2 - rho_pref + std::log( integral(2) ) ) ;
-  out(3) = q   - ( gamma * c2 - rho_pref + std::log( integral(3) ) ) ;
+  out(0) = z1  + ( gamma * c1 - rho_pref + std::log( integral(0) ) ) ;
+  out(1) = z2  - ( gamma * c1 - rho_pref + std::log( integral(1) ) ) ;
+  out(2) = af1 + ( gamma * c2 - rho_pref + std::log( integral(2) ) ) ;
+  out(3) = q   + ( gamma * c2 - rho_pref + std::log( integral(3) ) ) ;
       // The predictors.  Set up z1, Z_2 s.t. if current consumption is too high
       // for the Euler equation to hold then z1 decreases.  This will pull down 
       // on consumption in the contemporaneous block later.  Similarly, for af1:

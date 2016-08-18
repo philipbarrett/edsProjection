@@ -225,8 +225,8 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
             # Update the gain where required
         if( i.k %% 5 == 0 ) 
           message('        i.k = ', i.k, ',  v.k.diff = (', 
-                  round(v.k.diff[1],4), ', ', round(v.k.diff[2],4),  ', ',
-                  round(v.k.diff[3],4), ', ', round(v.k.diff[4],4), ' )' )
+                  round(v.k.diff[1],5), ', ', round(v.k.diff[2],5),  ', ',
+                  round(v.k.diff[3],5), ', ', round(v.k.diff[4],5), ' )' )
       }
       
       message('      ...complete.\n        Iterations = ', i.k,  
@@ -288,18 +288,21 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
     pred[,fwd.vars] <- euler_hat_grid( coeff.n, coeff.c, X.cont, lags, params,
                                         n.exog, n.endog, n.cont, n.fwd, rho, 
                                         sig.eps, 0, N, upper, lower, cheby,
-                                        matrix(0,1,1), TRUE, n.quad, "ds" )
+                                        matrix(0,1,1), TRUE, n.quad, model )
         # The forward-looking variables
-    eq.err <- pred - X.cont[,contemp.select]
-    max.abs.err <- apply( abs( eq.err ), 2, mean )
-    max.eq.err <- apply( eq.err, 2, mean )
-    message('  Maximum mean absolute equation error = ', round(max(max.abs.err), 4) )
+    err <- pred - X.cont[,contemp.select]
+    bias <- mean(err)
+    aad <- mean(abs(err))
+    max.abs.var.err <- apply( abs( err ), 2, mean )
+        # Error measures
+    message('  Bias = ', round(max(bias), 5) )
+    message('  Ave abs deviation = ', round(aad, 5) )
+    message('  Max variable-average abs error = ', round(max(max.abs.var.err), 5) )
     message('  Variable with maximum mean absolute equation error is ', 
-            c( endog.names, cont.names )[which.max(max.abs.err)] )
-    message('  Mean equation error = ', round(mean(abs(max.eq.err)), 4) )
-    message('  Maximum absolute mean equation error = ', round(max(abs(max.eq.err)), 4) )
+            c( endog.names, cont.names )[which.max(max.abs.var.err)] )  
+#     message('  Maximum absolute mean equation error = ', round(max(abs(max.eq.err)), 5) )
         # Maximum equation error
-    diff <- max(max.abs.err)
+    diff <- max(max.abs.var.err)
   
     endog.init <- apply( matrix( X[, n.exog + 1:n.endog ], ncol=n.endog), 2, mean )
     i.iter <- i.iter + 1
@@ -326,6 +329,7 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
   out$X.cont <- X.cont
   out$opt <- opt
   out$params <- params
+  out$err <- err
       # Set up the output
   return( out )
 }
@@ -339,7 +343,7 @@ sol.irbc.check <- function( sol, params=NULL, opt=NULL ){
   
   n.check <- 20000
   n.burn <- 1000
-  n.quad <- 7
+  n.quad <- 5
   kappa <- 101
       # The check and burn numbers.  Also do high-precision integration.
   
@@ -351,7 +355,13 @@ sol.irbc.check <- function( sol, params=NULL, opt=NULL ){
   N <- opt$N
   cheby <- opt$cheby
   lags <- opt$lags
+  endog.names <- opt$endog.names
+  cont.names <- opt$cont.names
+  fwd.vars <- opt$fwd.vars
+  n.fwd <- opt$n.fwd
+  model <- opt$model
       # Copy from options
+  extra.args <- list( n.fwd=opt$n.fwd, y1.ss=opt$ys['Y1'] )
   
   rho <- params$rho
   sig.eps <- params$sig.eps
@@ -361,23 +371,26 @@ sol.irbc.check <- function( sol, params=NULL, opt=NULL ){
                                                      rho[i], sig.eps[i] ) )
       # The exogenous simulation
   endog.sim <- endog_sim( n.check, exog.sim, sol$coeff, N, upper, lower, 
-                          c(0,0), cheby, kappa, n.burn, (lags>0) )
+                          rep(0,n.endog), cheby, kappa, n.burn, (lags>0) )
       # The endogenous simulation (Here set kappa=1)
   cont.sim <- cont_sim( endog.sim, sol$coeff.cont, N, n.endog, n.exog, upper, lower, cheby )
       # The controls
   all.sim <- cbind( endog.sim, cont.sim )
       # The combined simulation
   
-  k.hat <- euler_hat_grid( sol$coeff, sol$coeff.cont, all.sim, lags, params, n.exog, 
-                  n.endog, n.cont, rho, sig.eps, 0, N, upper, lower, cheby, 
-                  matrix(0,1,1,), TRUE, n.quad )
-      # The predictors for B & r
-  cont.hat <- contemp_eqns_irbc_grid( all.sim, lags, params, n.exog, n.endog, n.cont )
-      # The predictors for the controls
-  cont.hat[, 3:4] <- k.hat[, 3:4]
-      # Replace the predictors for r
-  
-  err <- cbind( k.hat[,1:2] - endog.sim[, 3:4], cont.hat - cont.sim )
+  pred <- contemp_eqns_irbc_grid( all.sim, lags, params, n.exog, n.endog, 
+                                  n.cont, extra.args, opt$model )
+      # The contemporaneous predictors
+  colnames(pred) <- c( endog.names, cont.names )
+      # Rename the columns
+  pred[,fwd.vars] <- euler_hat_grid( sol$coeff, sol$coeff.cont, all.sim, lags, params,
+                                     n.exog, n.endog, n.cont, n.fwd, rho, 
+                                     sig.eps, 0, N, upper, lower, cheby,
+                                     matrix(0,1,1), TRUE, n.quad, model )
+      # The forward-looking predictors  
+  contemp.select <- c( n.exog+1:n.endog, (1+lags)*(n.endog+n.exog)+1:n.cont )
+  err <- cbind( pred - all.sim[,contemp.select])
+                               # The indices of the contemporaenous variables] )
       # The errors
   out <- list( endog.sim=endog.sim, cont.sim=cont.sim, err=err )
   
