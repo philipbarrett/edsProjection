@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % AUTO-GENERATED CODE FROM DYNARE.R 
-% CREATED  2016-08-17-171743 
+% CREATED  2016-08-19-092158 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % Dynare code for the Adams-Barrett model.
@@ -24,7 +24,7 @@ rho1 = 0.9 ;
 rho2 = 0.9 ;
 sigeps1 = 0.01 ;
 sigeps2 = 0.01 ;
-eta = 6 ;
+eta = 5 ;
 
 dr={'rb1','rb2'};                  
 

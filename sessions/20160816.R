@@ -46,5 +46,10 @@ sol.2 <- sol.irbc.iterate( coeff.init, opt, params,  coeff.init.cont, FALSE )
 
 nl.check <- sol.irbc.check(sol.2)
 
-
-
+n.sim <- 10000
+exog.sim <- sapply( 1:opt$n.exog, function(i) 
+                        ar1_sim( n.sim, params$rho[i], params$sig.eps[i] ) )
+nl.sim <- endog_sim( n.sim, exog.sim, sol.2$coeff, 2, opt$upper, 
+                     opt$lower, opt$endog.init, FALSE, 1, 0, FALSE )
+dyn.sim <- endog_sim( n.sim, exog.sim, l.coeffs$ds.sol$coeff, 1, opt$upper, 
+                     opt$lower, opt$endog.init, FALSE, 1, 0, FALSE )
