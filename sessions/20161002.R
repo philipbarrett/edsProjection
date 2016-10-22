@@ -1,12 +1,12 @@
-params <- list( share = .86, gamma = 2, P1.bar=1, P2.bar=1, betta=.95,
+params <- list( share = .86, gamma = 3, P1.bar=1, P2.bar=1, betta=.95,
                 rho=c(.9,.9), sig.eps=c(.025,.025), eta=2 )
 
 
-nn.1 <- 10
-nn.2 <- 20
+nn.1 <- 5
+nn.2 <- 5
 nn <- nn.1 + nn.2
 eta.1.range <- c( 1.001, 1.09)
-eta.2.range <- c( 1.1, 12 )
+eta.2.range <- c( 1.1, 6 )
 eta.range <- c( eta.1.range, eta.2.range )
 
 v.eta <- c( seq( eta.1.range[1], eta.range[2], length.out=nn.1),
@@ -27,13 +27,13 @@ for( i.eta in 1:nn ){
   message('****************************')
   
   params$eta <- eta
-  all[i.eta,] <- stat.ds(params, "all")
+  all[i.eta,] <- stat.ds(params, "all", bo.nl=FALSE)
 }
 
-
-
-# plot( v.eta, all[,'ds.bs'], type='l', lwd=2, col='red' )
-# lines( v.eta, all[,'nl.bs'], lwd=2, col='blue' )
+plot( v.eta, all[,'ds.bs'], type='l', lwd=2, col='red' )
+lines( v.eta, all[,'nl.bs'], lwd=2, col='blue' )
+# 
+# 
 
 # ## And now UIP
 # uip <- matrix( 0, nn, 2 )
