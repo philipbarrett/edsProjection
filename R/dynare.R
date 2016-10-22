@@ -65,11 +65,12 @@ mod.run <- function(){
 }
 
 mod.read <- function(){
-# Reads the saved parameteres from the DS-style solution
+# Reads the saved parameters from the DS-style solution
   return( readMat('matlab/Rvars.mat') )
 }
 
-mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.nodes=3 ){
+mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.nodes=3,
+                    err.deets=FALSE ){
 # Generates the coefficient matrices and vector of equation errors
   
   ### 0. Hard-coding ###
@@ -79,7 +80,7 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
       # Number of lags
   n.fwd <- 4
       # Number of Euler equations
-  n.sample <- 2000
+  n.sample <- 4000
       # The number of rows of the simulation to sample for the coefficient rules
       # & such
   
@@ -92,14 +93,20 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
       # Run the model
   mod <- mod.read()
       # The model save file as a list
-  sim <- stoch_simDS( mod, params$sig.eps, params$betta, nsim, burn, 0 )
+
+  message("****** Mean home asset holding = ", round( mod$alpha.tilde, 4 ), " ******" )
+      # Screen updating
+  
+  y1.idx <- which( unlist( mod$varo ) == "Y1 " ) - 1
+      # The location of Y!
+  sim <- stoch_simDS( mod, params$sig.eps, params$betta, nsim, burn, y1.idx )
       # The simulation (Change the hard-coded zero if the index of y1 is other than 1)
+    
   mod$varo <- c( sub("\\s+$", "", (unlist(mod$varo))), 'af1' )
-  colnames(sim) <- mod$varo
   mod$ys <- c( mod$ys, mod$alpha.tilde )
   names(mod$ys) <- mod$varo
+  colnames(sim) <- mod$varo
       # Assign names
-  message("Mean home asset holding = ", round( mod$alpha.tilde, 4 ) )
   
   exog.order <- c('A1','A2')
   endog.order <- c( 'NFA', 'Z1', 'Z2' )
@@ -107,7 +114,7 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
                    'P1', 'P2', 'P11', 'P22', 'P12', 'P21', 'E', 'Q', 'af1',
                    'Y1', 'Y2', 'cd', 'cg' )
       # Variable names for the DS-style solution
-  fwd.order <- c( 'Z1', 'af1', 'Z2', 'Q')
+  fwd.order <- c( 'Z1', 'Z2', 'af1', 'Q')
       # The forward-looking equation variables
   sim.exog <- sim[, exog.order]
   sim.endog <- sim[, endog.order]
@@ -153,6 +160,7 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
       # Details of the Devreux-Sutherland solution
   
   ### 3. Evaluate equation errors ###
+  
   message('Evaluating errors from the dynare solution')
       # Screen updating
   X <- cbind( sim.exog[-1,], sim.endog[-1,], sim.exog[-nsim,], sim.endog[-nsim,], 
@@ -175,51 +183,66 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
                           (1+n.lag)*(n.exog+n.endog)+1:n.cont)]
   bias <- mean(err)
   aad <- mean(abs(err))
-  max.abs.err.dist <- apply( abs( err ), 1, max )
+  mean.max.abs.err <- mean(apply(abs(err),1,max))
+  max.abs.err.dist <- density( apply( abs( err ), 1, max ) )
+  log.max.abs.err.dist <- density( log( apply( abs( err ), 1, max ), 10 ) )
         # The distribution of maximum equation errors
-  l.err <- list( bias=bias, aad=aad, 
-                 max.abs.err.dist=max.abs.err.dist,
-                 err=err)
+  if( err.deets ){
+    l.err <- list( bias=bias, aad=aad, max.abs.err.dist=max.abs.err.dist,
+                   mean.max.abs.err=mean.max.abs.err,
+                   log.max.abs.err.dist=log.max.abs.err.dist, pred=pred, err=err, 
+                   X=X[,c(n.exog+1:n.endog,(1+n.lag)*(n.exog+n.endog)+1:n.cont)] )
+  }else{
+    l.err <- list( bias=bias, aad=aad, mean.max.abs.err=mean.max.abs.err,
+                   max.abs.err.dist=max.abs.err.dist,
+                   log.max.abs.err.dist=log.max.abs.err.dist )
+  }
+    
+
+#                  max.abs.err.dist=max.abs.err.dist,
+#                  err=err)
         # The list of different error measures
   
-  ### 4. Now for the alternative-state representation ###
-  # States are now A1, A2, NFA, and af1
-  endog.order.alt <- c( 'NFA', 'af1' )
-  cont.order.alt <- c( 'C1', 'C2', 'rb1', 'rb2', 'X11', 'X22', 'X12', 'X21', 
-                   'P1', 'P2', 'P11', 'P22', 'P12', 'P21', 'Z1', 'Z2', 'E', 'Q', 
-                   'Y1', 'Y2', 'cd', 'cg' )
-      # Variable names for the DSalternative-state respresentation
-  sim.endog.alt <- sim[, endog.order.alt]
-  sim.cont.alt <- sim[, cont.order.alt]
-      # Separate out the exogenous and endogenous states and the static variables
-  n.endog <- length( endog.order.alt )
-  n.cont <- length( cont.order.alt )
-      # Numbers of types of variables
-  message('Generating coefficient rules for alternative-state representation')
-      # Screen updating
-  upper <- c(  3 * sd.x, mod$ys[endog.order.alt] + .5 )
-  lower <- c( -3 * sd.x, mod$ys[endog.order.alt] - .5 )
-      # The bounds of the states
-  endog.reg <- sim.endog.alt[-nsim,][,sample(nsim-1,size=n.sample,replace=TRUE)]
-  exog.reg <- sim.exog[-1,][,sample(nsim-1,size=n.sample,replace=TRUE)]
-  X <- cbind( exog.reg, endog.reg )
-      # The X-variables for the regressions
-  n.X <- 1 + length(endog.order.alt) + length(exog.order) 
-      # The number of X variables is the number of states plus one (the constant
-      # term)
-  coeff <- matrix( 0, n.X, n.endog )
-  coeff.cont <- matrix( 0, n.X, n.cont )
-      # The coefficient matrices  
-  
-  for(i in 1:n.endog) coeff[,i] <- coeff_reg( sim.endog.alt[,i][-1], X, N,
-                                                    lower, upper, cheby )
-  for(i in 1:n.cont) coeff.cont[,i] <- coeff_reg( sim.cont.alt[,i][-1], X, N, 
-                                                  lower, upper, cheby )
-      # Populate the coefficient matrices
-  alt.sol <- list( coeff=coeff, coeff.cont=coeff.cont, 
-                  upper=upper, lower=lower )
-      # Details of the alternative solution
-#   alt.sol <- NA
+#   ### 4. Now for the alternative-state representation ###
+#   # States are now A1, A2, NFA, and af1
+#   endog.order.alt <- c( 'NFA', 'af1' )
+#   cont.order.alt <- c( 'C1', 'C2', 'rb1', 'rb2', 'X11', 'X22', 'X12', 'X21', 
+#                    'P1', 'P2', 'P11', 'P22', 'P12', 'P21', 'Z1', 'Z2', 'E', 'Q', 
+#                    'Y1', 'Y2', 'cd', 'cg' )
+#       # Variable names for the DSalternative-state respresentation
+#   sim.endog.alt <- sim[, endog.order.alt]
+#   sim.cont.alt <- sim[, cont.order.alt]
+#       # Separate out the exogenous and endogenous states and the static variables
+#   n.endog <- length( endog.order.alt )
+#   n.cont <- length( cont.order.alt )
+#       # Numbers of types of variables
+#   message('Generating coefficient rules for alternative-state representation')
+#       # Screen updating
+#   upper <- c(  3 * sd.x, mod$ys[endog.order.alt] + .5 )
+#   lower <- c( -3 * sd.x, mod$ys[endog.order.alt] - .5 )
+#       # The bounds of the states
+#   idx.sample <- sample(nsim-1,size=n.sample,replace=TRUE)
+#   endog.reg <- sim.endog.alt[-nsim,][idx.sample,]
+#   cont.reg <- sim.cont.alt[-1,][idx.sample,]
+#   exog.reg <- sim.exog[-1,][idx.sample,]
+#   X <- cbind( exog.reg, endog.reg )
+#       # The X-variables for the regressions
+#   n.X <- 1 + length(endog.order.alt) + length(exog.order) 
+#       # The number of X variables is the number of states plus one (the constant
+#       # term)
+#   coeff <- matrix( 0, n.X, n.endog )
+#   coeff.cont <- matrix( 0, n.X, n.cont )
+#       # The coefficient matrices  
+#   browser()
+#   for(i in 1:n.endog) coeff[,i] <- coeff_reg( endog.reg[,i], X, N,
+#                                                     lower, upper, cheby )
+#   for(i in 1:n.cont) coeff.cont[,i] <- coeff_reg( cont.reg[,i], X, N, 
+#                                                   lower, upper, cheby )
+#       # Populate the coefficient matrices
+#   alt.sol <- list( coeff=coeff, coeff.cont=coeff.cont, 
+#                   upper=upper, lower=lower )
+#       # Details of the alternative solution
+  alt.sol <- NA
 
   return( list( mod=mod, ds.sol=ds.sol, l.err=l.err, alt.sol=alt.sol ) )
 }

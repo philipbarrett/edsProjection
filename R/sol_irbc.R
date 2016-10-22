@@ -6,7 +6,8 @@
 # 22feb2016
 #########################################################################
 
-sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.flag=FALSE ){
+sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, 
+                              debug.flag=FALSE, c.first=TRUE ){
   # The main solution iteration loop
   
   #### Extract settings ####
@@ -124,45 +125,49 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
     X.cont <- cbind( X, cont.sim )
         # Compute the new simulation for the controls
     
-    while( i.c <= c.iter & c.diff > c.tol ){
+    if( c.first || i.iter > 0 ){
+      while( i.c <= c.iter & c.diff > c.tol ){
+        
+        ### 2.3 Compute the **values** of the controls satisfying the
+        ### contemporaneous block
+        contemp <- contemp_eqns_irbc_grid( X.cont, lags, params, n.exog, n.endog, 
+                                            n.cont, extra.args, opt$model )
+            # The predictors in the contemporaneous block
+        c.diff <- max( abs( X.cont[,contemp.select] - contemp ) )
+        i.c <- i.c + 1
+            # Update the loop controls. Level diff because in logs
+        X.cont[,contemp.select] <- 
+                        c.gain * contemp + ( 1 - c.gain ) * X.cont[,contemp.select]
+            # Compute the new coefficients on the consumption rule from the consumption predictors
+        if( adapt.gain ) c.gain <- max( exp( - adapt.exp * c.diff ), c.gain )
+            # Update the gain where required
+      }
       
-      ### 2.3 Compute the **values** of the controls satisfying the
-      ### contemporaneous block
-      contemp <- contemp_eqns_irbc_grid( X.cont, lags, params, n.exog, n.endog, 
-                                          n.cont, extra.args, opt$model )
-          # The predictors in the contemporaneous block
-      c.diff <- max( abs( X.cont[,contemp.select] - contemp ) )
-      i.c <- i.c + 1
-          # Update the loop controls. Level diff because in logs
-      X.cont[,contemp.select] <- 
-                      c.gain * contemp + ( 1 - c.gain ) * X.cont[,contemp.select]
-          # Compute the new coefficients on the consumption rule from the consumption predictors
-      if( adapt.gain ) c.gain <- max( exp( - adapt.exp * c.diff ), c.gain )
-          # Update the gain where required
-    }
-    
-    message('  Contemporaneous block complete.\n    Iterations = ', i.c,  
-            '\n    Difference = ', round( c.diff, 5 ),
-            '\n    Adaptive gain = ', round( c.gain, 5 ) )
-    
-    
-    ### 2.4 Update the comtemporaneous rules and grid values ###
-    for(i in 1:n.endog){
-      if( !( endog.names[i] %in% fwd.vars ) ){
-        coeff[,i] <- coeff_reg( contemp[,i], X[, state.select], 
-                                     N, lower, upper, cheby )
+      message('  Contemporaneous block complete.\n    Iterations = ', i.c,  
+              '\n    Difference = ', round( c.diff, 5 ),
+              '\n    Adaptive gain = ', round( c.gain, 5 ) )
+      
+      
+      ### 2.4 Update the comtemporaneous rules and grid values ###
+      for(i in 1:n.endog){
+        if( !( endog.names[i] %in% fwd.vars ) ){
+          coeff[,i] <- (1-n.gain) * coeff[,i] + n.gain *
+                            coeff_reg( contemp[,i], X[, state.select], 
+                                                N, lower, upper, cheby )
+        }
+      }   # Update the endogenous state coefficients which are not forward-looking
+      for(i in 1:n.cont){
+        if( !( cont.names[i] %in% fwd.vars ) ){
+          coeff.cont[,i] <- (1-n.gain) * coeff.cont[,i] + n.gain *
+                              coeff_reg( contemp[,n.endog+i], X[, state.select], 
+                                                    N, lower, upper, cheby )
+        }
       }
-    } 
-    for(i in 1:n.cont){
-      if( !( cont.names[i] %in% fwd.vars ) ){
-        coeff.cont[,i] <- coeff_reg( contemp[,n.endog+i], X[, state.select], 
-                                                  N, lower, upper, cheby )
-      }
+          # Update the coefficients on the non-forward-looking variables in line
+          # with the predictors from the conemporanneous block
+      if( sym.reg ) coeff.cont <- m.sym.ave.pair( coeff.cont, l.sym.ave, l.pairs.cont )
+          # Symmetry regularization
     }
-        # Update the coefficients on the non-forward-looking variables in line
-        # with the predictors from the conemporanneous block
-    if( sym.reg ) coeff.cont <- m.sym.ave.pair( coeff.cont, l.sym.ave, l.pairs.cont )
-        # Symmetry regularization
     sim <- cont_sim( X, cbind( coeff, coeff.cont ), N, n.endog, n.exog, upper, lower, cheby )
         # The new simulated values
     X.cont <- cbind( X[,1:n.exog], sim[,1:n.endog], 
@@ -208,7 +213,8 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
                                  0, N, upper, lower, cheby, matrix(0,1,1,), 
                                  TRUE, n.quad, model )
             # The forward-looking variable predictors
-        v.k.diff <- apply( abs( k.hat - X.cont[, fwd.idces] ), 2, max )
+#         v.k.diff <- apply( abs( k.hat - X.cont[, fwd.idces] ), 2, max )
+        v.k.diff <- apply( abs( k.hat - X.cont[, fwd.idces] ), 2, mean )
         k.diff <- max( v.k.diff )
         if(i.k==0) k.diff.min <- k.diff
         if( k.diff > k.diff.min ){
@@ -223,7 +229,7 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init, debug.fl
             # Update the simulations for forward looking variables
 #         if( adapt.gain ) k.gain <- max( exp( - adapt.exp * k.diff ), k.gain )
             # Update the gain where required
-        if( i.k %% 5 == 0 ) 
+        if( i.k %% 1 == 0 ) 
           message('        i.k = ', i.k, ',  v.k.diff = (', 
                   round(v.k.diff[1],5), ', ', round(v.k.diff[2],5),  ', ',
                   round(v.k.diff[3],5), ', ', round(v.k.diff[4],5), ' )' )
@@ -343,7 +349,7 @@ sol.irbc.check <- function( sol, params=NULL, opt=NULL ){
   
   n.check <- 20000
   n.burn <- 1000
-  n.quad <- 5
+  n.quad <- 4
   kappa <- 101
       # The check and burn numbers.  Also do high-precision integration.
   

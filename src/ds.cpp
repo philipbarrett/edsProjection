@@ -151,10 +151,10 @@ arma::rowvec contemp_eqns_ds(
   double A_1 = A(0) ;
   double A_2 = A(1) ;
   double NFA_lag = endog(1,0) ;
-  double z1 = endog(0,1) ;
-  double z2 = endog(0,2) ;
-  double z1_lag = endog(1,1) ;
-  double z2_lag = endog(1,2) ;
+  double z1 = endog(0,1) ; // endog(1,1) ; // 
+  double z2 = endog(0,2) ; // endog(1,2) ; //
+  double z1_lag = endog(1,1) ; // endog(2,1) ; //
+  double z2_lag = endog(1,2) ; // endog(2,2) ; //
       // Extract the states
       
   double q = cont(15) ;

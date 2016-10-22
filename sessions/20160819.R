@@ -1,8 +1,8 @@
 params <- list( share = .75, gamma = 2, P1.bar=1, P2.bar=1, betta=.95,
-                rho=c(.9,.9), sig.eps=c(.01,.01), eta=5 )
-# Model parameters
-l.coeffs <- mod.gen(params)
-# The dynare solution
+                rho=c(.9,.9), sig.eps=c(.025,.025), eta=8 )
+    # Model parameters
+l.coeffs <- mod.gen(params, err.deets=TRUE )
+    # The dynare solution
 exog.names <- c('A1','A2')
 endog.names <- c( 'NFA', 'Z1', 'Z2' )
 cont.names <- c( 'C1', 'C2', 'rb1', 'rb2', 'X11', 'X22', 'X12', 'X21', 
@@ -23,7 +23,8 @@ opt <- list( lags=1, n.exog=2, n.endog=3, n.fwd=4, n.cont=21, N=1, cheby=FALSE,
              sym.reg=FALSE, ys=l.coeffs$mod$ys )
 # Solution options
 opt$N <- 1
-dyn.check <- sol.irbc.check(l.coeffs$ds.sol, params, opt)
+# dyn.check <- sol.irbc.check(l.coeffs$ds.sol, params, opt)
+    # Dont't need to redo this
 
 opt$N <- 2
 idx.2 <- idx_create( opt$N, opt$n.endog+opt$n.exog )
@@ -76,3 +77,23 @@ colnames(irf.dyn.cont) <- cont.names
 
 
 ### Create chart with asset distributions
+n.sample <- nrow(l.coeffs$l.err$err)
+x.sample <- sample(nrow(nl.check$endog.sim)-1,size=n.sample,replace=TRUE)
+nfa.nl.idx <- 3
+
+plt.data.ds <- data.frame( NFA=l.coeffs$l.err$X[,'NFA'], 
+                          NFA.err=log(abs(l.coeffs$l.err$err[,'NFA']), 10 ) )
+plt.data.nl <- data.frame( NFA=nl.check$endog.sim[x.sample,nfa.nl.idx], 
+                          NFA.err=log(abs(nl.check$err[x.sample,'NFA']), 10 ) )
+plt.data <- data.frame( rbind( plt.data.ds, plt.data.nl) , 
+                   type=c(rep("DS", n.sample), rep("Global", n.sample)))
+pdf('~/Dropbox/2016/Research/IRBC puzzles/charts/err_plot_test.pdf')
+  ggplot(plt.data, aes(NFA,NFA.err, colour=type) ) + geom_point(alpha=.2) +
+    geom_smooth(aes(NFA,NFA.err, colour=type) ) + #, se=FALSE ) +
+    facet_wrap(~type, scales="free_x") +
+    labs(x = "NFA", y = "log 10 NFA error")
+dev.off()
+
+
+
+

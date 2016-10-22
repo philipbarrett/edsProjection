@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % AUTO-GENERATED CODE FROM DYNARE.R 
-% CREATED  2016-08-19-092158 
+% CREATED  2016-10-21-230717 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % Dynare code for the Adams-Barrett model.
@@ -15,16 +15,16 @@ varexo ep1 ep2 zeta;
 parameters BT RH rho1 rho2 eta alph p1bar p2bar sigeps1 sigeps2;
 
 % Parameter values
-alph = 0.75 ;
+alph = 0.86 ;
 RH = 2 ;
 p1bar = 1 ;
 p2bar = 1 ;
 BT = 0.95 ;
 rho1 = 0.9 ;
 rho2 = 0.9 ;
-sigeps1 = 0.01 ;
-sigeps2 = 0.01 ;
-eta = 5 ;
+sigeps1 = 0.025 ;
+sigeps2 = 0.025 ;
+eta = 12 ;
 
 dr={'rb1','rb2'};                  
 
