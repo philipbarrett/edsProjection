@@ -1,9 +1,9 @@
-params <- list( share = .86, gamma = 3, P1.bar=1, P2.bar=1, betta=.95,
+params <- list( share = .86, gamma = 2, P1.bar=1, P2.bar=1, betta=.95,
                 rho=c(.9,.9), sig.eps=c(.025,.025), eta=2 )
 
 
-nn.1 <- 10
-nn.2 <- 15
+nn.1 <- 3
+nn.2 <- 5
 nn <- nn.1 + nn.2
 eta.1.range <- c( 1.001, 1.09)
 eta.2.range <- c( 1.1, 6 )

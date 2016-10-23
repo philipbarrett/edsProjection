@@ -100,7 +100,7 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
   y1.idx <- which( unlist( mod$varo ) == "Y1 " ) - 1
       # The location of Y!
   sim <- stoch_simDS( mod, params$sig.eps, params$betta, nsim, burn, y1.idx )
-      # The simulation (Change the hard-coded zero if the index of y1 is other than 1)
+      # The simulation
     
   mod$varo <- c( sub("\\s+$", "", (unlist(mod$varo))), 'af1' )
   mod$ys <- c( mod$ys, mod$alpha.tilde )
@@ -109,8 +109,8 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
       # Assign names
   
   exog.order <- c('A1','A2')
-  endog.order <- c( 'NFA', 'Z1', 'Z2' )
-  cont.order <- c( 'C1', 'C2', 'rb1', 'rb2', 'X11', 'X22', 'X12', 'X21', 
+  endog.order <- c( 'NFA', 'af1' )
+  cont.order <- c( 'C1', 'C2', 'Z1', 'Z2', 'rb1', 'rb2', 'X11', 'X22', 'X12', 'X21', 
                    'P1', 'P2', 'P11', 'P22', 'P12', 'P21', 'E', 'Q', 'af1',
                    'Y1', 'Y2', 'cd', 'cg' )
       # Variable names for the DS-style solution
@@ -130,8 +130,9 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
       # Screen updating
   sd.x <- params$sig.eps / sqrt( ( 1 - params$rho ^ 2 ) )
       # The standard deviation of the exogenous state
-  upper <- c(  3 * sd.x, mod$ys[endog.order] + .25 )
-  lower <- c( -3 * sd.x, mod$ys[endog.order] - .25 )
+  
+  upper <- c(   6 * sd.x, mod$ys[endog.order] + 6 * apply(sim.endog,2,sd) )
+  lower <- c( - 6 * sd.x, mod$ys[endog.order] - 6 * apply(sim.endog,2,sd) )
       # The bounds of the states
   endog.reg <- sim.endog[-nsim,]
   exog.reg <- sim.exog[-1,]
@@ -158,6 +159,8 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
   ds.sol <- list( coeff=coeff, coeff.cont=coeff.cont, 
                   upper=upper, lower=lower )
       # Details of the Devreux-Sutherland solution
+  
+  browser()
   
   ### 3. Evaluate equation errors ###
   

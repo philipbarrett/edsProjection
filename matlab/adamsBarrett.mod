@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % AUTO-GENERATED CODE FROM DYNARE.R 
-% CREATED  2016-10-22-210929 
+% CREATED  2016-10-23-000038 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % Dynare code for the Adams-Barrett model.
@@ -16,7 +16,7 @@ parameters BT RH rho1 rho2 eta alph p1bar p2bar sigeps1 sigeps2;
 
 % Parameter values
 alph = 0.86 ;
-RH = 3 ;
+RH = 2 ;
 p1bar = 1 ;
 p2bar = 1 ;
 BT = 0.95 ;
@@ -24,7 +24,7 @@ rho1 = 0.9 ;
 rho2 = 0.9 ;
 sigeps1 = 0.025 ;
 sigeps2 = 0.025 ;
-eta = 6 ;
+eta = 1.001 ;
 
 dr={'rb1','rb2'};                  
 
@@ -76,8 +76,8 @@ Q = P2 - P1 + E ;
 exp(rb1) =  1/(exp(P1)*exp(Z1(-1))); 
 exp(rb2) =  exp(E) /(exp(P2)*exp(Z2(-1)));
 
-BT*( exp(-RH*C2(+1)) * exp(rb2(+1)) / exp( Q(+1) ) ) = exp(-RH*C2);
-% BT*( exp(-RH*C2(+1)) * exp(rb2(+1)) / exp( Q(+1) ) ) = exp(-RH*C2-E);
+% BT*( exp(-RH*C2(+1)) * exp(rb2(+1)) / exp( Q(+1) ) ) = exp(-RH*C2);
+BT*( exp(-RH*C2(+1)) * exp(rb2(+1)) / exp( Q(+1) - Q ) ) = exp(-RH*C2);
 
 BT*( exp(-RH*C1(+1)) * exp(rb1(+1)) ) = exp(-RH*C1);
 BT*( exp(-RH*C1(+1)) * exp(rb2(+1)) ) = exp(-RH*C1);

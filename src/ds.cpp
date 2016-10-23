@@ -30,8 +30,8 @@ arma::rowvec integrand_ds(
   double c2_lead = cont_lead(1) ;
       // The log consumption leads
       // The consumption ratios
-//  double rb1_lead = cont_lead(2) ;
-//  double rb2_lead = cont_lead(3) ;
+  double rb1_lead = cont_lead(2) ;
+  double rb2_lead = cont_lead(3) ;
       // The real returns
   double p1_lead = cont_lead(8) ;
   double p2_lead = cont_lead(9) ;
@@ -42,9 +42,9 @@ arma::rowvec integrand_ds(
       // The log real exchange rate lead (#16 in R-style counting)
   
   log_integrand(0) = - gamma * c1_lead - p1_lead ;
-  log_integrand(1) = - gamma * c1_lead + e12_lead ;
-  log_integrand(2) = - gamma * c2_lead - p2_lead ;
-  log_integrand(3) = - gamma * c2_lead - p1_lead - q_lead ;
+  log_integrand(1) = - gamma * c1_lead - p1_lead + e12_lead ;
+  log_integrand(2) = - gamma * c2_lead - q_lead + rb2_lead ;
+  log_integrand(3) = - gamma * c2_lead - q_lead - rb1_lead ;
       // The integrands in the log Euler equations
       
   return exp( log_integrand ) ;
@@ -105,11 +105,11 @@ arma::rowvec euler_hat_ds(
   }
   
   rowvec out(4) ;
-  out(0) = gamma * c1 - rho_pref + std::log( integral(0) ) ;          // = z1
-  out(1) = gamma * c1 - rho_pref + std::log( integral(1) ) ;          // = z2
-  out(2) = af1 + ( - z2 + gamma * c2 - rho_pref + 
-                    std::log( integral(2) ) ) ;                       // = af1
-  out(3) = q + ( - z1 - rho_pref + gamma * c2 + std::log( integral(3) ) ) ;     // = q
+  out(0) = gamma * c1 - rho_pref + std::log( integral(0) ) ;            // = z1
+  out(1) = gamma * c1 - rho_pref + std::log( integral(1) ) ;            // = z2
+  out(2) = af1 + ( q + gamma * c2 - rho_pref + 
+                    std::log( integral(2) ) ) ;                         // = af1
+  out(3) = rho_pref - gamma * c2 - std::log( integral(3) ) ;            // = q
       // The predictors.  For af1, if the expected return on asset 2 (-z2) is 
       // too high then the investment share in asset 1 increases.
   return out ;
@@ -212,10 +212,11 @@ arma::rowvec contemp_eqns_ds(
   double x_12_new = c_1 + log_1_alpha + eta * ( p_1 - p_12 ) ;
   double x_21_new = c_2 + log_1_alpha + eta * ( p_2 - p_21 ) ;
       // The resulting factor demands from the remaining optimality condition
-  out << NFA << z1 << z2 <<  // Return states first
+  out << NFA << af1 << // Return states first
+          z1 << z2 <<  
          c_1 << c_2 << rb1 << rb2 << x_11 << x_22 << x_12_new << x_21_new
              << p_1 << p_2 << p_11 << p_22 << p_12 << p_21 << e << q
-             << af1 << y_1 << y_2 << cd << cg << endr ;
+             << y_1 << y_2 << cd << cg << endr ;
       // The output vector    
   return( out ) ;
 }

@@ -49,8 +49,8 @@ Q = P2 - P1 + E ;
 exp(rb1) =  1/(exp(P1)*exp(Z1(-1))); 
 exp(rb2) =  exp(E) /(exp(P2)*exp(Z2(-1)));
 
-BT*( exp(-RH*C2(+1)) * exp(rb2(+1)) / exp( Q(+1) ) ) = exp(-RH*C2);
-% BT*( exp(-RH*C2(+1)) * exp(rb2(+1)) / exp( Q(+1) ) ) = exp(-RH*C2-E);
+% BT*( exp(-RH*C2(+1)) * exp(rb2(+1)) / exp( Q(+1) ) ) = exp(-RH*C2);
+BT*( exp(-RH*C2(+1)) * exp(rb2(+1)) / exp( Q(+1) - Q ) ) = exp(-RH*C2);
 
 BT*( exp(-RH*C1(+1)) * exp(rb1(+1)) ) = exp(-RH*C1);
 BT*( exp(-RH*C1(+1)) * exp(rb2(+1)) ) = exp(-RH*C1);
