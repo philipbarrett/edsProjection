@@ -19,15 +19,15 @@ stat.ds <- function( params, stat="err", opt=NULL, bo.plot = FALSE, bo.nl=TRUE )
     opt <- list( lags=1, n.exog=2, n.endog=3, n.fwd=4, n.cont=21, N=2, cheby=FALSE,
                  upper = l.coeffs$ds.sol$upper, lower=l.coeffs$ds.sol$lower, quad=TRUE, 
                  #                n.quad=4,  burn=1000, kappa=25, n.sim=20000, eps = 1, delta=.01, 
-                 n.quad=4,  burn=1000, kappa=40, n.sim=20000, eps = .5, delta=.025, 
+                 n.quad=4,  burn=1000, kappa=40, n.sim=20000, eps = .8, delta=.025, # eps=.5
                  endog.init=l.coeffs$mod$ys[c('NFA','Z1', 'Z2')], 
                  fwd.vars=c('Z1','Z2','af1','Q'),
                  exog.names=exog.names, endog.names=endog.names, cont.names=cont.names,
                  c.iter=10, c.tol=1e-07, c.gain=.8,
-                 k.iter=7, k.tol=1e-06, k.gain=.05, # k.gain=.05,
-                 n.iter=7, n.tol=1e-05, n.gain=.05, 
+                 k.iter=8, k.tol=1e-06, k.gain=.05, # k.gain=.05,
+                 n.iter=5, n.tol=1e-05, n.gain=.05, 
                  #                tol=1e-05, iter=1, model='ds',
-                 tol=1e-05, iter=2, model='ds',
+                 tol=1e-05, iter=3, model='ds',
                  sr=TRUE, adapt.gain=TRUE, adapt.exp=15, image=FALSE,
                  sym.reg=FALSE, ys=l.coeffs$mod$ys )
     # Solution options
@@ -40,31 +40,36 @@ stat.ds <- function( params, stat="err", opt=NULL, bo.plot = FALSE, bo.nl=TRUE )
     message("*** Creating the nonlinear solution ***")
 
         # Variable names
-  #   browser()
-    
-  #   idx.1 <- idx_create( opt$N, opt$n.endog+opt$n.exog )
-  #       # The indices for the parameters of the DS solution
-  #   coeff.init <- matrix( 0, nrow(idx.1), opt$n.endog )
-  #   coeff.init[ which( apply( idx.1, 1, sum ) < 2 ), ] <- l.coeffs$ds.sol$coeff
-  #   coeff.init.cont <- matrix( 0,  nrow(idx.1), opt$n.cont )
-  #   coeff.init.cont[ which( apply( idx.1, 1, sum ) < 2 ), ] <- l.coeffs$ds.sol$coeff.cont
-  #       # The initial coefficients
-  #   sol.1 <- sol.irbc.iterate( coeff.init, opt, params, 
-  #                              coeff.init.cont, FALSE, TRUE )
-  #       # Linear solution
-  
+#     browser()
+#     
+#     idx.1 <- idx_create( opt$N, opt$n.endog+opt$n.exog )
+#         # The indices for the parameters of the DS solution
+#     coeff.init <- matrix( 0, nrow(idx.1), opt$n.endog )
+#     coeff.init[ which( apply( idx.1, 1, sum ) < 2 ), ] <- l.coeffs$ds.sol$coeff
+#     coeff.init.cont <- matrix( 0,  nrow(idx.1), opt$n.cont )
+#     coeff.init.cont[ which( apply( idx.1, 1, sum ) < 2 ), ] <- l.coeffs$ds.sol$coeff.cont
+#         # The initial coefficients
+#     sol.1 <- sol.irbc.iterate( coeff.init, opt, params, 
+#                                coeff.init.cont, FALSE, FALSE )
+#         # Linear solution
+#   
+# browser()
+
+    opt$N <- 2
+    opt$iter <- 1
+
     idx.2 <- idx_create( opt$N, opt$n.endog+opt$n.exog )
         # The indices for the parameters of the DS solution
     coeff.init <- matrix( 0, nrow(idx.2), opt$n.endog )
-  #   coeff.init[ which( apply( idx.2, 1, sum ) < 2 ), ] <- sol.1$coeff
+#     coeff.init[ which( apply( idx.2, 1, sum ) < 2 ), ] <- sol.1$coeff
     coeff.init[ which( apply( idx.2, 1, sum ) < 2 ), ] <- l.coeffs$ds.sol$coeff
     coeff.init.cont <- matrix( 0,  nrow(idx.2), opt$n.cont )
     coeff.init.cont[ which( apply( idx.2, 1, sum ) < 2 ),  ] <- l.coeffs$ds.sol$coeff.cont
-  #   coeff.init.cont[ which( apply( idx.2, 1, sum ) < 2 ),  ] <- sol.1$coeff.cont
+#     coeff.init.cont[ which( apply( idx.2, 1, sum ) < 2 ),  ] <- sol.1$coeff.cont
   
     bo.nl <- tryCatch( 
       sol.2 <- sol.irbc.iterate( coeff.init, opt, params, 
-                                 coeff.init.cont, FALSE, TRUE ),
+                                 coeff.init.cont, FALSE, FALSE ),
                   error=function(cond) return(FALSE) )
     if( !is.logical(bo.nl) ) bo.nl <- TRUE
         # Create the solution
@@ -186,7 +191,7 @@ stat.ds <- function( params, stat="err", opt=NULL, bo.plot = FALSE, bo.nl=TRUE )
       }
     }
     
-    browser()
+#     browser()
     
     if( stat %in% c( "uip", "all")){
       ## 4.2 UIP REGRESSION ##
@@ -194,14 +199,18 @@ stat.ds <- function( params, stat="err", opt=NULL, bo.plot = FALSE, bo.nl=TRUE )
       message( " * Creating UIP stats * ")
             
       if(bo.nl){
-        nl.rdiff <- nl.sim[,4] - nl.sim[,5]
+        nl.R1 <- - nl.sim[,9] - nl.cont.sim[,'P1']
+        nl.R2 <- - nl.sim[,10] - nl.cont.sim[,'P1'] + nl.cont.sim[,'E']
+        nl.rdiff <- nl.R1 - nl.R2
         nl.e.app <- diff(nl.cont.sim[,'E'])
         nl.coeffs <- tryCatch( lm(nl.e.app~nl.rdiff[-length(nl.rdiff)])$coeff , 
                                error=function(cond) return(c(NA) ) )
       }else{
         nl.coeffs <- NA
       }
-      ds.rdiff <- ds.sim[,4] - ds.sim[,5]
+      ds.R1 <- - ds.sim[,9] - ds.cont.sim[,'P1']
+      ds.R2 <- - ds.sim[,10] - ds.cont.sim[,'P1'] + ds.cont.sim[,'E']
+      ds.rdiff <- ds.R1 - ds.R2
       ds.e.app <- diff(ds.cont.sim[,'E'])
       ds.coeffs <- tryCatch( lm(ds.e.app~ds.rdiff[-length(ds.rdiff)])$coeff,
                             error=function(cond) return(c(NA) ) )

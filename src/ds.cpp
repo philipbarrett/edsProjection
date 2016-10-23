@@ -30,16 +30,21 @@ arma::rowvec integrand_ds(
   double c2_lead = cont_lead(1) ;
       // The log consumption leads
       // The consumption ratios
-  double rb1_lead = cont_lead(2) ;
-  double rb2_lead = cont_lead(3) ;
+//  double rb1_lead = cont_lead(2) ;
+//  double rb2_lead = cont_lead(3) ;
+      // The real returns
+  double p1_lead = cont_lead(8) ;
+  double p2_lead = cont_lead(9) ;
       // The price ratios (inflation rates)
+  double e12_lead = cont_lead(15) ;
+      // The nominal exchange rate
   double q_lead = cont_lead(15) ;
       // The log real exchange rate lead (#16 in R-style counting)
   
-  log_integrand(0) = - gamma * c1_lead + rb1_lead ;
-  log_integrand(1) = - gamma * c1_lead + rb2_lead ;
-  log_integrand(2) = - gamma * c2_lead + rb1_lead - q_lead ;
-  log_integrand(3) = - gamma * c2_lead + rb2_lead - q_lead ;
+  log_integrand(0) = - gamma * c1_lead - p1_lead ;
+  log_integrand(1) = - gamma * c1_lead + e12_lead ;
+  log_integrand(2) = - gamma * c2_lead - p2_lead ;
+  log_integrand(3) = - gamma * c2_lead - p1_lead - q_lead ;
       // The integrands in the log Euler equations
       
   return exp( log_integrand ) ;
@@ -66,6 +71,7 @@ arma::rowvec euler_hat_ds(
       // Extract the endogenous states
   double c1 = cont(0) ;
   double c2 = cont(1) ;
+  double e12 = cont(14) ;
   double q = cont(15) ;
   double af1 = cont(16) ;
       // Extract controls
@@ -99,15 +105,13 @@ arma::rowvec euler_hat_ds(
   }
   
   rowvec out(4) ;
-  out(0) = z1  + ( gamma * c1 - rho_pref + std::log( integral(0) ) ) ;
-  out(1) = z2  - ( gamma * c1 - rho_pref + std::log( integral(1) ) ) ;
-  out(2) = af1 + ( gamma * c2 - rho_pref + std::log( integral(2) ) ) ;
-  out(3) = q   + ( gamma * c2 - rho_pref + std::log( integral(3) ) ) ;
-      // The predictors.  Set up z1, Z_2 s.t. if current consumption is too high
-      // for the Euler equation to hold then z1 decreases.  This will pull down 
-      // on consumption in the contemporaneous block later.  Similarly, for af1:
-      // if the expected return on asset 2 is too high then the investment share
-      // in asset 1 declines.  Finally, if q(+1) is too high
+  out(0) = gamma * c1 - rho_pref + std::log( integral(0) ) ;          // = z1
+  out(1) = gamma * c1 - rho_pref + std::log( integral(1) ) ;          // = z2
+  out(2) = af1 + ( - z2 + gamma * c2 - rho_pref + 
+                    std::log( integral(2) ) ) ;                       // = af1
+  out(3) = q + ( - z1 - rho_pref + gamma * c2 + std::log( integral(3) ) ) ;     // = q
+      // The predictors.  For af1, if the expected return on asset 2 (-z2) is 
+      // too high then the investment share in asset 1 increases.
   return out ;
       // Return predictors for (B11, B22, r1, r2)
   

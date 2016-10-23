@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % AUTO-GENERATED CODE FROM DYNARE.R 
-% CREATED  2016-10-22-130551 
+% CREATED  2016-10-22-210929 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % Dynare code for the Adams-Barrett model.
@@ -77,6 +77,7 @@ exp(rb1) =  1/(exp(P1)*exp(Z1(-1)));
 exp(rb2) =  exp(E) /(exp(P2)*exp(Z2(-1)));
 
 BT*( exp(-RH*C2(+1)) * exp(rb2(+1)) / exp( Q(+1) ) ) = exp(-RH*C2);
+% BT*( exp(-RH*C2(+1)) * exp(rb2(+1)) / exp( Q(+1) ) ) = exp(-RH*C2-E);
 
 BT*( exp(-RH*C1(+1)) * exp(rb1(+1)) ) = exp(-RH*C1);
 BT*( exp(-RH*C1(+1)) * exp(rb2(+1)) ) = exp(-RH*C1);
