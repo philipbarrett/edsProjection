@@ -8,25 +8,24 @@ stat.ds <- function( params, stat="err", opt=NULL, bo.plot = FALSE, bo.nl=TRUE )
 # for UIP test.
   
   ## 1. THE DS SOLUTION ##
-  browser()
   l.coeffs <- mod.gen(params, err.deets=TRUE )
       # The dynare solution
   exog.names <- c('A1','A2')
-  endog.names <- c( 'NFA', 'Z1' )
+  endog.names <- c( 'NFA', 'af1' )
   cont.names <- c( 'C1', 'C2', 'rb1', 'rb2', 'X11', 'X22', 'X12', 'X21', 
-                   'P1', 'P2', 'P11', 'P22', 'P12', 'P21', 'E', 'Q', 'af1',
+                   'P1', 'P2', 'P11', 'P22', 'P12', 'P21', 'E', 'Q', 
                    'Y1', 'Y2', 'cd', 'cg' )
   if( is.null(opt)){
-    opt <- list( lags=1, n.exog=2, n.endog=2, n.fwd=4, n.cont=21, N=2, cheby=FALSE,
+    opt <- list( lags=1, n.exog=2, n.endog=2, n.fwd=4, n.cont=20, N=2, cheby=FALSE,
                  upper = l.coeffs$ds.sol$upper, lower=l.coeffs$ds.sol$lower, quad=TRUE, 
                  #                n.quad=4,  burn=1000, kappa=25, n.sim=20000, eps = 1, delta=.01, 
                  n.quad=4,  burn=1000, kappa=40, n.sim=20000, eps = .8, delta=.025, # eps=.5
-                 endog.init=l.coeffs$mod$ys[c('NFA','Z1')], 
-                 fwd.vars=c('Z1','Z2','af1','Q'),
+                 endog.init=l.coeffs$mod$ys[c('NFA','af1')], 
+                 fwd.vars=c('rb1','rb2','af1','Q'),
                  exog.names=exog.names, endog.names=endog.names, cont.names=cont.names,
                  c.iter=3, c.tol=1e-07, c.gain=.8,
-                 k.iter=15, k.tol=1e-06, k.gain=.05, # k.gain=.05,
-                 n.iter=2, n.tol=1e-05, n.gain=.002, 
+                 k.iter=15, k.tol=1e-06, k.gain=.1, # k.gain=.05,
+                 n.iter=2, n.tol=1e-05, n.gain=.1, 
                  #                tol=1e-05, iter=1, model='ds',
                  tol=1e-05, iter=3, model='ds',
                  sr=TRUE, adapt.gain=FALSE, adapt.exp=15, image=TRUE,
@@ -41,7 +40,6 @@ stat.ds <- function( params, stat="err", opt=NULL, bo.plot = FALSE, bo.nl=TRUE )
     message("*** Creating the nonlinear solution ***")
 
         # Variable names
-browser()
     
     opt$N <- 1
     idx.1 <- idx_create( opt$N, opt$n.endog+opt$n.exog )
@@ -52,7 +50,7 @@ browser()
     coeff.init.cont[ which( apply( idx.1, 1, sum ) < 2 ), ] <- l.coeffs$ds.sol$coeff.cont
         # The initial coefficients
     sol.1 <- sol.irbc.iterate( coeff.init, opt, params, 
-                               coeff.init.cont, TRUE, TRUE )
+                               coeff.init.cont, FALSE, TRUE )
         # Linear solution
   
 browser()
@@ -62,15 +60,15 @@ browser()
     idx.2 <- idx_create( opt$N, opt$n.endog+opt$n.exog )
         # The indices for the parameters of the DS solution
     coeff.init <- matrix( 0, nrow(idx.2), opt$n.endog )
-#     coeff.init[ which( apply( idx.2, 1, sum ) < 2 ), ] <- sol.1$coeff
-    coeff.init[ which( apply( idx.2, 1, sum ) < 2 ), ] <- l.coeffs$ds.sol$coeff
+    coeff.init[ which( apply( idx.2, 1, sum ) < 2 ), ] <- sol.1$coeff
+#     coeff.init[ which( apply( idx.2, 1, sum ) < 2 ), ] <- l.coeffs$ds.sol$coeff
     coeff.init.cont <- matrix( 0,  nrow(idx.2), opt$n.cont )
-    coeff.init.cont[ which( apply( idx.2, 1, sum ) < 2 ),  ] <- l.coeffs$ds.sol$coeff.cont
-#     coeff.init.cont[ which( apply( idx.2, 1, sum ) < 2 ),  ] <- sol.1$coeff.cont
+#     coeff.init.cont[ which( apply( idx.2, 1, sum ) < 2 ),  ] <- l.coeffs$ds.sol$coeff.cont
+    coeff.init.cont[ which( apply( idx.2, 1, sum ) < 2 ),  ] <- sol.1$coeff.cont
   
     bo.nl <- tryCatch( 
       sol.2 <- sol.irbc.iterate( coeff.init, opt, params, 
-                                 coeff.init.cont, TRUE, TRUE ),
+                                 coeff.init.cont, FALSE, TRUE ),
                   error=function(cond) return(FALSE) )
     if( !is.logical(bo.nl) ) bo.nl <- TRUE
         # Create the solution
@@ -202,6 +200,7 @@ browser()
       if(bo.nl){
         nl.R1 <- - nl.sim[,9] - nl.cont.sim[,'P1']
         nl.R2 <- - nl.sim[,10] - nl.cont.sim[,'P1'] + nl.cont.sim[,'E']
+            ## NEED TO ADD THE R BACK IN HERE SOMEHOW
         nl.rdiff <- nl.R1 - nl.R2
         nl.e.app <- diff(nl.cont.sim[,'E'])
         nl.coeffs <- tryCatch( lm(nl.e.app~nl.rdiff[-length(nl.rdiff)])$coeff , 

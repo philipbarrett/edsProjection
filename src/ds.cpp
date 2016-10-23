@@ -33,18 +33,13 @@ arma::rowvec integrand_ds(
   double rb1_lead = cont_lead(2) ;
   double rb2_lead = cont_lead(3) ;
       // The real returns
-  double p1_lead = cont_lead(8) ;
-  double p2_lead = cont_lead(9) ;
-      // The price ratios (inflation rates)
-  double e12_lead = cont_lead(15) ;
-      // The nominal exchange rate
   double q_lead = cont_lead(15) ;
       // The log real exchange rate lead (#16 in R-style counting)
   
-  log_integrand(0) = - gamma * c1_lead - p1_lead ;
-  log_integrand(1) = - gamma * c1_lead - p1_lead + e12_lead ;
+  log_integrand(0) = - gamma * c1_lead + rb1_lead ;
+  log_integrand(1) = - gamma * c1_lead + rb2_lead ;
   log_integrand(2) = - gamma * c2_lead - q_lead + rb2_lead ;
-  log_integrand(3) = - gamma * c2_lead - q_lead - rb1_lead ;
+  log_integrand(3) = - gamma * c2_lead - q_lead + rb1_lead ;
       // The integrands in the log Euler equations
       
   return exp( log_integrand ) ;
@@ -66,14 +61,14 @@ arma::rowvec euler_hat_ds(
   double rho_pref = - std::log( betta ) ;
       // Extract coefficients
   double NFA = endog( 0 ) ;
-  double z1 = endog( 1 ) ;
-  double z2 = endog( 2 ) ;
+  double af1 = endog( 1 ) ;
       // Extract the endogenous states
   double c1 = cont(0) ;
   double c2 = cont(1) ;
+  double rb1 = cont(2) ;
+  double rb2 = cont(3) ;
   double e12 = cont(14) ;
   double q = cont(15) ;
-  double af1 = cont(16) ;
       // Extract controls
   
   mat exog_lead = zeros( n_integ, n_exog ) ;
@@ -105,8 +100,8 @@ arma::rowvec euler_hat_ds(
   }
   
   rowvec out(4) ;
-  out(0) = gamma * c1 - rho_pref + std::log( integral(0) ) ;            // = z1
-  out(1) = gamma * c1 - rho_pref + std::log( integral(1) ) ;            // = z2
+  out(0) = rb1 - gamma * c1 + rho_pref - std::log( integral(0) ) ;      // = rb1
+  out(1) = rb2 - gamma * c1 + rho_pref - std::log( integral(1) ) ;            // = rb2
   out(2) = af1 + ( q + gamma * c2 - rho_pref + 
                     std::log( integral(2) ) ) ;                         // = af1
   out(3) = rho_pref - gamma * c2 - std::log( integral(3) ) ;            // = q
@@ -155,14 +150,11 @@ arma::rowvec contemp_eqns_ds(
   double A_1 = A(0) ;
   double A_2 = A(1) ;
   double NFA_lag = endog(1,0) ;
-  double z1 = endog(0,1) ; // endog(1,1) ; // 
-  double z2 = endog(0,2) ; // endog(1,2) ; //
-  double z1_lag = endog(1,1) ; // endog(2,1) ; //
-  double z2_lag = endog(1,2) ; // endog(2,2) ; //
+  double af1 = endog(0,1) ;
       // Extract the states
-      
+  double rb1 = cont(2) ;
+  double rb2 = cont(3) ;
   double q = cont(15) ;
-  double af1 = cont(16) ;
   double x_12 = cont(6) ;
   double x_21 = cont(7) ;
       // Extract the controls
@@ -194,9 +186,7 @@ arma::rowvec contemp_eqns_ds(
   double p_12 = p_22 + e ;
   double p_21 = p_11 - e ;
       // Imported goods prices
-  double rb1 = - p_1 - z1_lag ;
-  double rb2 = e - p_2 - z2_lag ;
-      // Realized returns
+
   double y_1 = std::log( A_1 ) - p_1 ;
   double y_2 = std::log( A_2 ) - p_2 ;
       // Real incomes
@@ -212,8 +202,7 @@ arma::rowvec contemp_eqns_ds(
   double x_12_new = c_1 + log_1_alpha + eta * ( p_1 - p_12 ) ;
   double x_21_new = c_2 + log_1_alpha + eta * ( p_2 - p_21 ) ;
       // The resulting factor demands from the remaining optimality condition
-  out << NFA << af1 << // Return states first
-          z1 << z2 <<  
+  out << NFA << af1 <<    // Return states first
          c_1 << c_2 << rb1 << rb2 << x_11 << x_22 << x_12_new << x_21_new
              << p_1 << p_2 << p_11 << p_22 << p_12 << p_21 << e << q
              << y_1 << y_2 << cd << cg << endr ;

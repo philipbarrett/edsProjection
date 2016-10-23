@@ -133,7 +133,7 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init,
         contemp <- contemp_eqns_irbc_grid( X.cont, lags, params, n.exog, n.endog, 
                                             n.cont, extra.args, opt$model )
             # The predictors in the contemporaneous block
-        c.diff <- max( abs( X.cont[,contemp.select] - contemp ) )
+        c.diff <- max( abs( contemp - X.cont[,contemp.select] ) )
         i.c <- i.c + 1
             # Update the loop controls. Level diff because in logs
         X.cont[,contemp.select] <- 

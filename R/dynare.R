@@ -98,7 +98,7 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
       # Screen updating
   
   y1.idx <- which( unlist( mod$varo ) == "Y1 " ) - 1
-      # The location of Y!
+      # The location of Y1
   sim <- stoch_simDS( mod, params$sig.eps, params$betta, nsim, burn, y1.idx )
       # The simulation
     
@@ -110,11 +110,11 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
   
   exog.order <- c('A1','A2')
   endog.order <- c( 'NFA', 'af1' )
-  cont.order <- c( 'C1', 'C2', 'Z1', 'Z2', 'rb1', 'rb2', 'X11', 'X22', 'X12', 'X21', 
-                   'P1', 'P2', 'P11', 'P22', 'P12', 'P21', 'E', 'Q', 'af1',
+  cont.order <- c( 'C1', 'C2', 'rb1', 'rb2', 'X11', 'X22', 'X12', 'X21', 
+                   'P1', 'P2', 'P11', 'P22', 'P12', 'P21', 'E', 'Q',
                    'Y1', 'Y2', 'cd', 'cg' )
       # Variable names for the DS-style solution
-  fwd.order <- c( 'Z1', 'Z2', 'af1', 'Q')
+  fwd.order <- c( 'rb1', 'rb2', 'af1', 'Q')
       # The forward-looking equation variables
   sim.exog <- sim[, exog.order]
   sim.endog <- sim[, endog.order]
@@ -160,7 +160,7 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
                   upper=upper, lower=lower )
       # Details of the Devreux-Sutherland solution
   
-  browser()
+#   browser()
   
   ### 3. Evaluate equation errors ###
   
