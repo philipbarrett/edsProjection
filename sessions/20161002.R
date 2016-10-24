@@ -1,9 +1,9 @@
 params <- list( share = .86, gamma = 2, P1.bar=1, P2.bar=1, betta=.95,
-                rho=c(.9,.9), sig.eps=c(.025,.025), eta=2 )
+                rho=c(.9,.9, .7, .7), sig.eps=c(.025,.025, .01, .01), eta=2 )
 
 
-nn.1 <- 3
-nn.2 <- 5
+nn.1 <- 5
+nn.2 <- 10
 nn <- nn.1 + nn.2
 eta.1.range <- c( 1.001, 1.09)
 eta.2.range <- c( 1.1, 6 )
@@ -11,6 +11,13 @@ eta.range <- c( eta.1.range, eta.2.range )
 
 v.eta <- c( seq( eta.1.range[1], eta.range[2], length.out=nn.1),
             seq( eta.2.range[1], eta.2.range[2], length.out = nn.2 ) )
+
+#############
+v.eta <- c(1.5, 3)
+nn <- 2
+#############
+
+v.gamma <- v.eta
 
 all <- matrix( 0, nn, 11 )
     # All the statistics
@@ -21,17 +28,20 @@ colnames(all) <- c('af1', 'ds.bias', 'ds.aad', 'ds.mean.max.abs.err', 'nl.bias',
 for( i.eta in 1:nn ){
   
   eta <- v.eta[i.eta]
+#   gamma <- v.gamma[i.eta]
   
   message('\n****************************')
   message('***  eta = ', eta, ' **************')
+#   message('***  gamma = ', gamma, ' **************')
   message('****************************')
   
   params$eta <- eta
-  all[i.eta,] <- stat.ds(params, "all", bo.nl=TRUE)
+#   params$gamma <- gamma
+  all[i.eta,] <- stat.ds(params, "all", bo.nl=FALSE)
 }
 
 plot( v.eta, all[,'ds.bs'], type='l', lwd=2, col='red' )
-lines( v.eta, all[,'nl.bs'], lwd=2, col='blue' )
+# lines( v.eta, all[,'nl.bs'], lwd=2, col='blue' )
 # 
 # 
 

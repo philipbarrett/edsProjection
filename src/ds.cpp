@@ -146,9 +146,12 @@ arma::rowvec contemp_eqns_ds(
       //   c_1, c_2, rb1, rb2, x_11, x_22, x_12, x_21, p_1, p_2, 
       //   p_11, p_22, p_12, p_21, e_12, af1, y_1, y_2, cd, cg, nfa
 
-  rowvec A = exp( exog.row(0) ) ;
-  double A_1 = A(0) ;
-  double A_2 = A(1) ;
+//  rowvec A = exp( exog.row(0) ) ;
+  double A_1 = exp( exog(0,0) ) ;
+  double A_2 = exp( exog(0,1) ) ;
+  double p_11 = exp( exog(0,2) ) ;
+  double p_22 = exp( exog(0,3) ) ;
+  
   double NFA_lag = endog(1,0) ;
   double af1 = endog(0,1) ;
       // Extract the states
@@ -175,9 +178,9 @@ arma::rowvec contemp_eqns_ds(
   
       // Consumption aggregators
 
-  double p_11 = p1_bar ;
-  double p_22 = p2_bar ;
-      // Producer prices
+//  double p_11 = p1_bar ;
+//  double p_22 = p2_bar ;
+//      // Producer prices
   double p_1 = p_11 - 1 / eta * ( log_alpha + c_1 - x_11 ) ;
   double p_2 = p_22 - 1 / eta * ( log_alpha + c_2 - x_22 ) ;
       // Aggregate price levels, from factor demands
@@ -204,7 +207,8 @@ arma::rowvec contemp_eqns_ds(
       // The resulting factor demands from the remaining optimality condition
   out << NFA << af1 <<    // Return states first
          c_1 << c_2 << rb1 << rb2 << x_11 << x_22 << x_12_new << x_21_new
-             << p_1 << p_2 << p_11 << p_22 << p_12 << p_21 << e << q
+             << p_1 << p_2 // << p_11 << p_22
+             << p_12 << p_21 << e << q
              << y_1 << y_2 << cd << cg << endr ;
       // The output vector    
   return( out ) ;

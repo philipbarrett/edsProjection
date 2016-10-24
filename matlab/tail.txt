@@ -38,8 +38,8 @@ alph * exp(C2) / exp(X22) = ( exp(P22) / exp(P2) ) ^ eta ;
   %P2 = - .5 * A2 ; %***
   %exp(P1) = ( alph + (1-alph) * exp( (1-eta) * E ) ) ^ ( 1 / (1-eta) ) ; %***
   
-  P11 = log(p1bar) ;
-P22 = log(p2bar) ;
+P11 = rho1 * P11(-1) + ep3 ;
+P22 = rho2 * P22(-1) + ep4 ;
 
 E = P11 - P21 ;
 E = P12 - P22 ;
@@ -50,10 +50,10 @@ exp(rb1) =  1/(exp(P1)*exp(Z1(-1)));
 exp(rb2) =  exp(E) /(exp(P2)*exp(Z2(-1)));
 
 % BT*( exp(-RH*C2(+1)) * exp(rb2(+1)) / exp( Q(+1) ) ) = exp(-RH*C2);
-BT*( exp(-RH*C2(+1)) * exp(rb2(+1)) / exp( Q(+1) - Q ) ) = exp(-RH*C2);
+BT*( exp(-RH*C2(+1)) * exp(rb2(+1)) / exp( Q(+1) - Q ) ) = exp((theta-RH)*C2);
 
-BT*( exp(-RH*C1(+1)) * exp(rb1(+1)) ) = exp(-RH*C1);
-BT*( exp(-RH*C1(+1)) * exp(rb2(+1)) ) = exp(-RH*C1);
+BT*( exp(-RH*C1(+1)) * exp(rb1(+1)) ) = exp((theta-RH)*C1);
+BT*( exp(-RH*C1(+1)) * exp(rb2(+1)) ) = exp((theta-RH)*C1);
 
 end;
 
@@ -69,8 +69,8 @@ A1 = 0;
 A2 = 0;
 C1 = 0;
 C2 = 0;
-P1 = log(p1bar);
-P2 = log(p2bar);
+P1 = 0 ; % log(p1bar);
+P2 = 0 ; % log(p2bar);
 P11 = 0 ;
 P22 = 0 ;
 P12 = 0 ;

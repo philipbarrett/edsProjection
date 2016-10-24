@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % AUTO-GENERATED CODE FROM DYNARE.R 
-% CREATED  2016-10-23-015924 
+% CREATED  2016-10-23-212047 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % Dynare code for the Adams-Barrett model.
@@ -10,9 +10,9 @@
 
 var A1 A2 NFA Z1 Z2 Y1 Y2 C1 C2 P1 P2 P11 P22 P12 P21 X11 X22 X12 X21 Q E cg cd rb1 rb2; 
 
-varexo ep1 ep2 zeta;
+varexo ep1 ep2 ep3 ep4 zeta;
 
-parameters BT RH rho1 rho2 eta alph p1bar p2bar sigeps1 sigeps2;
+parameters BT RH rho1 rho2 rho3 rho4 eta alph p1bar p2bar sigeps1 sigeps2 sigeps3 sigeps4 theta;
 
 % Parameter values
 alph = 0.86 ;
@@ -22,9 +22,14 @@ p2bar = 1 ;
 BT = 0.95 ;
 rho1 = 0.9 ;
 rho2 = 0.9 ;
+rho3 = 0.9 ;
+rho4 = 0.9 ;
 sigeps1 = 0.025 ;
 sigeps2 = 0.025 ;
-eta = 1.001 ;
+sigeps3 = 0.025 ;
+sigeps4 = 0.025 ;
+eta = 2 ;
+theta = 0.05 ;
 
 dr={'rb1','rb2'};                  
 
@@ -65,8 +70,8 @@ alph * exp(C2) / exp(X22) = ( exp(P22) / exp(P2) ) ^ eta ;
   %P2 = - .5 * A2 ; %***
   %exp(P1) = ( alph + (1-alph) * exp( (1-eta) * E ) ) ^ ( 1 / (1-eta) ) ; %***
   
-  P11 = log(p1bar) ;
-P22 = log(p2bar) ;
+P11 = rho1 * P11(-1) + ep3 ;
+P22 = rho2 * P22(-1) + ep4 ;
 
 E = P11 - P21 ;
 E = P12 - P22 ;
@@ -77,10 +82,10 @@ exp(rb1) =  1/(exp(P1)*exp(Z1(-1)));
 exp(rb2) =  exp(E) /(exp(P2)*exp(Z2(-1)));
 
 % BT*( exp(-RH*C2(+1)) * exp(rb2(+1)) / exp( Q(+1) ) ) = exp(-RH*C2);
-BT*( exp(-RH*C2(+1)) * exp(rb2(+1)) / exp( Q(+1) - Q ) ) = exp(-RH*C2);
+BT*( exp(-RH*C2(+1)) * exp(rb2(+1)) / exp( Q(+1) - Q ) ) = exp((theta-RH)*C2);
 
-BT*( exp(-RH*C1(+1)) * exp(rb1(+1)) ) = exp(-RH*C1);
-BT*( exp(-RH*C1(+1)) * exp(rb2(+1)) ) = exp(-RH*C1);
+BT*( exp(-RH*C1(+1)) * exp(rb1(+1)) ) = exp((theta-RH)*C1);
+BT*( exp(-RH*C1(+1)) * exp(rb2(+1)) ) = exp((theta-RH)*C1);
 
 end;
 
@@ -96,8 +101,8 @@ A1 = 0;
 A2 = 0;
 C1 = 0;
 C2 = 0;
-P1 = log(p1bar);
-P2 = log(p2bar);
+P1 = 0 ; % log(p1bar);
+P2 = 0 ; % log(p2bar);
 P11 = 0 ;
 P22 = 0 ;
 P12 = 0 ;

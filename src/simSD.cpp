@@ -18,6 +18,8 @@ arma::mat simDS( arma::mat u, List mod, double betta, int y1_idx=0 ){
   /* 0. unpack parameters */
   int pds = u.n_rows ;
       // Number of simulation periods
+  int nshk = u.n_cols ;
+      // Number of shocks
   int na = mod["na"] ;
   int nvar = mod["nvar"] ;
   int nsk = mod["nsk"] ;
@@ -35,7 +37,8 @@ arma::mat simDS( arma::mat u, List mod, double betta, int y1_idx=0 ){
       // The shock propagation
     
   /* 1. Create the innovations */
-  mat BB = trans(ghu.cols(0,1)) ;
+  
+  mat BB = trans(ghu.cols(0,nshk-1)) ;
       // Drop the effect of zeta
   mat innovs = u * BB ;
       // The variable innovations

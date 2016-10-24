@@ -15,6 +15,7 @@ params.convert <- function( st ){
   if( st == 'P2.bar' ) return('p2bar')
   if( st == 'betta' ) return('BT')
   if( st == 'rho' ) return('rho')
+  if( st == 'theta' ) return('theta')
   if( st == 'sig.eps' ) return('sigeps')
   if( st == 'eta' ) return('eta')
   
@@ -70,7 +71,7 @@ mod.read <- function(){
 }
 
 mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.nodes=3,
-                    err.deets=FALSE ){
+                    err.deets=FALSE, sim.stats=FALSE ){
 # Generates the coefficient matrices and vector of equation errors
   
   ### 0. Hard-coding ###
@@ -108,10 +109,11 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
   colnames(sim) <- mod$varo
       # Assign names
   
-  exog.order <- c('A1','A2')
+  exog.order <- c('A1','A2', 'P11', 'P22')
   endog.order <- c( 'NFA', 'af1' )
   cont.order <- c( 'C1', 'C2', 'rb1', 'rb2', 'X11', 'X22', 'X12', 'X21', 
-                   'P1', 'P2', 'P11', 'P22', 'P12', 'P21', 'E', 'Q',
+                   'P1', 'P2', #'P11', 'P22', 
+                   'P12', 'P21', 'E', 'Q',
                    'Y1', 'Y2', 'cd', 'cg' )
       # Variable names for the DS-style solution
   fwd.order <- c( 'rb1', 'rb2', 'af1', 'Q')
@@ -124,6 +126,24 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
   n.endog <- length( endog.order )
   n.cont <- length( cont.order )
       # Numbers of types of variables
+  
+  ## 1a. Return some stats from the simulation
+  if( sim.stats ){
+    bs.basic <- cor(diff(sim.cont[,'C1'] - sim.cont[,'C2']), diff(sim.cont[,'Q']) )
+    bs.soph <- cor(diff(sim.cont[,'C1'] - sim.cont[,'C2']-sim.cont[,'Q'] / params$gamma), 
+                   diff(sim.cont[,'E']) )
+    sim.R1 <- sim.cont[,'rb1'][-1] + diff( sim.cont[,'P1'] )
+    sim.R2 <- sim.cont[,'rb2'][-1] + diff( sim.cont[,'P1'] ) - diff( sim.cont[,'E'] )
+    sim.rdiff <- sim.R1 - sim.R2
+    sim.e.app <- diff(sim.cont[,'E'])
+    uip.coeffs <- lm(sim.e.app~sim.rdiff)$coeff
+    sim.uip.err <- sim.e.app - sim.rdiff 
+    uip.nfa <- lm( sim.uip.err ~ sim.endog[,'NFA'][-nrow(sim.endog)])$coeff 
+    # The UIP coefficients
+    out <- c( mod$alpha.tilde, bs.basic, bs.soph, uip.coeffs[2], uip.nfa[2] )
+    names(out) <- c('alpha.tilde', 'bs.basic', 'bs.soph', 'uip.coeff', 'uip.nfa' )
+    return( out )
+  }
   
   ### 2. Run regressions to generate coefficients ###
   message('Generating coefficient rules for error evaluation')
@@ -149,7 +169,7 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
   for(i in 1:n.cont) coeff.cont[,i] <- coeff_reg( sim.cont[,i][-1], X, N, 
                                                   lower, upper, cheby )
       # Populate the coefficient matrices
-
+# browser()
   if(check){
     sim.endog.alt <- endog_sim( nsim, sim.exog, coeff, N, upper, lower, 
                                    sim.endog[1,], cheby, 1, 0, TRUE )
@@ -159,8 +179,6 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
   ds.sol <- list( coeff=coeff, coeff.cont=coeff.cont, 
                   upper=upper, lower=lower )
       # Details of the Devreux-Sutherland solution
-  
-#   browser()
   
   ### 3. Evaluate equation errors ###
   
