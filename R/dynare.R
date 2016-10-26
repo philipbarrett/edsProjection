@@ -71,7 +71,7 @@ mod.read <- function(){
 }
 
 mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.nodes=3,
-                    err.deets=FALSE, sim.stats=FALSE ){
+                    err.deets=FALSE, sim.stats=FALSE, return.sim=FALSE ){
 # Generates the coefficient matrices and vector of equation errors
   
   ### 0. Hard-coding ###
@@ -128,10 +128,12 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
       # Numbers of types of variables
   
   ## 1a. Return some stats from the simulation
+#   browser()
   if( sim.stats ){
     bs.basic <- cor(diff(sim.cont[,'C1'] - sim.cont[,'C2']), diff(sim.cont[,'Q']) )
     bs.soph <- cor(diff(sim.cont[,'C1'] - sim.cont[,'C2']-sim.cont[,'Q'] / params$gamma), 
                    diff(sim.cont[,'E']) )
+    bs.level <- cor(exp(sim.cont[,'C1']) - exp(sim.cont[,'C2']), exp(sim.cont[,'Q']) )
     sim.R1 <- sim.cont[,'rb1'][-1] + diff( sim.cont[,'P1'] )
     sim.R2 <- sim.cont[,'rb2'][-1] + diff( sim.cont[,'P1'] ) - diff( sim.cont[,'E'] )
     sim.rdiff <- sim.R1 - sim.R2
@@ -140,9 +142,13 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
     sim.uip.err <- sim.e.app - sim.rdiff 
     uip.nfa <- lm( sim.uip.err ~ sim.endog[,'NFA'][-nrow(sim.endog)])$coeff 
     # The UIP coefficients
-    out <- c( mod$alpha.tilde, bs.basic, bs.soph, uip.coeffs[2], uip.nfa[2] )
-    names(out) <- c('alpha.tilde', 'bs.basic', 'bs.soph', 'uip.coeff', 'uip.nfa' )
+    out <- c( mod$alpha.tilde, bs.basic, bs.soph, bs.level, uip.coeffs[2], uip.nfa[2] )
+    names(out) <- c('alpha.tilde', 'bs.basic', 'bs.soph', 'bs.level', 'uip.coeff', 'uip.nfa' )
     return( out )
+  }
+
+  if( return.sim ){
+    return( cbind( sim.exog, sim.endog, sim.cont ) )
   }
   
   ### 2. Run regressions to generate coefficients ###

@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % AUTO-GENERATED CODE FROM DYNARE.R 
-% CREATED  2016-10-23-212047 
+% CREATED  2016-10-25-221116 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % Dynare code for the Adams-Barrett model.
@@ -24,12 +24,12 @@ rho1 = 0.9 ;
 rho2 = 0.9 ;
 rho3 = 0.9 ;
 rho4 = 0.9 ;
-sigeps1 = 0.025 ;
-sigeps2 = 0.025 ;
-sigeps3 = 0.025 ;
-sigeps4 = 0.025 ;
+sigeps1 = 0.01 ;
+sigeps2 = 0.01 ;
+sigeps3 = NA ;
+sigeps4 = NA ;
 eta = 2 ;
-theta = 0.05 ;
+theta = 0.025 ;
 
 dr={'rb1','rb2'};                  
 
@@ -39,7 +39,7 @@ af1 = 0;
 
 model; 
 
-NFA = exp(rb2)*NFA(-1) + exp(Y1) - exp(C1) + exp(STEADY_STATE(Y1))*( BT*af1*(exp(rb1) - exp(rb2)) + zeta );
+NFA = exp(rb2)*NFA(-1) + exp(Y1) - exp(C1) + exp(STEADY_STATE(Y1))*( BT*exp(-theta*C1)*af1*(exp(rb1) - exp(rb2)) + zeta );
 
 cd = C1 - C2 - Q / RH ;
 % Has conditional expectation zero (to 1st order)
@@ -49,8 +49,8 @@ cg = (1/2)*(C1 + C2);
 A1 = rho1 * A1(-1) + ep1 ;
 A2 = rho1 * A2(-1) + ep2 ;
 
-exp(Y1) = exp(A1) / exp(P1) ;
-exp(Y2) = exp(A2) / exp(P2) ;
+exp(Y1) = exp(A1-P11) / exp(P1) ;
+exp(Y2) = exp(A2-P22) / exp(P2) ;
 
 exp(A1) = exp(X11) + exp(X21) ;
 exp(A2) = exp(X22) + exp(X12) ;
