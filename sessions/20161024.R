@@ -39,10 +39,10 @@ pdf('~/Dropbox//2016/Research/IRBC puzzles/Paper/graphs/bs_dens_florida_cm_level
 dev.off()
 B11 <- baseline.sim[-nrow(baseline.sim),'af1'] * exp( baseline.sim[-1,'rb1'] + baseline.sim[-1,'P1'] )
 pdf('~/Dropbox//2016/Research/IRBC puzzles/Paper/graphs/bond_density_florida.pdf')
-  plot(density(B11), lwd=2, main='', xlab='')
+  plot(density(B11), lwd=2, main='', xlab='Domestic bond holdings')
 dev.off()
 
-gam.stats <- sig.stats <- eta.stats <- matrix( 0, nn, 6 )
+eta.stats <- matrix( 0, nn, 6 )
 
 for( i.eta in 1:nn ){
   
@@ -69,7 +69,7 @@ dev.off()
 
 pdf('~/Dropbox//2016/Research/IRBC puzzles/Paper/graphs/bs_eta_florida.pdf')
   plot( v.eta, eta.stats[, 'bs.basic'], type='l', lwd=2, 
-      xlab=expression(eta), ylab='Mean domestic bond holdings' )
+      xlab=expression(eta), ylab='Backus-Smith correlation' )
   abline(v=2,lty=2)
   abline(h=0)
 dev.off()
@@ -77,6 +77,7 @@ dev.off()
 nn <- 20
 v.sigma.m <- seq(0,.02, length.out=nn)
 params <- params.orig
+sig.stats <- matrix( 0, nn, 6 )
 
 for( i in 1:nn ){
 
@@ -96,21 +97,22 @@ colnames(sig.stats) <- names(temp)
 
 pdf('~/Dropbox//2016/Research/IRBC puzzles/Paper/graphs/bs_sigma_m_florida.pdf')
   plot( v.sigma.m, sig.stats[, 'bs.basic'], type='l', lwd=2, 
-      xlab=expression(eta), ylab='Mean domestic bond holdings' )
+      xlab=expression(sigma), ylab='Backus-Smith correlation' )
   abline(v=.0025,lty=2)
   abline(h=0)
 dev.off()
 
-nn <- 21
-v.gamma <- seq(0,5, length.out=nn)
+nn <- 19
+v.gamma <- seq(.5,5, length.out=nn)
 params <- params.orig
+gam.stats <- matrix( 0, nn, 6 )
 
 for( i in 1:nn ){
   
   gam <- v.gamma[i]
   
   message('\n****************************')
-  message('***  gamma = ', gamma, ' **************')
+  message('***  gamma = ', gam, ' **************')
   message('****************************')
   
   params$gamma <- gam
@@ -122,15 +124,15 @@ for( i in 1:nn ){
 colnames(gam.stats) <- names(temp)
 
 pdf('~/Dropbox//2016/Research/IRBC puzzles/Paper/graphs/bs_gamma_florida.pdf')
-  plot( v.sigma.m, sig.stats[, 'bs.basic'], type='l', lwd=2, 
-        xlab=expression(gamma), ylab='Mean domestic bond holdings' )
+  plot( v.gamma[v.gamma>=1], gam.stats[v.gamma>=1, 'bs.basic'], type='l', lwd=2, 
+        xlab=expression(gamma), ylab='B' )
   abline(v=2,lty=2)
   abline(h=0)
 dev.off()
 
 
 pdf('~/Dropbox//2016/Research/IRBC puzzles/Paper/graphs/alpha_tilde_gam_florida.pdf')
-  plot( v.eta, params$betta * gam.stats[, 'alpha.tilde'], type='l', lwd=2, 
+  plot( v.gamma[v.gamma>=1], params$betta * gam.stats[v.gamma>=1, 'alpha.tilde'], type='l', lwd=2, 
         xlab=expression(gamma), ylab='Mean domestic bond holdings' )
   abline(v=2,lty=2)
 dev.off()
