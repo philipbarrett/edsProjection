@@ -871,6 +871,21 @@ BEGIN_RCPP
     return __result;
 END_RCPP
 }
+// coeff_reg_X
+arma::mat coeff_reg_X(arma::mat X_in, int N, arma::rowvec lower, arma::rowvec upper, bool cheby);
+RcppExport SEXP edsProjection_coeff_reg_X(SEXP X_inSEXP, SEXP NSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP chebySEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::mat >::type X_in(X_inSEXP);
+    Rcpp::traits::input_parameter< int >::type N(NSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type lower(lowerSEXP);
+    Rcpp::traits::input_parameter< arma::rowvec >::type upper(upperSEXP);
+    Rcpp::traits::input_parameter< bool >::type cheby(chebySEXP);
+    __result = Rcpp::wrap(coeff_reg_X(X_in, N, lower, upper, cheby));
+    return __result;
+END_RCPP
+}
 // coeff_reg
 arma::vec coeff_reg(arma::vec y, arma::mat X_in, int N, arma::rowvec lower, arma::rowvec upper, bool cheby);
 RcppExport SEXP edsProjection_coeff_reg(SEXP ySEXP, SEXP X_inSEXP, SEXP NSEXP, SEXP lowerSEXP, SEXP upperSEXP, SEXP chebySEXP) {

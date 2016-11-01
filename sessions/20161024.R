@@ -14,6 +14,7 @@ v.eta <- c( seq( eta.1.range[1], eta.range[2], length.out=nn.1),
             seq( eta.2.range[1], eta.2.range[2], length.out = nn.2 ) )
 
 baseline <- mod.gen(params, sim.stats = TRUE)
+
 params.cm <- params
 params.cm$sig.eps[3:4] <- 0
 cm <- mod.gen(params.cm, sim.stats = TRUE)
@@ -74,7 +75,7 @@ pdf('~/Dropbox//2016/Research/IRBC puzzles/Paper/graphs/bs_eta_florida.pdf')
   abline(h=0)
 dev.off()
 
-nn <- 20
+nn <- 10
 v.sigma.m <- seq(0,.02, length.out=nn)
 params <- params.orig
 sig.stats <- matrix( 0, nn, 6 )
@@ -102,8 +103,8 @@ pdf('~/Dropbox//2016/Research/IRBC puzzles/Paper/graphs/bs_sigma_m_florida.pdf')
   abline(h=0)
 dev.off()
 
-nn <- 19
-v.gamma <- seq(.5,5, length.out=nn)
+nn <- 12
+v.gamma <- seq(.5,8, length.out=nn)
 params <- params.orig
 gam.stats <- matrix( 0, nn, 6 )
 
@@ -140,4 +141,21 @@ dev.off()
 # plot( v.sigma.m, all[,'alpha.tilde'], type='l', lwd=2)
 # plot( v.sigma.m, all[,'bs.basic'], type='l', lwd=2)
 
+nn <- 10
+v.alpha <- seq(0,1, length.out=nn)
+params <- params.orig
+alpha.stats <- matrix( 0, nn, 6 )
 
+for( i in 1:nn ){
+  
+  alpha <- v.alpha[i]
+  
+  message('\n****************************')
+  message('***  alpha = ', alpha, ' **************')
+  message('****************************')
+  
+  params$share <- alpha
+  temp <- mod.gen(params, sim.stats = TRUE)
+  print(temp)
+  sig.alpha[i,] <- temp
+}

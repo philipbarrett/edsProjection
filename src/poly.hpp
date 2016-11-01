@@ -53,4 +53,7 @@ double poly_eval_core( arma::vec a, arma::mat m_basis, arma::umat indices,
                           int n_terms, int K, int M) ;
   // The core of the polynomial evaluation.  Assumes scaling and basis creation
   // is already complete.
+arma::vec coeff_reg( arma::vec y, arma::mat X_in, int N, 
+                       arma::rowvec lower, arma::rowvec upper,
+                       bool cheby ) ;
 #endif

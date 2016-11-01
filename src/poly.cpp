@@ -233,10 +233,9 @@ double poly_eval_core( arma::vec a, arma::mat m_basis,
 }
 
 // [[Rcpp::export]]
-arma::vec coeff_reg( arma::vec y, arma::mat X_in, int N, 
-                      arma::rowvec lower, arma::rowvec upper,
-                      bool cheby=false ){
-// Computes the coefficients of the polynomial approximating y on the data X
+arma::mat coeff_reg_X( arma::mat X_in, int N, arma::rowvec lower, 
+                       arma::rowvec upper, bool cheby=false ){
+// Creates the X matrix for coeff_reg
 
   int K = X_in.n_cols ;
   int M = X_in.n_rows ;
@@ -278,6 +277,18 @@ arma::vec coeff_reg( arma::vec y, arma::mat X_in, int N,
 //    Rcout << "basis:\n" << basis << std::endl ;
 //    Rcout << "indices:\n" << indices << std::endl ;
 //    Rcout << "X_reg:\n" << X_reg << std::endl ;
+
+  return X_reg ;
+
+}
+
+// [[Rcpp::export]]
+arma::vec coeff_reg( arma::vec y, arma::mat X_in, int N, 
+                     arma::rowvec lower, arma::rowvec upper,
+                     bool cheby=false ){
+// Computes the coefficients of the polynomial approximating y on the data X
+  
+  mat X_reg = coeff_reg_X( X_in, N, lower, upper, cheby ) ;
   
   vec coeff = solve( X_reg, y ) ;
   return coeff ;

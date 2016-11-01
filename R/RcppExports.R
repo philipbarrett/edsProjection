@@ -185,6 +185,10 @@ poly_eval_core <- function(a, m_basis, indices, n_terms, K, M) {
     .Call('edsProjection_poly_eval_core', PACKAGE = 'edsProjection', a, m_basis, indices, n_terms, K, M)
 }
 
+coeff_reg_X <- function(X_in, N, lower, upper, cheby = FALSE) {
+    .Call('edsProjection_coeff_reg_X', PACKAGE = 'edsProjection', X_in, N, lower, upper, cheby)
+}
+
 coeff_reg <- function(y, X_in, N, lower, upper, cheby = FALSE) {
     .Call('edsProjection_coeff_reg', PACKAGE = 'edsProjection', y, X_in, N, lower, upper, cheby)
 }

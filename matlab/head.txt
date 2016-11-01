@@ -3,7 +3,7 @@
 
 % Variable and parameter declarations
 
-var A1 A2 NFA Z1 Z2 Y1 Y2 C1 C2 P1 P2 P11 P22 P12 P21 X11 X22 X12 X21 Q E cg cd rb1 rb2; 
+var A1 A2 NFA Y1 Y2 C1 C2 P1 P2 P11 P22 P12 P21 X11 X22 X12 X21 Q E cg cd rb1 rb2 R_1 R_2; 
 
 varexo ep1 ep2 ep3 ep4 zeta;
 

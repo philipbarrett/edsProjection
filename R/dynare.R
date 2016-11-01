@@ -112,7 +112,7 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
   exog.order <- c('A1','A2', 'P11', 'P22')
   endog.order <- c( 'NFA', 'af1' )
   cont.order <- c( 'C1', 'C2', 'rb1', 'rb2', 'X11', 'X22', 'X12', 'X21', 
-                   'P1', 'P2', #'P11', 'P22', 
+                   'P1', 'P2', 'R_1', 'R_2',
                    'P12', 'P21', 'E', 'Q',
                    'Y1', 'Y2', 'cd', 'cg' )
       # Variable names for the DS-style solution
@@ -134,14 +134,14 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
     bs.soph <- cor(diff(sim.cont[,'C1'] - sim.cont[,'C2']-sim.cont[,'Q'] / params$gamma), 
                    diff(sim.cont[,'E']) )
     bs.level <- cor(exp(sim.cont[,'C1']) - exp(sim.cont[,'C2']), exp(sim.cont[,'Q']) )
-    sim.R1 <- sim.cont[,'rb1'][-1] + diff( sim.cont[,'P1'] )
-    sim.R2 <- sim.cont[,'rb2'][-1] + diff( sim.cont[,'P1'] ) - diff( sim.cont[,'E'] )
+    sim.R1 <- sim.cont[,'R_1']
+    sim.R2 <- sim.cont[,'R_2']
     sim.rdiff <- sim.R1 - sim.R2
     sim.e.app <- diff(sim.cont[,'E'])
-    uip.coeffs <- lm(sim.e.app~sim.rdiff)$coeff
-    sim.uip.err <- sim.e.app - sim.rdiff 
+    uip.coeffs <- lm(sim.e.app~sim.rdiff[-length(sim.rdiff)])$coeff
+    sim.uip.err <- sim.e.app - sim.rdiff[-length(sim.rdiff)]
     uip.nfa <- lm( sim.uip.err ~ sim.endog[,'NFA'][-nrow(sim.endog)])$coeff 
-    # The UIP coefficients
+        # The UIP coefficients
     out <- c( mod$alpha.tilde, bs.basic, bs.soph, bs.level, uip.coeffs[2], uip.nfa[2] )
     names(out) <- c('alpha.tilde', 'bs.basic', 'bs.soph', 'bs.level', 'uip.coeff', 'uip.nfa' )
     return( out )
@@ -157,8 +157,8 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
   sd.x <- params$sig.eps / sqrt( ( 1 - params$rho ^ 2 ) )
       # The standard deviation of the exogenous state
   
-  upper <- c(   6 * sd.x, mod$ys[endog.order] + 6 * apply(sim.endog,2,sd) )
-  lower <- c( - 6 * sd.x, mod$ys[endog.order] - 6 * apply(sim.endog,2,sd) )
+  upper <- c(   3 * sd.x, mod$ys[endog.order] + 3 * apply(sim.endog,2,sd) )
+  lower <- c( - 3 * sd.x, mod$ys[endog.order] - 3 * apply(sim.endog,2,sd) )
       # The bounds of the states
   endog.reg <- sim.endog[-nsim,]
   exog.reg <- sim.exog[-1,]
@@ -177,8 +177,8 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
       # Populate the coefficient matrices
 # browser()
   if(check){
-    sim.endog.alt <- endog_sim( nsim, sim.exog, coeff, N, upper, lower, 
-                                   sim.endog[1,], cheby, 1, 0, TRUE )
+    sim.endog.alt <- endog_sim( nsim-1, sim.exog[-1,], coeff, N, upper, lower, 
+                                sim.endog[1,], cheby, 1, 0, TRUE )
     browser()
         # Do checks in debug - looks fine to me! :)
   }
