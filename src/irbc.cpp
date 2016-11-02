@@ -18,8 +18,6 @@ arma::rowvec integrand_irbc(
                 double gamma, arma::mat coeffs_cont, 
                 int n_exog, int n_endog, int n_cont, int N, 
                 arma::rowvec upper, arma::rowvec lower, bool cheby=false ){
-
-//  double gamma = params["gamma"] ;
   
   rowvec cont_lead = endog_update( exog_lead, endog, coeffs_cont, n_exog, 
                                     n_endog, N, upper, lower, cheby ) ;
@@ -112,15 +110,14 @@ arma::rowvec euler_hat_irbc(
 //  out(3) = rho_pref + e12 - gamma * c1 - p1 - std::log( integral(3) ) ;
   out(0) = B_11 -  
               ( gamma * c2 - rho_pref + r1 + e12 + p2 + std::log( integral(2) ) ) ;
-  out(1) = B_22 - 
-              ( gamma * c1 - rho_pref + r2 - e12 + p1 + std::log( integral(3) ) ) ;
+  out(1) = gamma * c1 - rho_pref + r2 + p1 + std::log( integral(3) ) ;
   out(2) = rho_pref - gamma * c1 - p1 - std::log( integral(0) ) ;
   out(3) = rho_pref - gamma * c2 - p2 - std::log( integral(1) ) ;
-      // The predictors.  Set up B_11, B_22 s.t. if current consumption is too 
+      // The predictors, for B11, e_12, R1 and R2.  Set up B_11 s.t. if current consumption is too 
       // high for the Euler equation to hold then B_{t+1} increases.  This will
       // pull down on consumption in the contemporaneous block later.
   return out ;
-      // Return predictors for (B11, B22, r1, r2)
+      // Return predictors for (B11, e_12, r1, r2)
   
 }
 
@@ -135,75 +132,71 @@ arma::rowvec contemp_eqns_irbc(
 
 
   // Extract parameters
-  double alphahat = params["alphahat"] ;
+  double alpha = params["share"] ;
+  double log_alpha = std::log(alpha) ;
+  double log_1_alpha = std::log(1-alpha) ;
   double eta = params["eta"] ;
+  double alphahat = pow( alpha, 1 / eta )  ;
+  double alphahat_1 = pow( 1 - alpha, 1 / eta )  ;
   double log_alphahat = std::log( alphahat ) ;
   double log_1_alphahat = std::log( 1 - alphahat ) ;
-  double P1_bar = params["P1.bar"] ;
-  double P2_bar = params["P2.bar"] ;
-  double p1_bar = std::log( P1_bar ) ;
-  double p2_bar = std::log( P2_bar ) ;
+  double theta = params["theta"] ;
 
-  rowvec out( cont.n_elem ) ;
+  rowvec out( cont.n_elem + endog.n_cols ) ;
       // Initialize the output vector.  Defines the equations for:
       //   c_1, c_2, r_1, r_2, x_11, x_22, x_12, x_21, p_1, p_2, p_12, p_21, e_12
 
-  rowvec A = exp( exog.row(0) ) ;
-  double A_1 = A(0) ;
-  double A_2 = A(1) ;
+  double A_1 = exp( exog(0,0) ) ;
+  double A_2 = exp( exog(0,1) ) ;
+  double p_11 = exog(0,2) ;
+  double p_22 = exog(0,3) ;
+      
   double B_11 = endog(0,0) ;
-  double B_22 = endog(0,1) ;
+  // double B_22 = endog(0,1) ;
+      // B_22 is to be found from the law of motion
   double B_11_lag = endog(1,0) ;
   double B_22_lag = endog(1,1) ;
       // Extract the states
   double r_1 = cont(2) ;
   double r_2 = cont(3) ;
-  double x_11 = cont(4) ;
-  double x_22 = cont(5) ;
+  double x_12 = cont(6) ;
+  double x_21 = cont(7) ;
+  double e_12 = cont(12) ;
       // Extract the controls
   
-  double x_21 = std::log( std::max( A_1 - std::exp( x_11 ), 1e-08 ) ) ;
-  double x_12 = std::log( std::max( A_2 - std::exp( x_22 ), 1e-08 ) ) ;
+  double x_11= std::log( std::max( A_1 - std::exp( x_21 ), 1e-08 ) ) ;
+  double x_22 = std::log( std::max( A_2 - std::exp( x_12 ), 1e-08 ) ) ;
       // Goods market clearing.  Guards to make sure that logs don't fail here.
   double c_1, c_2 ;
   if( eta == 1.0 ){
     c_1 = alphahat * x_11 + ( 1 - alphahat ) * x_12 ;
     c_2 = alphahat * x_22 + ( 1 - alphahat ) * x_21 ;
   }else{
-/**** THIS LINE LOOKS WRONG: (1 - share) ^ eta != 1 - share ^ eta :( ****/
     c_1 = eta / ( eta - 1 ) * std::log( alphahat * std::exp( ( 1 - 1 / eta ) * x_11 ) +
-              ( 1 - alphahat ) * std::exp( ( 1 - 1 / eta ) * x_12 ) ) ;
+              alphahat_1 * std::exp( ( 1 - 1 / eta ) * x_12 ) ) ;
     c_2 = eta / ( eta - 1 ) * std::log( alphahat * std::exp( ( 1 - 1 / eta ) * x_22 ) +
-              ( 1 - alphahat ) * std::exp( ( 1 - 1 / eta ) * x_21 ) ) ;
-/**** THIS LINE LOOKS WRONG: (1 - share) ^ eta != 1 - share ^ eta :( ****/
-              
+              alphahat_1 * std::exp( ( 1 - 1 / eta ) * x_21 ) ) ;
   }
-  
       // Consumption aggregators
 
-  double p_12 = log_1_alphahat - log_alphahat + p1_bar + ( x_11 - x_12 ) / eta ;
-  double p_21 = log_1_alphahat - log_alphahat + p2_bar + ( x_22 - x_21 ) / eta ;
-      // The cross-country price levels.  From factor optimality.
-  double e_12 = .5 * ( p1_bar - p2_bar + p_12 - p_21 ) ;
-      // The nominal exchange rate
-  double p_1  = - c_1 + 
-    std::log( std::max( 
-      A_1 * P1_bar - B_11 * std::exp( - r_1 ) + B_11_lag 
-      + std::exp( e_12 ) * ( B_22 * std::exp( - r_2 )  - B_22_lag ),
-      1e-14 ) ) ;
-      // Prices level in country 1
-  double p_2  = - c_2 + 
-    std::log( std::max( 
-      A_2 * P2_bar - B_22 * std::exp( - r_2 ) + B_22_lag 
-      + std::exp( - e_12 ) * ( B_11 * std::exp( - r_1 )  - B_11_lag ),
-      1e-14 ) ) ;
-      // Price level in country 2
-      // The (log) price levels impled by the budget constraints
-  double x_11_new = c_1 + eta * ( p_1 - p1_bar + log_alphahat ) ;
-  double x_22_new = c_2 + eta * ( p_2 - p2_bar + log_alphahat ) ;
+  double p_1 = p_11 - 1 / eta * ( log_alpha + c_1 - x_11 ) ;
+  double p_2 = p_22 - 1 / eta * ( log_alpha + c_2 - x_22 ) ;
+      // Aggregate price levels, from factor demands
+  double q_12 = e_12 - p_1 + p_2 ;
+      // The real exchange rate
+  double p_12 = p_22 + e_12 ;
+  double p_21 = p_11 - e_12 ;
+      // Imported goods prices
+  double B_22 = std::exp( r_2 ) * ( 
+            B_22_lag + std::exp( - e_12 ) * ( - A_1 * exp( p_11 ) + 
+              B_11 * std::exp( - r_1 ) - B_11_lag + std::exp( c_1 - p_1 ) ) ) ;
+      // Debt in country 2
+  double x_12_new = c_1 + log_1_alpha + eta * ( p_1 - p_12 ) ;
+  double x_21_new = c_2 + log_1_alpha + eta * ( p_2 - p_21 ) ;
       // The resulting factor demands from the remaining optimality condition
-  out << c_1 << c_2 << r_1 << r_2 << x_11_new << x_22_new << x_12 << x_21 
-             << p_1 << p_2 << p_12 << p_21 << e_12 << endr ;
+  out << B_11 << B_22 <<
+          c_1 << c_2 << r_1 << r_2 << x_11 << x_22 << x_12_new << x_21_new <<
+          p_1 << p_2 << p_12 << p_21 << e_12 << q_12 << endr ;
       // The output vector    
   return( out ) ;
 }

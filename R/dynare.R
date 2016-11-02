@@ -70,7 +70,7 @@ mod.read <- function(){
   return( readMat('matlab/Rvars.mat') )
 }
 
-mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.nodes=3,
+mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE, n.nodes=3,
                     err.deets=FALSE, sim.stats=FALSE, return.sim=FALSE ){
 # Generates the coefficient matrices and vector of equation errors
   
@@ -103,20 +103,31 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
   sim <- stoch_simDS( mod, params$sig.eps, params$betta, nsim, burn, y1.idx )
       # The simulation
     
-  mod$varo <- c( sub("\\s+$", "", (unlist(mod$varo))), 'af1' )
-  mod$ys <- c( mod$ys, mod$alpha.tilde )
-  names(mod$ys) <- mod$varo
-  colnames(sim) <- mod$varo
+  varo <- c( sub("\\s+$", "", (unlist(mod$varo))), 'af1' )
+  ys <- c( mod$ys, mod$alpha.tilde )
+  names(ys) <- varo
+  colnames(sim) <- varo
+      # Assign names
+  B11 <- exp(ys[y1.idx+1]) * params$betta * exp( -params$theta * sim[,'C1'] ) *
+    sim[,'af1'] * exp( sim[,'R_1'] + sim[,'P1'] )
+  B22 <- ( sim[,'NFA'] - params$betta * exp( -params$theta * sim[,'C1'] ) * 
+             sim[,'af1'] ) * exp(ys[y1.idx+1] ) * exp( sim[,'R_2'] + sim[,'P1']  - sim[,'E'])
+      # Create nominal debt series:  NB THESE ARE END OF PERIOD
+  sim <- cbind( sim, B11, B22 )
+      # Append B11, B22 to simulation
+  varo <- c( varo, 'B11', 'B22' )
+  ys <- c( ys, B11=mean(B11), B22=mean(B22) )
       # Assign names
   
   exog.order <- c('A1','A2', 'P11', 'P22')
-  endog.order <- c( 'NFA', 'af1' )
-  cont.order <- c( 'C1', 'C2', 'rb1', 'rb2', 'X11', 'X22', 'X12', 'X21', 
-                   'P1', 'P2', 'R_1', 'R_2',
-                   'P12', 'P21', 'E', 'Q',
-                   'Y1', 'Y2', 'cd', 'cg' )
+  endog.order <- c( 'B11', 'B22' )
+  cont.order <- c( 'C1', 'C2', 'R_1', 'R_2', #'rb1', 'rb2', 
+                   'X11', 'X22', 'X12', 'X21', 
+                   'P1', 'P2', 
+                   'P12', 'P21', 'E', 'Q' ) #,
+                   # 'Y1', 'Y2', 'cd', 'cg' ) # , 'NFA', 'af1' )
       # Variable names for the DS-style solution
-  fwd.order <- c( 'rb1', 'rb2', 'af1', 'Q')
+  fwd.order <- c( 'B11', 'E', 'R_1', 'R_2')
       # The forward-looking equation variables
   sim.exog <- sim[, exog.order]
   sim.endog <- sim[, endog.order]
@@ -157,8 +168,8 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
   sd.x <- params$sig.eps / sqrt( ( 1 - params$rho ^ 2 ) )
       # The standard deviation of the exogenous state
   
-  upper <- c(   3 * sd.x, mod$ys[endog.order] + 3 * apply(sim.endog,2,sd) )
-  lower <- c( - 3 * sd.x, mod$ys[endog.order] - 3 * apply(sim.endog,2,sd) )
+  upper <- c(   3 * sd.x, ys[endog.order] + 3 * apply(sim.endog,2,sd) )
+  lower <- c( - 3 * sd.x, ys[endog.order] - 3 * apply(sim.endog,2,sd) )
       # The bounds of the states
   endog.reg <- sim.endog[-nsim,]
   exog.reg <- sim.exog[-1,]
@@ -177,37 +188,49 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
       # Populate the coefficient matrices
 # browser()
   if(check){
+    message('Verifying dynare solution conversion')
     sim.endog.alt <- endog_sim( nsim-1, sim.exog[-1,], coeff, N, upper, lower, 
                                 sim.endog[1,], cheby, 1, 0, TRUE )
-    browser()
         # Do checks in debug - looks fine to me! :)
+    pc.err <- abs( sim.endog[-1,] / sim.endog.alt[,n.exog+1:n.endog] - 1 ) * 100
+        # The percentage error
+    message( "  % absolute error on endogenous state rules:" )
+    print( t( apply( pc.err, 2, function(x) quantile( x, c(.25, .5, .75, .9, .95, .99 ) ) ) ) )
+    # browser()
   }
   ds.sol <- list( coeff=coeff, coeff.cont=coeff.cont, 
                   upper=upper, lower=lower )
       # Details of the Devreux-Sutherland solution
   
   ### 3. Evaluate equation errors ###
-  
+  browser()  
   message('Evaluating errors from the dynare solution')
       # Screen updating
   X <- cbind( sim.exog[-1,], sim.endog[-1,], sim.exog[-nsim,], sim.endog[-nsim,], 
-              sim.cont[-1,] )[sample(nrow(X),size=n.sample,replace=TRUE),]
+              sim.cont[-1,] ) #[sample(nrow(X),size=n.sample,replace=TRUE),]
       # Redefine X for evaluating the errors
-  extra.args <- list(n.fwd=4, y1.ss=mod$ys['Y1'])
+  
+  #### DO I HAVE THE TIMING RIGHT HERE FOR B11, B22???
+  
+  extra.args <- list(n.fwd=4, y1.ss=ys['Y1'])
       # The number of forward-looking equations
   pred <- contemp_eqns_irbc_grid( X, 1, params, n.exog, n.endog, 
-                                      n.cont, extra.args, "ds" )
+                                      n.cont, extra.args, "irbc" )
       # The contemporaneous predictors
   colnames(pred) <- c( endog.order, cont.order )
       # Rename the columns
-      # The control predictors (Q and af1 to be added after the Euler eqs)
   pred[,fwd.order] <- euler_hat_grid( coeff, coeff.cont, X, n.lag, params,
                                       n.exog, n.endog, n.cont, n.fwd, params$rho, 
                                       params$sig.eps, 0, N, upper, lower, cheby,
-                                      matrix(0,1,1), TRUE, n.nodes, "ds" )
+                                      matrix(0,1,1), TRUE, n.nodes, "irbc" )
       # Generate predictions from the Euler equation errors
   err <- pred - X[,c(n.exog+1:n.endog, 
                           (1+n.lag)*(n.exog+n.endog)+1:n.cont)]
+  
+  ######## TO CHECK: B11 & B22 DEFINITIONS, TIMINGS FOR THE SAME ########
+  
+  
+  
   bias <- mean(err)
   aad <- mean(abs(err))
   mean.max.abs.err <- mean(apply(abs(err),1,max))
@@ -245,8 +268,8 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=FALSE, n.node
 #       # Numbers of types of variables
 #   message('Generating coefficient rules for alternative-state representation')
 #       # Screen updating
-#   upper <- c(  3 * sd.x, mod$ys[endog.order.alt] + .5 )
-#   lower <- c( -3 * sd.x, mod$ys[endog.order.alt] - .5 )
+#   upper <- c(  3 * sd.x, ys[endog.order.alt] + .5 )
+#   lower <- c( -3 * sd.x, ys[endog.order.alt] - .5 )
 #       # The bounds of the states
 #   idx.sample <- sample(nsim-1,size=n.sample,replace=TRUE)
 #   endog.reg <- sim.endog.alt[-nsim,][idx.sample,]

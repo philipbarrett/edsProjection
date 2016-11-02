@@ -146,7 +146,6 @@ arma::rowvec contemp_eqns_ds(
       //   c_1, c_2, rb1, rb2, x_11, x_22, x_12, x_21, p_1, p_2, 
       //   p_11, p_22, p_12, p_21, e_12, af1, y_1, y_2, cd, cg, nfa
 
-//  rowvec A = exp( exog.row(0) ) ;
   double A_1 = exp( exog(0,0) ) ;
   double A_2 = exp( exog(0,1) ) ;
   double p_11 = exp( exog(0,2) ) ;

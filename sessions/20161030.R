@@ -41,7 +41,7 @@ cont.order <- c( 'C1', 'C2', 'rb1', 'rb2', 'X11', 'X22', 'X12', 'X21',
                  'P12', 'P21', 'E', 'Q',
                  'Y1', 'Y2', 'cd', 'cg', 'NFA', 'af1' )
     # Variable names for the DS-style solution
-fwd.order <- c( 'rb1', 'rb2', 'B11', 'B22')
+fwd.order <- c(  'B11', 'E', 'rb1', 'rb2' )
     # The forward-looking equation variables
 sim.exog <- sim[, exog.order]
 sim.endog <- sim[, endog.order]
@@ -73,7 +73,7 @@ for(i in 1:n.endog) coeff[,i] <- coeff_reg( sim.endog[,i][-1], X, N,
     # Populate the coefficient matrices (Endogenous states only)
 
 sim.endog.alt <- endog_sim( nsim-1, sim.exog[-1,], coeff, N, upper, lower, 
-                            sim.endog[1,], cheby, 1, 0, TRUE )
+                            sim.endog[2,], cheby, 1, 0, TRUE )
     # Alternative endogenous simulation
 
 
