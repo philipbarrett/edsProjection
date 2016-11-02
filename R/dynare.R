@@ -207,7 +207,7 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE, n.nodes
   message('Evaluating errors from the dynare solution')
       # Screen updating
   X <- cbind( sim.exog[-1,], sim.endog[-1,], sim.exog[-nsim,], sim.endog[-nsim,], 
-              sim.cont[-1,] ) #[sample(nrow(X),size=n.sample,replace=TRUE),]
+              sim.cont[-1,] )[sample(nrow(X),size=n.sample,replace=TRUE),]
       # Redefine X for evaluating the errors
   
   #### DO I HAVE THE TIMING RIGHT HERE FOR B11, B22???
@@ -228,7 +228,7 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE, n.nodes
                           (1+n.lag)*(n.exog+n.endog)+1:n.cont)]
   
   ######## TO CHECK: B11 & B22 DEFINITIONS, TIMINGS FOR THE SAME ########
-  
+  #### REALLY LOOKS LIKE JUST THE BUDGET SET EQN ####
   
   
   bias <- mean(err)

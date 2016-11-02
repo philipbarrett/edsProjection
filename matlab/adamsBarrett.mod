@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % AUTO-GENERATED CODE FROM DYNARE.R 
-% CREATED  2016-11-01-224557 
+% CREATED  2016-11-01-230127 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % Dynare code for the Adams-Barrett model.
