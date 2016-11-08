@@ -54,6 +54,7 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init,
   cont.names <- opt$cont.names
   fwd.vars <- opt$fwd.vars
   model <- opt$model
+  mono <- if( is.null(opt$mono) ) "none" else opt$mono
   
   #### Extract parameters ####
   rho <- params$rho
@@ -211,7 +212,7 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init,
         k.hat <- euler_hat_grid( coeff.n, coeff.c, X.cont, lags, params, 
                                  n.exog, n.endog, n.cont, n.fwd, rho, sig.eps, 
                                  0, N, upper, lower, cheby, matrix(0,1,1,), 
-                                 TRUE, n.quad, model )
+                                 TRUE, n.quad, model, mono )
             # The forward-looking variable predictors
 #         v.k.diff <- apply( abs( k.hat - X.cont[, fwd.idces] ), 2, max )
         v.k.diff <- apply( abs( k.hat - X.cont[, fwd.idces] ), 2, mean )
@@ -227,7 +228,7 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init,
             # Update loop variables
         X.cont[,fwd.idces] <- k.gain * k.hat + ( 1 - k.gain ) * X.cont[,fwd.idces]
             # Update the simulations for forward looking variables
-#         if( adapt.gain ) k.gain <- max( exp( - adapt.exp * k.diff ), k.gain )
+        if( adapt.gain ) k.gain <- max( exp( - adapt.exp * k.diff ), k.gain )
             # Update the gain where required
         if( i.k %% 1 == 0 ) 
           message('        i.k = ', i.k, ',  v.k.diff = (', 
@@ -265,7 +266,7 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init,
       coeff.n <- n.gain * coeff.n.new + ( 1 - n.gain ) * coeff.n
       coeff.c <- n.gain * coeff.c.new + ( 1 - n.gain ) * coeff.c
           # Update the rules
-      # if( adapt.gain ) n.gain <- max( exp( - adapt.exp * n.diff ), n.gain )
+      if( adapt.gain ) n.gain <- max( exp( - adapt.exp * n.diff ), n.gain )
           # Update the adaptive gain
       if( sym.reg ){
         coeff.n <- m.sym.ave.pair( coeff.n, l.sym.ave, l.pairs )

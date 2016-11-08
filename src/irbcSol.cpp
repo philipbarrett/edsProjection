@@ -14,6 +14,7 @@
 #include "ds.hpp"
 #include "sim.hpp"
 #include "quad.hpp"
+#include "mono.hpp"
 
 // [[Rcpp::export]]
 arma::mat euler_hat_grid( 
@@ -23,7 +24,7 @@ arma::mat euler_hat_grid(
             arma::rowvec rho, arma::rowvec sig_eps, int n_integ,
             int N, arma::rowvec upper, arma::rowvec lower, bool cheby,
             arma::mat exog_innov_mc, bool quad=true, int n_nodes=0,
-            std::string model="irbc" ){
+            std::string model="irbc", std::string mono="none" ){
 // Creates the vector of errors on the Euler equations
 
   int n_pts = X.n_rows ;
@@ -41,18 +42,36 @@ arma::mat euler_hat_grid(
   /** Create the integration nodes and weights **/
   n_integ = quad ? pow( n_nodes, n_exog ) : n_integ ;
       // Update the number of points if using quadrature
+  if( mono == "m1" ) n_integ = 2 * n_exog ;
+      // Monomial rule
   rowvec weights( n_integ ) ;
   mat nodes( n_integ, n_exog ) ;
   vec v_sig_eps = conv_to<vec>::from( sig_eps ) ;
       // The weights and integration nodes
       
   if( quad ){
-    mat m_quad = quad_nodes_weights_mat( n_nodes, n_exog, 
-                        v_sig_eps, zeros(n_exog) ) ;
-    vec temp = m_quad.col( n_exog ) ;
-    weights = conv_to<rowvec>::from( temp ) ;
-    nodes = m_quad.head_cols(n_exog) ;
-        // Quadrature
+    if(mono == "m1"){
+      mat m_sig2 = eye( n_exog, n_exog ) ;
+          // Initiate covariance matrix
+      for ( int i = 0 ; i < n_exog ; i++ ){
+        m_sig2(i,i) = pow( v_sig_eps(i), 2.0 ) ;
+      }
+          // Create the variance-covariance matrix in the uncorrelated case
+      mat m_quad = M1_nodes_weights_mat( zeros(n_exog), m_sig2 ) ;
+      vec temp = m_quad.col( n_exog ) ;
+      weights = conv_to<rowvec>::from( temp ) ;
+      nodes = m_quad.head_cols(n_exog) ;
+          // Monomial rule
+    }
+    else
+    {
+      mat m_quad = quad_nodes_weights_mat( n_nodes, n_exog, 
+                          v_sig_eps, zeros(n_exog) ) ;
+      vec temp = m_quad.col( n_exog ) ;
+      weights = conv_to<rowvec>::from( temp ) ;
+      nodes = m_quad.head_cols(n_exog) ;
+          // Quadrature
+    }
   }
   else
   {

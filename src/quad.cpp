@@ -4,7 +4,7 @@
  * Code to generate Gaussian quadrature nodes and weights
  * 
  * 30jan2016
- * Philip Barrett << Chicago
+ * Philip Barrett, Chicago
  * 
  ***********************************************************************************/
 
@@ -110,7 +110,7 @@ List quad_nodes_weights( int n_nodes, int n_dim,
   for( int i = 1 ; i < pow( n_nodes, n_dim ) ; i++ ){
   // Loop to compute the indices of the quadrature nodes
     idx.row(i) = idx.row(i-1) ;
-        // Start out by copying the preceiding row down
+        // Start out by copying the preceding row down
     if( idx( i - 1, n_dim - 1 ) < n_nodes - 1 ){
       idx( i, n_dim - 1 ) = idx( i - 1, n_dim - 1 ) + 1 ;
     }   // Increment the last index where possible
@@ -168,3 +168,7 @@ arma::mat quad_nodes_weights_mat( int n_nodes, int n_dim,
       // Assign the weights and nodes to the different columns
   return out ;
 }
+
+// NB: It isn't that hard to create correlated integrating variables.
+// Just need to scale the nodes and weights according to Judd-Maliar-Malier
+// appendix B.2

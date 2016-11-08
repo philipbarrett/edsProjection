@@ -89,12 +89,16 @@ irbc_reg <- function(exog, endog, cont, exog_innov_integ, params, coeffs, coeffs
     .Call('edsProjection_irbc_reg', PACKAGE = 'edsProjection', exog, endog, cont, exog_innov_integ, params, coeffs, coeffs_cont, n_exog, n_endog, n_cont, n_fwd, rho, n_integ, N, upper, lower, cheby, weights, extra_args, print_rhs)
 }
 
-euler_hat_grid <- function(coeffs, coeffs_cont, X, lags, params, n_exog, n_endog, n_cont, n_fwd, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad = TRUE, n_nodes = 0L, model = "irbc") {
-    .Call('edsProjection_euler_hat_grid', PACKAGE = 'edsProjection', coeffs, coeffs_cont, X, lags, params, n_exog, n_endog, n_cont, n_fwd, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad, n_nodes, model)
+euler_hat_grid <- function(coeffs, coeffs_cont, X, lags, params, n_exog, n_endog, n_cont, n_fwd, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad = TRUE, n_nodes = 0L, model = "irbc", mono = "none") {
+    .Call('edsProjection_euler_hat_grid', PACKAGE = 'edsProjection', coeffs, coeffs_cont, X, lags, params, n_exog, n_endog, n_cont, n_fwd, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad, n_nodes, model, mono)
 }
 
 contemp_eqns_irbc_grid <- function(X, lags, params, n_exog, n_endog, n_cont, extra_args, model = "irbc") {
     .Call('edsProjection_contemp_eqns_irbc_grid', PACKAGE = 'edsProjection', X, lags, params, n_exog, n_endog, n_cont, extra_args, model)
+}
+
+M1_nodes_weights_mat <- function(mu, sigma) {
+    .Call('edsProjection_M1_nodes_weights_mat', PACKAGE = 'edsProjection', mu, sigma)
 }
 
 integrand_ngm_2 <- function(exog, endog, exog_lead, params, coeffs, n_exog, n_endog, N, upper, lower, cheby = FALSE) {

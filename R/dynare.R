@@ -70,8 +70,8 @@ mod.read <- function(){
   return( readMat('matlab/Rvars.mat') )
 }
 
-mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE, n.nodes=3,
-                    err.deets=FALSE, sim.stats=FALSE, return.sim=FALSE ){
+mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE, 
+                    n.nodes=3, err.deets=FALSE, sim.stats=FALSE, return.sim=FALSE ){
 # Generates the coefficient matrices and vector of equation errors
   
   ### 0. Hard-coding ###
@@ -108,11 +108,12 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE, n.nodes
   names(ys) <- varo
   colnames(sim) <- varo
       # Assign names
-  B11 <- exp(ys[y1.idx+1]) * params$betta * exp( -params$theta * sim[,'C1'] ) *
+  B11 <- exp(ys[y1.idx+1]) *# params$betta * #exp( -params$theta * sim[,'C1'] ) *
     sim[,'af1'] * exp( sim[,'R_1'] + sim[,'P1'] )
-  B22 <- ( sim[,'NFA'] - params$betta * exp( -params$theta * sim[,'C1'] ) * 
+  B22 <- - ( sim[,'NFA'] - #params$betta * #exp( -params$theta * sim[,'C1'] ) * 
              sim[,'af1'] ) * exp(ys[y1.idx+1] ) * exp( sim[,'R_2'] + sim[,'P1']  - sim[,'E'])
       # Create nominal debt series:  NB THESE ARE END OF PERIOD
+      # B22 is negative because it is held by households in country 2
   sim <- cbind( sim, B11, B22 )
       # Append B11, B22 to simulation
   varo <- c( varo, 'B11', 'B22' )
@@ -180,6 +181,8 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE, n.nodes
       # term)
   coeff <- matrix( 0, n.X, n.endog )
   coeff.cont <- matrix( 0, n.X, n.cont )
+  colnames(coeff) <- endog.order
+  colnames(coeff.cont) <- cont.order
       # The coefficient matrices  
   for(i in 1:n.endog) coeff[,i] <- coeff_reg( sim.endog[,i][-1], X, N,
                                                     lower, upper, cheby )
@@ -199,18 +202,16 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE, n.nodes
     # browser()
   }
   ds.sol <- list( coeff=coeff, coeff.cont=coeff.cont, 
-                  upper=upper, lower=lower )
+                  upper=upper, lower=lower, ys=ys )
       # Details of the Devreux-Sutherland solution
   
   ### 3. Evaluate equation errors ###
-  browser()  
+  # browser()
   message('Evaluating errors from the dynare solution')
       # Screen updating
   X <- cbind( sim.exog[-1,], sim.endog[-1,], sim.exog[-nsim,], sim.endog[-nsim,], 
               sim.cont[-1,] )[sample(nrow(X),size=n.sample,replace=TRUE),]
-      # Redefine X for evaluating the errors
-  
-  #### DO I HAVE THE TIMING RIGHT HERE FOR B11, B22???
+      # Redefine X for evaluating the errors.  Timing is good.
   
   extra.args <- list(n.fwd=4, y1.ss=ys['Y1'])
       # The number of forward-looking equations
@@ -227,12 +228,10 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE, n.nodes
   err <- pred - X[,c(n.exog+1:n.endog, 
                           (1+n.lag)*(n.exog+n.endog)+1:n.cont)]
   
-  ######## TO CHECK: B11 & B22 DEFINITIONS, TIMINGS FOR THE SAME ########
-  #### REALLY LOOKS LIKE JUST THE BUDGET SET EQN ####
   
   
-  bias <- mean(err)
-  aad <- mean(abs(err))
+  bias <- apply(err, 2, mean)
+  aad <- apply(abs(err), 2, mean)
   mean.max.abs.err <- mean(apply(abs(err),1,max))
   max.abs.err.dist <- density( apply( abs( err ), 1, max ) )
   log.max.abs.err.dist <- density( log( apply( abs( err ), 1, max ), 10 ) )

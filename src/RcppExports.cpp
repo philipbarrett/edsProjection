@@ -385,8 +385,8 @@ BEGIN_RCPP
 END_RCPP
 }
 // euler_hat_grid
-arma::mat euler_hat_grid(arma::mat coeffs, arma::mat coeffs_cont, arma::mat X, int lags, List params, int n_exog, int n_endog, int n_cont, int n_fwd, arma::rowvec rho, arma::rowvec sig_eps, int n_integ, int N, arma::rowvec upper, arma::rowvec lower, bool cheby, arma::mat exog_innov_mc, bool quad, int n_nodes, std::string model);
-RcppExport SEXP edsProjection_euler_hat_grid(SEXP coeffsSEXP, SEXP coeffs_contSEXP, SEXP XSEXP, SEXP lagsSEXP, SEXP paramsSEXP, SEXP n_exogSEXP, SEXP n_endogSEXP, SEXP n_contSEXP, SEXP n_fwdSEXP, SEXP rhoSEXP, SEXP sig_epsSEXP, SEXP n_integSEXP, SEXP NSEXP, SEXP upperSEXP, SEXP lowerSEXP, SEXP chebySEXP, SEXP exog_innov_mcSEXP, SEXP quadSEXP, SEXP n_nodesSEXP, SEXP modelSEXP) {
+arma::mat euler_hat_grid(arma::mat coeffs, arma::mat coeffs_cont, arma::mat X, int lags, List params, int n_exog, int n_endog, int n_cont, int n_fwd, arma::rowvec rho, arma::rowvec sig_eps, int n_integ, int N, arma::rowvec upper, arma::rowvec lower, bool cheby, arma::mat exog_innov_mc, bool quad, int n_nodes, std::string model, std::string mono);
+RcppExport SEXP edsProjection_euler_hat_grid(SEXP coeffsSEXP, SEXP coeffs_contSEXP, SEXP XSEXP, SEXP lagsSEXP, SEXP paramsSEXP, SEXP n_exogSEXP, SEXP n_endogSEXP, SEXP n_contSEXP, SEXP n_fwdSEXP, SEXP rhoSEXP, SEXP sig_epsSEXP, SEXP n_integSEXP, SEXP NSEXP, SEXP upperSEXP, SEXP lowerSEXP, SEXP chebySEXP, SEXP exog_innov_mcSEXP, SEXP quadSEXP, SEXP n_nodesSEXP, SEXP modelSEXP, SEXP monoSEXP) {
 BEGIN_RCPP
     Rcpp::RObject __result;
     Rcpp::RNGScope __rngScope;
@@ -410,7 +410,8 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< bool >::type quad(quadSEXP);
     Rcpp::traits::input_parameter< int >::type n_nodes(n_nodesSEXP);
     Rcpp::traits::input_parameter< std::string >::type model(modelSEXP);
-    __result = Rcpp::wrap(euler_hat_grid(coeffs, coeffs_cont, X, lags, params, n_exog, n_endog, n_cont, n_fwd, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad, n_nodes, model));
+    Rcpp::traits::input_parameter< std::string >::type mono(monoSEXP);
+    __result = Rcpp::wrap(euler_hat_grid(coeffs, coeffs_cont, X, lags, params, n_exog, n_endog, n_cont, n_fwd, rho, sig_eps, n_integ, N, upper, lower, cheby, exog_innov_mc, quad, n_nodes, model, mono));
     return __result;
 END_RCPP
 }
@@ -429,6 +430,18 @@ BEGIN_RCPP
     Rcpp::traits::input_parameter< List >::type extra_args(extra_argsSEXP);
     Rcpp::traits::input_parameter< std::string >::type model(modelSEXP);
     __result = Rcpp::wrap(contemp_eqns_irbc_grid(X, lags, params, n_exog, n_endog, n_cont, extra_args, model));
+    return __result;
+END_RCPP
+}
+// M1_nodes_weights_mat
+arma::mat M1_nodes_weights_mat(arma::vec mu, arma::mat sigma);
+RcppExport SEXP edsProjection_M1_nodes_weights_mat(SEXP muSEXP, SEXP sigmaSEXP) {
+BEGIN_RCPP
+    Rcpp::RObject __result;
+    Rcpp::RNGScope __rngScope;
+    Rcpp::traits::input_parameter< arma::vec >::type mu(muSEXP);
+    Rcpp::traits::input_parameter< arma::mat >::type sigma(sigmaSEXP);
+    __result = Rcpp::wrap(M1_nodes_weights_mat(mu, sigma));
     return __result;
 END_RCPP
 }

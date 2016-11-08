@@ -73,13 +73,13 @@ arma::rowvec euler_hat_irbc(
   double p2 = cont(9) ;
   double e12 = cont(12) ;
       // Extract controls
-  
+
   mat exog_lead = zeros( n_integ, n_exog ) ;
       // Initalize the draws of the exogenous variables in the next period
   exog_lead = ones(n_integ) * ( rho % exog ) + exog_innov_integ ;
         // Multiply the most recent exogenous draw by the appropriate rho and
         // add the innovation
-  
+        // Would be easy to convert to VAR(1) form here.
   rowvec integral = zeros<rowvec>( n_fwd ) ;
   mat integrand = zeros( n_integ, n_fwd ) ;
       // Initialize the right hand side.
@@ -188,8 +188,8 @@ arma::rowvec contemp_eqns_irbc(
   double p_21 = p_11 - e_12 ;
       // Imported goods prices
   double B_22 = std::exp( r_2 ) * ( 
-            B_22_lag + std::exp( - e_12 ) * ( - A_1 * exp( p_11 ) + 
-              B_11 * std::exp( - r_1 ) - B_11_lag + std::exp( c_1 - p_1 ) ) ) ;
+            + B_22_lag - std::exp( - e_12 ) * ( A_1 * exp( p_11 ) - 
+              B_11 * std::exp( - r_1 ) + B_11_lag - std::exp( c_1 + p_1 ) ) ) ;
       // Debt in country 2
   double x_12_new = c_1 + log_1_alpha + eta * ( p_1 - p_12 ) ;
   double x_21_new = c_2 + log_1_alpha + eta * ( p_2 - p_21 ) ;
