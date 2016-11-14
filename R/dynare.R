@@ -228,8 +228,6 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE,
   err <- pred - X[,c(n.exog+1:n.endog, 
                           (1+n.lag)*(n.exog+n.endog)+1:n.cont)]
   
-  
-  
   bias <- apply(err, 2, mean)
   aad <- apply(abs(err), 2, mean)
   mean.max.abs.err <- mean(apply(abs(err),1,max))
