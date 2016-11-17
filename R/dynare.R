@@ -81,9 +81,13 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE,
       # Number of lags
   n.fwd <- 4
       # Number of Euler equations
-  n.sample <- 4000
+  n.sample <- 20000
       # The number of rows of the simulation to sample for the coefficient rules
       # & such
+  sr <- FALSE
+  eps <- 1
+  delta <- .025
+      # State reduction controls
   
   ### 1. Run and extract the model ###
   message('Creating & solving dynare model')
@@ -166,16 +170,28 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE,
   ### 2. Run regressions to generate coefficients ###
   message('Generating coefficient rules for error evaluation')
       # Screen updating
+  
+  if( sr ){
+    # browser()
+    idces <- p_eps_cheap_const_idx( cbind( sim.exog[-1,], sim.endog[-nsim,]),
+                                    eps, delta )
+        # Need to include the lagged state in the evaluation set for the
+        # equilibrium condition
+    endog.reg <- sim.endog[-nsim,][idces,]
+    exog.reg <- sim.exog[-1,][idces,]
+  }else{
+    endog.reg <- sim.endog[-nsim,]
+    exog.reg <- sim.exog[-1,]
+  }
+  X <- cbind( exog.reg, endog.reg )
+      # The X-variables for the regressions
+  
   sd.x <- params$sig.eps / sqrt( ( 1 - params$rho ^ 2 ) )
       # The standard deviation of the exogenous state
   
   upper <- c(   3 * sd.x, ys[endog.order] + 3 * apply(sim.endog,2,sd) )
   lower <- c( - 3 * sd.x, ys[endog.order] - 3 * apply(sim.endog,2,sd) )
       # The bounds of the states
-  endog.reg <- sim.endog[-nsim,]
-  exog.reg <- sim.exog[-1,]
-  X <- cbind( exog.reg, endog.reg )
-      # The X-variables for the regressions
   n.X <- 1 + length(endog.order) + length(exog.order) 
       # The number of X variables is the number of states plus one (the constant
       # term)
@@ -204,6 +220,11 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE,
   ds.sol <- list( coeff=coeff, coeff.cont=coeff.cont, 
                   upper=upper, lower=lower, ys=ys )
       # Details of the Devreux-Sutherland solution
+  
+  if( !err.deets ){
+    l.err <- NA
+    return( list( mod=mod, ds.sol=ds.sol, l.err=l.err ) )
+  }
   
   ### 3. Evaluate equation errors ###
   # browser()
@@ -291,7 +312,7 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE,
 #       # Details of the alternative solution
   alt.sol <- NA
 
-  return( list( mod=mod, ds.sol=ds.sol, l.err=l.err, alt.sol=alt.sol ) )
+  return( list( mod=mod, ds.sol=ds.sol, l.err=l.err ) )
 }
 
 
