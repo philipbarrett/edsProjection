@@ -51,7 +51,7 @@ arma::rowvec euler_hat_irbc(
                   arma::mat exog_innov_integ, double betta, 
                   double gamma, arma::mat coeffs_cont, 
                   int n_exog, int n_endog, int n_cont, int n_fwd,
-                  arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
+                  arma::mat rho, int n_integ, int N, arma::rowvec upper, 
                   arma::rowvec lower, bool cheby, arma::rowvec weights,
                   bool print_rhs=false ){
 // Computes the single-period error on the neocassical growth model equilibrium 
@@ -76,10 +76,10 @@ arma::rowvec euler_hat_irbc(
 
   mat exog_lead = zeros( n_integ, n_exog ) ;
       // Initalize the draws of the exogenous variables in the next period
-  exog_lead = ones(n_integ) * ( rho % exog ) + exog_innov_integ ;
+  exog_lead = ones(n_integ) * ( exog * rho ) + exog_innov_integ ;
         // Multiply the most recent exogenous draw by the appropriate rho and
         // add the innovation
-        // Would be easy to convert to VAR(1) form here.
+        // Would be easy to convert to VAR(1) form here. DONE!
   rowvec integral = zeros<rowvec>( n_fwd ) ;
   mat integrand = zeros( n_integ, n_fwd ) ;
       // Initialize the right hand side.

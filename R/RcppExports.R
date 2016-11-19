@@ -217,6 +217,10 @@ ar1_sim <- function(n_pds, rho, sig_eps, init_flag = FALSE, init = 0) {
     .Call('edsProjection_ar1_sim', PACKAGE = 'edsProjection', n_pds, rho, sig_eps, init_flag, init)
 }
 
+var1_sim <- function(n_pds, A, sig_eps, init_flag = FALSE, init = 0) {
+    .Call('edsProjection_var1_sim', PACKAGE = 'edsProjection', n_pds, A, sig_eps, init_flag, init)
+}
+
 endog_update_slow <- function(exog, endog_old, coeffs, n_exog, n_endog, N, upper, lower, cheby = FALSE) {
     .Call('edsProjection_endog_update_slow', PACKAGE = 'edsProjection', exog, endog_old, coeffs, n_exog, n_endog, N, upper, lower, cheby)
 }

@@ -41,5 +41,7 @@ arma::mat irf_create( int pds, int n_sim, int N, int shk_idx,
                       arma::rowvec init, int n_endog, int n_exog, 
                       double shk, bool cheby ) ;
     // Creates the impulse responses
-
+arma::mat var1_sim( int n_pds, arma::mat A, arma::mat sigma, 
+                    bool init_flag, double init ) ;
+    // Creates a VAR(1) simulation
 #endif

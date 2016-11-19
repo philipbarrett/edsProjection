@@ -41,6 +41,33 @@ arma::vec ar1_sim( int n_pds, double rho, double sig_eps,
 /** TO DO: Add correlated shocks in a VAR **/
 
 // [[Rcpp::export]]
+arma::mat var1_sim( int n_pds, arma::mat A, arma::mat sig_eps, 
+                   bool init_flag=false, double init=0 ){
+// Creates a VAR(1) simulation X(+1) = X * A + e, where e ~ N( 0, sigma )
+// where X is a row vector.
+  int n_dim = A.n_cols ;
+      // Number of dimensions
+  mat innov_1 = randn( n_pds, n_dim ) ;
+      //  The uncorrelated innovation matrix
+  mat omega = chol( sig_eps ) ;
+      // The cholesky decomposition of the innovation matrix
+  mat innov = innov_1 * omega ;
+      // The correlated innovation matrix
+  mat out = zeros(n_pds, n_dim) ;
+      //  Initialize the output
+  if( init_flag ){
+    out(0) = init ;
+        // Initialize the output
+  }
+  for( int i = 1 ; i < n_pds ; i++ ){
+    out.row(i) = out.row(i-1) * A + innov.row(i) ;
+        // Fill the output with the VAR(1) process
+  }
+  return out ;
+}
+
+
+// [[Rcpp::export]]
 arma::rowvec endog_update_slow( arma::rowvec exog, arma::rowvec endog_old, arma::mat coeffs, 
                             int n_exog, int n_endog, int N,
                             arma::rowvec upper, arma::rowvec lower, bool cheby=false ){

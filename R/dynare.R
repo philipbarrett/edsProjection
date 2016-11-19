@@ -170,8 +170,7 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE,
   ### 2. Run regressions to generate coefficients ###
   message('Generating coefficient rules for error evaluation')
       # Screen updating
-  
-  if( sr ){
+  if(sr){
     # browser()
     idces <- p_eps_cheap_const_idx( cbind( sim.exog[-1,], sim.endog[-nsim,]),
                                     eps, delta )
@@ -186,8 +185,13 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE,
   X <- cbind( exog.reg, endog.reg )
       # The X-variables for the regressions
   
-  sd.x <- params$sig.eps / sqrt( ( 1 - params$rho ^ 2 ) )
+  var.x <- solve( diag(n.exog) - params$rho %*% params$rho, params$sig.eps )
+  sd.x <- sqrt(diag(var.x))
       # The standard deviation of the exogenous state
+  
+  var.check <- max(abs(var(sim.exog) - var.x))
+  message( "Simulated and analytical exogenous variance differ by at most ", 
+           round(var.check,8) )
   
   upper <- c(   3 * sd.x, ys[endog.order] + 3 * apply(sim.endog,2,sd) )
   lower <- c( - 3 * sd.x, ys[endog.order] - 3 * apply(sim.endog,2,sd) )

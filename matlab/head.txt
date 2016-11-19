@@ -7,6 +7,6 @@ var A1 A2 NFA Y1 Y2 C1 C2 P1 P2 P11 P22 P12 P21 X11 X22 X12 X21 Q E cg cd rb1 rb
 
 varexo ep1 ep2 ep3 ep4 zeta;
 
-parameters BT RH rho1 rho2 rho3 rho4 eta alph p1bar p2bar sigeps1 sigeps2 sigeps3 sigeps4 theta;
+parameters BT RH rho1 rho2 rho3 rho4 rho5 rho6 rho7 rho8 rho9 rho10 rho11 rho12 rho13 rho14 rho15 rho16 eta alph p1bar p2bar sigeps1 sigeps2 sigeps3 sigeps4 sigeps5 sigeps6 sigeps7 sigeps8 sigeps9 sigeps10 sigeps11 sigeps12 sigeps13 sigeps14 sigeps15 sigeps16 theta;
 
 % Parameter values

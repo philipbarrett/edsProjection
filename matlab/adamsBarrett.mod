@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % AUTO-GENERATED CODE FROM DYNARE.R 
-% CREATED  2016-11-14-232536 
+% CREATED  2016-11-19-082850 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % Dynare code for the Adams-Barrett model.
@@ -12,7 +12,7 @@ var A1 A2 NFA Y1 Y2 C1 C2 P1 P2 P11 P22 P12 P21 X11 X22 X12 X21 Q E cg cd rb1 rb
 
 varexo ep1 ep2 ep3 ep4 zeta;
 
-parameters BT RH rho1 rho2 rho3 rho4 eta alph p1bar p2bar sigeps1 sigeps2 sigeps3 sigeps4 theta;
+parameters BT RH rho1 rho2 rho3 rho4 rho5 rho6 rho7 rho8 rho9 rho10 rho11 rho12 rho13 rho14 rho15 rho16 eta alph p1bar p2bar sigeps1 sigeps2 sigeps3 sigeps4 sigeps5 sigeps6 sigeps7 sigeps8 sigeps9 sigeps10 sigeps11 sigeps12 sigeps13 sigeps14 sigeps15 sigeps16 theta;
 
 % Parameter values
 alph = 0.86 ;
@@ -21,15 +21,39 @@ p1bar = 1 ;
 p2bar = 1 ;
 BT = 0.99 ;
 rho1 = 0.9 ;
-rho2 = 0.9 ;
-rho3 = 0.9 ;
-rho4 = 0.9 ;
-sigeps1 = 0.01 ;
-sigeps2 = 0.01 ;
-sigeps3 = 0.005 ;
-sigeps4 = 0.005 ;
+rho2 = 0.025 ;
+rho3 = 0 ;
+rho4 = 0 ;
+rho5 = 0.025 ;
+rho6 = 0.9 ;
+rho7 = 0 ;
+rho8 = 0 ;
+rho9 = 0 ;
+rho10 = 0 ;
+rho11 = 0.9 ;
+rho12 = 0 ;
+rho13 = 0 ;
+rho14 = 0 ;
+rho15 = 0 ;
+rho16 = 0.9 ;
+sigeps1 = 1e-04 ;
+sigeps2 = 2.5e-05 ;
+sigeps3 = 0 ;
+sigeps4 = 0 ;
+sigeps5 = 2.5e-05 ;
+sigeps6 = 1e-04 ;
+sigeps7 = 0 ;
+sigeps8 = 0 ;
+sigeps9 = 0 ;
+sigeps10 = 0 ;
+sigeps11 = 2.5e-05 ;
+sigeps12 = 0 ;
+sigeps13 = 0 ;
+sigeps14 = 0 ;
+sigeps15 = 0 ;
+sigeps16 = 2.5e-05 ;
 eta = 2 ;
-theta = 0 ;
+theta = 0.05 ;
 dr={'rb1','rb2'};                  
 
 parameters af1;
@@ -52,8 +76,10 @@ cd = C1 - C2 - Q / RH ;
 cg = (1/2)*(C1 + C2);
     % Defines the excess return
 
-A1 = rho1 * A1(-1) + ep1 ;
-A2 = rho2 * A2(-1) + ep2 ;
+A1 = rho1 * A1(-1) + rho2 * A2(-1) + rho3 * P11(-1) + rho4 * P22(-1) + ep1 ;
+A2 = rho5 * A1(-1) + rho6 * A2(-1) + rho7 * P11(-1) + rho8 * P22(-1) + ep2 ;
+P11 = rho9 * A1(-1) + rho10 * A2(-1) + rho11 * P11(-1) + rho12 * P22(-1) + ep3 ;
+P22 = rho13 * A1(-1) + rho14 * A2(-1) + rho15 * P11(-1) + rho16 * P22(-1) + ep4 ;
  
 exp(Y1) = exp(A1) * exp(P11) / exp(P1) ;
 exp(Y2) = exp(A2) * exp(P22) / exp(P2) ;
@@ -70,9 +96,6 @@ alph * exp(C1) / exp(X11) = ( exp(P11) / exp(P1) ) ^ eta ;
 alph * exp(C2) / exp(X22) = ( exp(P22) / exp(P2) ) ^ eta ;
 (1-alph) * exp(C1) / exp(X12) = ( exp(P12) / exp(P1) ) ^ eta ;
 (1-alph) * exp(C2) / exp(X21) = ( exp(P21) / exp(P2) ) ^ eta ;
-
-P11 = rho3 * P11(-1) + ep3 ;
-P22 = rho4 * P22(-1) + ep4 ;
 
 E = P11 - P21 ;
 E = P12 - P22 ;
@@ -129,10 +152,16 @@ steady;
 % Shock variances
 
 shocks;
-var ep1 = sigeps1 ^ 2 ;
-var ep2 = sigeps2 ^ 2 ;
-var ep3 = sigeps3 ^ 2 ;
-var ep4 = sigeps4 ^ 2 ;
+var ep1 = sigeps1 ;
+var ep1, ep2 = sigeps2 ;
+var ep1, ep3 = sigeps3 ;
+var ep1, ep4 = sigeps4 ;
+var ep2 = sigeps6 ;
+var ep2, ep3 = sigeps7 ;
+var ep2, ep4 = sigeps8 ;
+var ep3 = sigeps11 ;
+var ep3, ep4 = sigeps12 ;
+var ep4 = sigeps16 ;
 end;
 
 

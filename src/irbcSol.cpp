@@ -21,7 +21,7 @@ arma::mat euler_hat_grid(
             arma::mat coeffs, arma::mat coeffs_cont, 
             arma::mat X, int lags, List params, 
             int n_exog, int n_endog, int n_cont, int n_fwd,
-            arma::rowvec rho, arma::rowvec sig_eps, int n_integ,
+            arma::mat rho, arma::mat sig_eps, int n_integ,
             int N, arma::rowvec upper, arma::rowvec lower, bool cheby,
             arma::mat exog_innov_mc, bool quad=true, int n_nodes=0,
             std::string model="irbc", std::string mono="none" ){
@@ -46,18 +46,14 @@ arma::mat euler_hat_grid(
       // Monomial rule
   rowvec weights( n_integ ) ;
   mat nodes( n_integ, n_exog ) ;
-  vec v_sig_eps = conv_to<vec>::from( sig_eps ) ;
+  // vec v_sig_eps = conv_to<vec>::from( sig_eps ) ;
       // The weights and integration nodes
       
   if( quad ){
+    // Rcout << "mono = " << mono << std::endl ;  // Useful check!
     if(mono == "m1"){
-      mat m_sig2 = eye( n_exog, n_exog ) ;
-          // Initiate covariance matrix
-      for ( int i = 0 ; i < n_exog ; i++ ){
-        m_sig2(i,i) = pow( v_sig_eps(i), 2.0 ) ;
-      }
-          // Create the variance-covariance matrix in the uncorrelated case
-      mat m_quad = M1_nodes_weights_mat( zeros(n_exog), m_sig2 ) ;
+      mat m_quad = M1_nodes_weights_mat( zeros(n_exog), sig_eps ) ;
+          // The monomial integration nodes
       vec temp = m_quad.col( n_exog ) ;
       weights = conv_to<rowvec>::from( temp ) ;
       nodes = m_quad.head_cols(n_exog) ;
@@ -65,6 +61,10 @@ arma::mat euler_hat_grid(
     }
     else
     {
+      Rcout << "WARNING: Non-monomial quadrature not working with correlated errors" 
+            << std::endl ;
+      vec v_sig_eps = ones(n_exog) ;
+          // NONSENSE ROW.  Just guarantees that compilation holds
       mat m_quad = quad_nodes_weights_mat( n_nodes, n_exog, 
                           v_sig_eps, zeros(n_exog) ) ;
       vec temp = m_quad.col( n_exog ) ;
@@ -86,7 +86,7 @@ arma::mat euler_hat_grid(
                   arma::mat exog_innov_integ, double betta, 
                   double gamma, arma::mat coeffs_cont, 
                   int n_exog, int n_endog, int n_cont, int n_fwd,
-                  arma::rowvec rho, int n_integ, int N, arma::rowvec upper, 
+                  arma::mat rho, int n_integ, int N, arma::rowvec upper, 
                   arma::rowvec lower, bool cheby, arma::rowvec weights,
                   bool print_rhs ) ;
       // Pointer to model evaluation function
@@ -94,10 +94,9 @@ arma::mat euler_hat_grid(
   if( model == "irbc" )
     euler_hat_fn = euler_hat_irbc ;
         // The first attempt at the Adams-Barrett model
-  if( model == "ds" )
-    euler_hat_fn = euler_hat_ds ;
-        // The Devreux-Sutherland version
-  
+  // if( model == "ds" )
+  //   euler_hat_fn = euler_hat_ds ;
+  //       // The Devreux-Sutherland version
   
   /** Now compute the model errors **/
   for( int i = 0 ; i < n_pts ; i++ ){

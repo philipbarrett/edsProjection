@@ -23,7 +23,7 @@ arma::mat euler_hat_grid(
             arma::mat coeffs, arma::mat coeffs_cont, 
             arma::mat X, int lags, List params, 
             int n_exog, int n_endog, int n_cont, int n_fwd,
-            arma::rowvec rho, arma::rowvec sig_eps, int n_integ,
+            arma::mat rho, arma::mat sig_eps, int n_integ,
             int N, arma::rowvec upper, arma::rowvec lower, bool cheby,
             arma::mat exog_innov_mc, bool quad, int n_nodes,
             std::string model, std::string mono ) ;

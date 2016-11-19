@@ -58,16 +58,17 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init,
   
   #### Extract parameters ####
   rho <- params$rho
-  params$alphahat <- params$share ^ params$eta
   sig.eps <- params$sig.eps
+  params$alphahat <- params$share ^ params$eta
   n.terms <- idx_count( N, n.exog + n.endog )
   
   if( debug.flag ) browser()
   
   ##### Create the exogenous simulation ####
   set.seed(1234)
-  exog.sim <- sapply( 1:n.exog, function(i) ar1_sim( n.sim * kappa + burn, 
-                                                     rho[i], sig.eps[i] ) )
+  # exog.sim <- sapply( 1:n.exog, function(i) ar1_sim( n.sim * kappa + burn, 
+  #                                                    rho[i], sig.eps[i] ) )
+  exog.sim <- var1_sim( kappa * n.sim + burn, rho, sig.eps )
 
   #####  Initiate loop variables   ##### 
   n.state <- n.endog + n.exog
@@ -152,20 +153,26 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init,
       ### 2.4 Update the comtemporaneous rules and grid values ###
       for(i in 1:n.endog){
         if( !( endog.names[i] %in% fwd.vars ) ){
-          coeff[,i] <- (1-n.gain) * coeff[,i] + n.gain *
-                            coeff_reg( contemp[,i], X[, state.select], 
-                                                N, lower, upper, cheby )
+          # coeff[,i] <- (1-n.gain) * coeff[,i] + n.gain *
+          #                   coeff_reg( contemp[,i], X[, state.select], 
+          #                                       N, lower, upper, cheby )
+          coeff[,i] <- coeff_reg( contemp[,i], X[, state.select], 
+                                  N, lower, upper, cheby )
         }
       }   # Update the endogenous state coefficients which are not forward-looking
       for(i in 1:n.cont){
         if( !( cont.names[i] %in% fwd.vars ) ){
-          coeff.cont[,i] <- (1-n.gain) * coeff.cont[,i] + n.gain *
-                              coeff_reg( contemp[,n.endog+i], X[, state.select], 
-                                                    N, lower, upper, cheby )
+          # coeff.cont[,i] <- (1-n.gain) * coeff.cont[,i] + n.gain *
+          #                     coeff_reg( contemp[,n.endog+i], X[, state.select], 
+          #                                           N, lower, upper, cheby )
+          coeff.cont[,i] <- coeff_reg( contemp[,n.endog+i], X[, state.select], 
+                                          N, lower, upper, cheby )
         }
       }
           # Update the coefficients on the non-forward-looking variables in line
           # with the predictors from the conemporanneous block
+      # TEST: Enforcing 100% update here
+      
       if( sym.reg ) coeff.cont <- m.sym.ave.pair( coeff.cont, l.sym.ave, l.pairs.cont )
           # Symmetry regularization
     }
@@ -266,8 +273,9 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init,
       coeff.n <- n.gain * coeff.n.new + ( 1 - n.gain ) * coeff.n
       coeff.c <- n.gain * coeff.c.new + ( 1 - n.gain ) * coeff.c
           # Update the rules
-      if( adapt.gain ) n.gain <- max( exp( - adapt.exp * n.diff ), n.gain )
-          # Update the adaptive gain
+      # if( adapt.gain ) n.gain <- max( exp( - adapt.exp * n.diff ), n.gain )
+      #     # Update the adaptive gain
+          # Turn off for this.
       if( sym.reg ){
         coeff.n <- m.sym.ave.pair( coeff.n, l.sym.ave, l.pairs )
         coeff.c <- m.sym.ave.pair( coeff.c, l.sym.ave, l.pairs.cont )
@@ -295,7 +303,7 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init,
     pred[,fwd.vars] <- euler_hat_grid( coeff.n, coeff.c, X.cont, lags, params,
                                         n.exog, n.endog, n.cont, n.fwd, rho, 
                                         sig.eps, 0, N, upper, lower, cheby,
-                                        matrix(0,1,1), TRUE, n.quad, model )
+                                        matrix(0,1,1), TRUE, n.quad, model, mono )
         # The forward-looking variables
     err <- pred - X.cont[,contemp.select]
     bias <- mean(err)
@@ -374,9 +382,13 @@ sol.irbc.check <- function( sol, params=NULL, opt=NULL ){
   sig.eps <- params$sig.eps
       # Copy from parameters
   
-  exog.sim <- sapply( 1:n.exog, function(i) ar1_sim( kappa * n.check + n.burn, 
-                                                     rho[i], sig.eps[i] ) )
+  # exog.sim <- sapply( 1:n.exog, function(i) ar1_sim( kappa * n.check + n.burn, 
+  #                                                    rho[i], sig.eps[i] ) )
+  exog.sim <- var1_sim( kappa * n.check + n.burn, rho, sig.eps )
       # The exogenous simulation
+  
+
+  
   endog.sim <- endog_sim( n.check, exog.sim, sol$coeff, N, upper, lower, 
                           rep(0,n.endog), cheby, kappa, n.burn, (lags>0) )
       # The endogenous simulation (Here set kappa=1)
