@@ -1,9 +1,9 @@
 ## Parameters
-rho <- diag(c(.9,.9,.9,.9))
-sig <- diag(c(.01,.01,.005,.005)^2)
-params <- list( share = .86, gamma = 10, P1.bar=1, P2.bar=1, betta=.96,
-                rho=rho, sig.eps=sig, eta=2, theta=0.025 )
-baseline <- mod.gen(params, check=TRUE ) #, err.deets = TRUE )
+rho <- diag(c(.96,.96,.9,.9))
+sig <- diag(c(1,1,.5,.5)) * .004 ^ 2
+params <- list( share = .86, gamma = 2, P1.bar=1, P2.bar=1, betta=.99,
+                rho=rho, sig.eps=sig, eta=3, theta=0.01 )
+baseline <- mod.gen(params, check=FALSE ) #, err.deets = TRUE )
 
 ## Convert to R-style solution object
 # Extract things from baseline
@@ -45,4 +45,6 @@ baseline.err <- sim.err( sim.baseline, baseline.sol, extra.args )
 sim <- sim.baseline
 bs <- cor( diff(sim[,'C1']-sim[,'C2']), diff(sim[,'Q']) )
 bs.level <- cor( exp(sim[,'C1'])-exp(sim[,'C2']), exp(sim[,'Q']) )
-lm( diff(sim[,'E']) ~ (sim[,'R_1']-sim[,'R_2'])[-n.sim] )$coeff[2]
+uip.coeff <- lm( diff(sim[,'E']) ~ (sim[,'R_1']-sim[,'R_2'])[-n.sim] )$coeff[2]
+err.sumy <- summary( baseline.err )
+err.abs.sumy <- summary( abs(baseline.err) )
