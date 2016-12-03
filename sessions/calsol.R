@@ -1,11 +1,23 @@
+# US-CANADA CALIBRATED MODEL
+rho.1 <- matrix( c(  1.1097647,  -.15449075, .02131559, .30252068,
+                     .22374942,  .78217604, -.11064979, .29379593,
+                    -.05576506, -.00454507,  .88582022, .092488,
+                    -.13001704,  .03837792,   -.062587, .94126153 ), 4, 4 )
+sig.1 <- matrix( c( .0000231,  .00001815, 5.827e-06, -2.389e-07,
+                    .00001815, .00002715, 7.148e-06, 3.343e-06,
+                    5.827e-06, 7.148e-06, .00001239, 9.608e-06,
+                   -2.389e-07, 3.343e-06, 9.608e-06, .00001258 ), 4, 4 )
+rho <- rho.1[,4:1][4:1,]
+sig <- sig.1[,4:1][4:1,]
+    # Reorder: USA GDP, CA GDP, USA PPI, CA PPI
+
 ## Dynare solution
 params <- list( share = .86, gamma = 8, P1.bar=1, P2.bar=1, betta=.99,
-                rho=diag(rep(.9,4)), sig.eps=diag(c(.01,.01, .005, .005)^2), 
-                eta=2, theta=.05 )
-params$rho[2,1] <- params$rho[1,2] <- .025
-params$sig.eps[2,1] <- params$sig.eps[1,2] <- .005 ^ 2
-    # Add non-sphericality
+                rho=rho, sig.eps=sig, eta=2, theta=.05 )
+params.0 <- params
+params.0$theta <- 0
 baseline <- mod.gen(params, check=FALSE)
+baseline.0 <- mod.gen(params.0, check=FALSE)
 
 # Extract things from baseline
 upper <- baseline$ds.sol$upper
@@ -28,7 +40,7 @@ opt <- list( lags=1, n.exog=n.exog, n.endog=n.endog, n.cont=n.cont, N=1, cheby=F
              c.iter=100, c.tol=1e-07, c.gain=.8,
              k.iter=20, k.tol=1e-07, k.gain=.4,
              n.iter=2, n.tol=1e-05, n.gain=.3, 
-             tol=1e-05, iter=5, model='irbc',
+             tol=1e-05, iter=4, model='irbc',
              sr=TRUE, adapt.gain=TRUE, adapt.exp=15, image=TRUE,
              exog.names=exog.names, endog.names=endog.names, 
              cont.names=cont.names, fwd.vars=fwd.vars,
@@ -38,51 +50,64 @@ baseline.sol <- list( params=params, opt=opt,
                       coeff.cont=baseline$ds.sol$coeff.cont )
 
 ## Linear solution
-l.sym.ave <- list( ave=c(1), sym=list(c(2,3),c(4,5),c(6,7) ) )
-l.pairs <- list( c(1,2) )
-l.pairs.cont <- list( c(1,2), c(3,4), c(5,6), c(7,8), c(9,10), c(11,12) )
 sol.1 <- sol.irbc.iterate( baseline$ds.sol$coeff, opt, params, 
                            baseline$ds.sol$coeff.cont )
-sol.1.sym <- list(
-  coeff=m.sym.ave.pair( sol.1$coeff, l.sym.ave, l.pairs ),
-  coeff.cont=m.sym.ave.pair( sol.1$coeff.cont, l.sym.ave, l.pairs.cont ),
-  opt=opt, params=params )
-    # Ex post regularization
+opt$iter <- 2
+sol.1.0 <- sol.irbc.iterate( sol.1$coeff, opt, params.0, sol.1$coeff.cont )
+
+## Quadratic solution
+opt$N <- 2
+opt$iter <- 2
+n.coeff <- idx_count( opt$N, n.exog + n.endog )
+idx.coeff <- apply( idx_create(opt$N, n.exog + n.endog), 
+                    1, function(x) sum(x) <=1 )
+coeff.init <- matrix(0,n.coeff,n.endog)
+coeff.init.cont <- matrix(0,n.coeff,n.cont)
+coeff.init[ idx.coeff, ] <- sol.1$coeff
+coeff.init.cont[ idx.coeff, ] <- sol.1$coeff.cont
+    # Set up the new initial guess
+opt$n.gain <- .1
+sol.2 <- sol.irbc.iterate( coeff.init, opt, params, coeff.init.cont )
+sol.2.0 <- sol.irbc.iterate( sol.2$coeff, opt, params.0, sol.2$coeff.cont )
 
 ## Simulations
 n.sim <- 100000
-baseline.sol <- list( params=params, opt=sol.1$opt, 
-                      coeff=baseline$ds.sol$coeff, 
-                      coeff.cont=baseline$ds.sol$coeff.cont )
 sim.baseline <- sim.sol( baseline.sol, n.sim )
 sim.exog <- sim.baseline[,1:n.exog]
 sim.sol.1 <- sim.sol( sol.1, n.sim, sim.exog )
-sim.sol.1.sym <- sim.sol( sol.1.sym, n.sim, sim.exog )
+sim.sol.1.0 <- sim.sol( sol.1.0, n.sim, sim.exog )
+sim.sol.2 <- sim.sol( sol.2, n.sim, sim.exog )
+sim.sol.2.0 <- sim.sol( sol.2.0, n.sim, sim.exog )
 
 ## Errors
 extra.args <- list( n.fwd=opt$n.fwd, y1.ss=opt$ys['Y1'] )
 baseline.err <- sim.err( sim.baseline, baseline.sol, extra.args )
 err.sol.1 <- sim.err( sim.sol.1, sol.1, extra.args )
-err.sol.1.sym <- sim.err( sim.sol.1.sym, sol.1.sym, extra.args )
+err.sol.1.0 <- sim.err( sim.sol.1.0, sol.1.0, extra.args )
+err.sol.2 <- sim.err( sim.sol.2, sol.2, extra.args )
+err.sol.2.0 <- sim.err( sim.sol.2.0, sol.2.0, extra.args )
 
 ## Diagnsotics
 par.init <- par()
 par(mfrow=c(2,1), mai = c(.5, 0.5, 0.3, 0.1))
-    # Settings
-l.err <- list( Local=baseline.err, Global1=err.sol.1 )
+# Settings
+l.err <- list( Local=baseline.err, Global1=err.sol.1, Global2=err.sol.2 )
+l.err.0 <- list( Global1=err.sol.1.0, Global2=err.sol.2.0 )
 barplot(t(sapply( l.err, function(x) apply(abs(x), 2, mean) )), 
         beside=TRUE, main="Ave abs err")
 barplot(t(sapply( l.err, function(x) apply(x, 2, mean) )), 
         beside=TRUE, main="Ave err")
-    # Baseline + global linear
-# barplot(apply(abs(err.sol.1.sym), 2, mean), main="Ave abs err")
-# barplot(apply((err.sol.1.sym), 2, mean), main="Ave err")
-#     # Symmetric gloabl linear - it pretty bad
+    # theta > 0
+barplot(t(sapply( l.err.0, function(x) apply(abs(x), 2, mean) )), 
+        beside=TRUE, main="Ave abs err")
+barplot(t(sapply( l.err.0, function(x) apply(x, 2, mean) )), 
+        beside=TRUE, main="Ave err")
+    # theta = 0 
 par(par.init)
 
 # Outputs
-l.sim <- list( local=sim.baseline, global.1=sim.sol.1 ) #, global.2=sim.sol.2,
-               # global.1.0=sim.sol.1.0, global.2.0=sim.sol.2.0 )
+l.sim <- list( local=sim.baseline, global.1=sim.sol.1 , global.2=sim.sol.2,
+               global.1.0=sim.sol.1.0, global.2.0=sim.sol.2.0 )
 bs.log <- sapply( l.sim, 
                   function(sim) cor( diff(sim[,'C1']-sim[,'C2']), diff(sim[,'Q']) ) )
 uip.coeff <- sapply( l.sim, 

@@ -32,10 +32,10 @@ sim.sol <- function(sol, n.sim=100000, sim.exog=NULL ){
   return( cbind( endog.sim, cont.sim ) )
 }
 
-sim.err <- function( sim, sol, extra.args=NULL ){
+sim.err <- function( sim, sol, extra.args=NULL, params=NULL ){
 # Computes the errors on a simulation
   opt <- sol$opt
-  params <- sol$params
+  if(is.null(params)) params <- sol$params
       # Copy option and parameters
   pred <- contemp_eqns_irbc_grid( sim, opt$lags, params, opt$n.exog, 
                                   opt$n.endog, opt$n.cont, extra.args, opt$model )

@@ -189,12 +189,13 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE,
   sd.x <- sqrt(diag(var.x))
       # The standard deviation of the exogenous state
   
-  var.check <- max(abs(var(sim.exog) - var.x))
-  message( "Simulated and analytical exogenous variance differ by at most ", 
-           round(var.check,8) )
+  # var.x <- var(sim.exog)
+  # var.check <- max(abs(var(sim.exog) - var.x))
+  # message( "Simulated and analytical exogenous variance differ by at most ", 
+  #          round(var.check,8) )
   
-  upper <- c(   3 * sd.x, ys[endog.order] + 3 * apply(sim.endog,2,sd) )
-  lower <- c( - 3 * sd.x, ys[endog.order] - 3 * apply(sim.endog,2,sd) )
+  upper <- c(   3 * apply(sim.exog,2,sd), ys[endog.order] + 3 * apply(sim.endog,2,sd) )
+  lower <- c( - 3 * apply(sim.exog,2,sd), ys[endog.order] - 3 * apply(sim.endog,2,sd) )
       # The bounds of the states
   n.X <- 1 + length(endog.order) + length(exog.order) 
       # The number of X variables is the number of states plus one (the constant
@@ -224,6 +225,8 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE,
   ds.sol <- list( coeff=coeff, coeff.cont=coeff.cont, 
                   upper=upper, lower=lower, ys=ys )
       # Details of the Devreux-Sutherland solution
+  
+  # browser()
   
   if( !err.deets ){
     l.err <- NA

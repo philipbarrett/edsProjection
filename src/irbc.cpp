@@ -48,7 +48,7 @@ arma::rowvec integrand_irbc(
 // [[Rcpp::export]]
 arma::rowvec euler_hat_irbc( 
                   arma::rowvec exog, arma::rowvec endog, arma::rowvec cont,
-                  arma::mat exog_innov_integ, double betta, 
+                  arma::mat exog_innov_integ, double betta, double theta,
                   double gamma, arma::mat coeffs_cont, 
                   int n_exog, int n_endog, int n_cont, int n_fwd,
                   arma::mat rho, int n_integ, int N, arma::rowvec upper, 
@@ -109,10 +109,10 @@ arma::rowvec euler_hat_irbc(
 //  out(2) = rho_pref - e12 - gamma * c2 - p2 - std::log( integral(2) ) ;
 //  out(3) = rho_pref + e12 - gamma * c1 - p1 - std::log( integral(3) ) ;
   out(0) = B_11 -  
-              ( gamma * c2 - rho_pref + r1 + e12 + p2 + std::log( integral(2) ) ) ;
-  out(1) = gamma * c1 - rho_pref + r2 + p1 + std::log( integral(3) ) ;
-  out(2) = rho_pref - gamma * c1 - p1 - std::log( integral(0) ) ;
-  out(3) = rho_pref - gamma * c2 - p2 - std::log( integral(1) ) ;
+              ( ( gamma - theta ) * c2 - rho_pref + r1 + e12 + p2 + std::log( integral(2) ) ) ;
+  out(1) = ( gamma - theta ) * c1 - rho_pref + r2 + p1 + std::log( integral(3) ) ;
+  out(2) = rho_pref - ( gamma - theta ) * c1 - p1 - std::log( integral(0) ) ;
+  out(3) = rho_pref - ( gamma - theta ) * c2 - p2 - std::log( integral(1) ) ;
       // The predictors, for B11, e_12, R1 and R2.  Set up B_11 s.t. if current consumption is too 
       // high for the Euler equation to hold then B_{t+1} increases.  This will
       // pull down on consumption in the contemporaneous block later.
@@ -140,7 +140,6 @@ arma::rowvec contemp_eqns_irbc(
   double alphahat_1 = pow( 1 - alpha, 1 / eta )  ;
   double log_alphahat = std::log( alphahat ) ;
   double log_1_alphahat = std::log( 1 - alphahat ) ;
-  double theta = params["theta"] ;
 
   rowvec out( cont.n_elem + endog.n_cols ) ;
       // Initialize the output vector.  Defines the equations for:
@@ -214,11 +213,12 @@ arma::rowvec irbc_reg(
 // the states and controls.
   double betta = params["betta"] ;
   double gamma = params["gamma"] ;
+  double theta = params["theta"] ;
 
   rowvec out = zeros<rowvec>( n_endog + n_cont ) ;
       // Initialize the output
   out.head(n_endog+2) = 
-        euler_hat_irbc( exog, endog, cont, exog_innov_integ, betta, gamma, 
+        euler_hat_irbc( exog, endog, cont, exog_innov_integ, betta, theta, gamma, 
                             coeffs_cont, n_exog, n_endog, n_cont, n_fwd,
                             rho, n_integ, N, upper, lower, cheby, weights,
                             print_rhs ) ;

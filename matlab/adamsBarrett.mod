@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % AUTO-GENERATED CODE FROM DYNARE.R 
-% CREATED  2016-11-19-082850 
+% CREATED  2016-12-01-220839 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % Dynare code for the Adams-Barrett model.
@@ -16,16 +16,16 @@ parameters BT RH rho1 rho2 rho3 rho4 rho5 rho6 rho7 rho8 rho9 rho10 rho11 rho12 
 
 % Parameter values
 alph = 0.86 ;
-RH = 8 ;
+RH = 2 ;
 p1bar = 1 ;
 p2bar = 1 ;
 BT = 0.99 ;
-rho1 = 0.9 ;
-rho2 = 0.025 ;
+rho1 = 0.94 ;
+rho2 = 0 ;
 rho3 = 0 ;
 rho4 = 0 ;
-rho5 = 0.025 ;
-rho6 = 0.9 ;
+rho5 = 0 ;
+rho6 = 0.94 ;
 rho7 = 0 ;
 rho8 = 0 ;
 rho9 = 0 ;
@@ -36,24 +36,24 @@ rho13 = 0 ;
 rho14 = 0 ;
 rho15 = 0 ;
 rho16 = 0.9 ;
-sigeps1 = 1e-04 ;
-sigeps2 = 2.5e-05 ;
+sigeps1 = 1.6e-05 ;
+sigeps2 = 0 ;
 sigeps3 = 0 ;
 sigeps4 = 0 ;
-sigeps5 = 2.5e-05 ;
-sigeps6 = 1e-04 ;
+sigeps5 = 0 ;
+sigeps6 = 1.6e-05 ;
 sigeps7 = 0 ;
 sigeps8 = 0 ;
 sigeps9 = 0 ;
 sigeps10 = 0 ;
-sigeps11 = 2.5e-05 ;
+sigeps11 = 3.1e-05 ;
 sigeps12 = 0 ;
 sigeps13 = 0 ;
 sigeps14 = 0 ;
 sigeps15 = 0 ;
-sigeps16 = 2.5e-05 ;
-eta = 2 ;
-theta = 0.05 ;
+sigeps16 = 3.1e-05 ;
+eta = 3 ;
+theta = 0 ;
 dr={'rb1','rb2'};                  
 
 parameters af1;
@@ -65,11 +65,7 @@ model;
 %NFA = exp(rb2)*NFA(-1) + exp(Y1) - exp(C1) + exp(STEADY_STATE(Y1))*( BT*exp(-theta*C1)*af1*(exp(rb1) - exp(rb2)) + zeta );
 NFA = exp(rb2)*NFA(-1) + exp(Y1) - exp(C1) + exp(STEADY_STATE(Y1))*( BT*af1*(exp(rb1) - exp(rb2)) + zeta );
 
-%end;
-
 % Main model equations
-
-%model;
 
 cd = C1 - C2 - Q / RH ;
     % Has conditional expectation zero (to 1st order)

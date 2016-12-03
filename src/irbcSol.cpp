@@ -37,6 +37,7 @@ arma::mat euler_hat_grid(
   mat err = zeros(n_pts, n_fwd ) ;
       // Becuase n_fwd is the number of forward-looking expectational equations
   double betta = params["betta"] ;
+  double theta = params["theta"] ;
   double gamma = params["gamma"] ;
 
   /** Create the integration nodes and weights **/
@@ -83,7 +84,7 @@ arma::mat euler_hat_grid(
   /** Define the model function **/
   rowvec (*euler_hat_fn)( 
              arma::rowvec exog, arma::rowvec endog, arma::rowvec cont,
-                  arma::mat exog_innov_integ, double betta, 
+                  arma::mat exog_innov_integ, double betta, double theta,
                   double gamma, arma::mat coeffs_cont, 
                   int n_exog, int n_endog, int n_cont, int n_fwd,
                   arma::mat rho, int n_integ, int N, arma::rowvec upper, 
@@ -109,7 +110,7 @@ arma::mat euler_hat_grid(
       cont = X.row(i).tail( n_cont ) ;
         // The controls
     err.row(i) = euler_hat_fn(
-                    exog, endog, cont, nodes, betta, gamma,
+                    exog, endog, cont, nodes, betta, theta, gamma, 
                     coeffs_cont, n_exog, n_endog, n_cont, n_fwd, rho, 
                     n_integ, N, upper, lower, cheby, weights, false ) ;
   }   // The error on the states according to the Euler equations
