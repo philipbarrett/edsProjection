@@ -16,26 +16,49 @@ cd = C1 - C2 - Q / RH ;
 cg = (1/2)*(C1 + C2);
     % Defines the excess return
 
-A1 = rho1 * A1(-1) + rho2 * A2(-1) + rho3 * P11(-1) + rho4 * P22(-1) + ep1 ;
-A2 = rho5 * A1(-1) + rho6 * A2(-1) + rho7 * P11(-1) + rho8 * P22(-1) + ep2 ;
-P11 = rho9 * A1(-1) + rho10 * A2(-1) + rho11 * P11(-1) + rho12 * P22(-1) + ep3 ;
-P22 = rho13 * A1(-1) + rho14 * A2(-1) + rho15 * P11(-1) + rho16 * P22(-1) + ep4 ;
+%A1 = rho1 * A1(-1) + rho2 * A2(-1) + rho3 * P11(-1) + rho4 * P22(-1) + ep1 ;
+%A2 = rho5 * A1(-1) + rho6 * A2(-1) + rho7 * P11(-1) + rho8 * P22(-1) + ep2 ;
+shk1 = rho1 * shk1(-1) + rho2 * shk2(-1) + rho3 * P11(-1) + rho4 * P22(-1) + ep1 ;
+shk2 = rho5 * shk1(-1) + rho6 * shk2(-1) + rho7 * P11(-1) + rho8 * P22(-1) + ep2 ;
+P11 = rho9 * shk1(-1) + rho10 * shk2(-1) + rho11 * P11(-1) + rho12 * P22(-1) + ep3 ;
+P22 = rho13 * shk1(-1) + rho14 * shk2(-1) + rho15 * P11(-1) + rho16 * P22(-1) + ep4 ;
+
+A1 = shk1 + log(mu) ;
+A2 = shk2 + log(mu) ;
+    % Realized endowments 
  
-exp(Y1) = exp(A1) * exp(P11) / exp(P1) ;
-exp(Y2) = exp(A2) * exp(P22) / exp(P2) ;
+exp(Y1) = exp(A1) * exp(P11) / exp(P1) + exp(CN1) * exp(PN1)/ exp(P1);
+exp(Y2) = exp(A2) * exp(P22) / exp(P2) + exp(CN2) * exp(PN2)/ exp(P2);
 
 exp(A1) = exp(X11) + exp(X21) ;
 exp(A2) = exp(X22) + exp(X12) ;
 
-exp(C1) = ( alph ^ ( 1 / eta ) * exp(X11) ^ ( ( eta - 1 ) / eta ) + 
-             ( 1 - alph ) ^ ( 1 / eta ) * exp(X12) ^ ( ( eta - 1 ) / eta ) ) ^ ( eta / ( eta - 1 ) ) ;
-exp(C2) = ( alph ^ ( 1 / eta ) * exp(X22) ^ ( ( eta - 1 ) / eta ) + 
-             ( 1 - alph ) ^ ( 1 / eta ) * exp(X21) ^ ( ( eta - 1 ) / eta ) ) ^ ( eta / ( eta - 1 ) ) ;
+exp(CT1) = ( alph ^ ( 1 / eta ) * exp(X11) ^ ( ( eta - 1 ) / eta ) + 
+             ( 1 - alph ) ^ ( 1 / eta ) * exp(X12) ^ ( ( eta - 1 ) / eta ) ) ^ 
+                ( eta / ( eta - 1 ) ) ;
+exp(CT2) = ( alph ^ ( 1 / eta ) * exp(X22) ^ ( ( eta - 1 ) / eta ) + 
+             ( 1 - alph ) ^ ( 1 / eta ) * exp(X21) ^ ( ( eta - 1 ) / eta ) ) ^ 
+                ( eta / ( eta - 1 ) ) ;
+			 
+exp(C1) = ( mu ^ ( 1 / xi ) * exp(CT1) ^ ( ( xi - 1 ) / xi ) + 
+             ( 1 - mu ) ^ ( 1 / xi ) * exp(CN1) ^ ( ( xi - 1 ) / xi ) ) ^ 
+                ( xi / ( xi - 1 ) ) ;
+exp(C2) = ( mu ^ ( 1 / xi ) * exp(CT2) ^ ( ( xi - 1 ) / xi ) + 
+             ( 1 - mu ) ^ ( 1 / xi ) * exp(CN2) ^ ( ( xi - 1 ) / xi ) ) ^ 
+                ( xi / ( xi - 1 ) ) ;
 
-alph * exp(C1) / exp(X11) = ( exp(P11) / exp(P1) ) ^ eta ;
-alph * exp(C2) / exp(X22) = ( exp(P22) / exp(P2) ) ^ eta ;
-(1-alph) * exp(C1) / exp(X12) = ( exp(P12) / exp(P1) ) ^ eta ;
-(1-alph) * exp(C2) / exp(X21) = ( exp(P21) / exp(P2) ) ^ eta ;
+alph * exp(CT1) / exp(X11) = ( exp(P11) / exp(PT1) ) ^ eta ;
+alph * exp(CT2) / exp(X22) = ( exp(P22) / exp(PT2) ) ^ eta ;
+(1-alph) * exp(CT1) / exp(X12) = ( exp(P12) / exp(PT1) ) ^ eta ;
+(1-alph) * exp(CT2) / exp(X21) = ( exp(P21) / exp(PT2) ) ^ eta ;
+
+mu * exp(C1) / exp(CT1) = ( exp(PT1) / exp(P1) ) ^ xi ;
+mu * exp(C2) / exp(CT2) = ( exp(PT2) / exp(P2) ) ^ xi ;
+(1-mu) * exp(C1) / exp(CN1) = ( exp(PN1) / exp(P1) ) ^ xi ;
+(1-mu) * exp(C2) / exp(CN2) = ( exp(PN2) / exp(P2) ) ^ xi ;
+
+CN1 = log(1-mu);
+CN2 = log(1-mu);
 
 E = P11 - P21 ;
 E = P12 - P22 ;
@@ -65,24 +88,34 @@ cg = 0;
 NFA = 0;
 Y1 = 0;
 Y2 = 0;
-A1 = 0;
-A2 = 0;
+shk1 = 0;
+shk2 = 0;
+A1 = log(mu);
+A2 = log(mu);
+CT1 = log(mu);
+CT2 = log(mu);
+CN1 = log(1-mu);
+CN2 = log(1-mu);
 C1 = 0;
 C2 = 0;
-P1 = 0; % log(p1bar);
-P2 = 0; %log(p2bar);
+P1 = 0; %log(p1bar);
+P2 = 0;  %log(p2bar);
 P11 = 0 ;
 P22 = 0 ;
 P12 = 0 ;
 P21 = 0 ;
+PN1 = 0;
+PN2 = 0;
+PT1 = 0;
+PT2 = 0;
 rb1 = log(1/BT);
 rb2 = log(1/BT);
 R_1 = log(1/BT);
 R_2 = log(1/BT);
-X11 = log(alph) ;
-X22 = log(alph) ;
-X12 = log(1-alph) ;
-X21 = log(1-alph) ;
+X11 = log(mu*alph) ;
+X22 = log(mu*alph) ;
+X12 = log(mu*(1-alph)) ;
+X21 = log(mu*(1-alph)) ;
 Q = 0 ;
 E = 0 ;
 end; 

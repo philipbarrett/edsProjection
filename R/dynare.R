@@ -18,7 +18,8 @@ params.convert <- function( st ){
   if( st == 'theta' ) return('theta')
   if( st == 'sig.eps' ) return('sigeps')
   if( st == 'eta' ) return('eta')
-  
+  if( st == 'mu' ) return('mu')
+  if( st == 'xi' ) return('xi')
 }
 
 mod.create <- function( params ){
@@ -124,13 +125,14 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE,
   ys <- c( ys, B11=mean(B11), B22=mean(B22) )
       # Assign names
   
-  exog.order <- c('A1','A2', 'P11', 'P22')
+  exog.order <- c('shk1','shk2', 'P11', 'P22')
   endog.order <- c( 'B11', 'B22' )
-  cont.order <- c( 'C1', 'C2', 'R_1', 'R_2', #'rb1', 'rb2', 
+  cont.order <- c( 'A1', 'A2', 'C1', 'C2', 'R_1', 'R_2',
                    'X11', 'X22', 'X12', 'X21', 
-                   'P1', 'P2', 
-                   'P12', 'P21', 'E', 'Q' ) #,
-                   # 'Y1', 'Y2', 'cd', 'cg' ) # , 'NFA', 'af1' )
+                   'P1', 'P2', 'P12', 'P21', 
+                   'PN1', 'PN2', 'PT1', 'PT2',
+                   'CN1', 'CN2', 'CT1', 'CT2',
+                   'E', 'Q', 'Y1', 'Y2' )
       # Variable names for the DS-style solution
   fwd.order <- c( 'B11', 'E', 'R_1', 'R_2')
       # The forward-looking equation variables

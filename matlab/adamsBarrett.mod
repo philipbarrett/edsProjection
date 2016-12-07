@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % AUTO-GENERATED CODE FROM DYNARE.R 
-% CREATED  2016-12-04-091506 
+% CREATED  2016-12-06-223043 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % Dynare code for the Adams-Barrett model.
@@ -8,11 +8,11 @@
 
 % Variable and parameter declarations
 
-var A1 A2 NFA Y1 Y2 C1 C2 P1 P2 P11 P22 P12 P21 X11 X22 X12 X21 Q E cg cd rb1 rb2 R_1 R_2; 
+var shk1 shk2 A1 A2 NFA Y1 Y2 C1 C2 P1 P2 P11 P22 P12 P21 PN1 PN2 PT1 PT2 X11 X22 X12 X21 CN1 CN2 CT1 CT2 Q E cg cd rb1 rb2 R_1 R_2; 
 
 varexo ep1 ep2 ep3 ep4 zeta;
 
-parameters BT RH rho1 rho2 rho3 rho4 rho5 rho6 rho7 rho8 rho9 rho10 rho11 rho12 rho13 rho14 rho15 rho16 eta alph p1bar p2bar sigeps1 sigeps2 sigeps3 sigeps4 sigeps5 sigeps6 sigeps7 sigeps8 sigeps9 sigeps10 sigeps11 sigeps12 sigeps13 sigeps14 sigeps15 sigeps16 theta;
+parameters BT RH mu xi rho1 rho2 rho3 rho4 rho5 rho6 rho7 rho8 rho9 rho10 rho11 rho12 rho13 rho14 rho15 rho16 eta alph p1bar p2bar sigeps1 sigeps2 sigeps3 sigeps4 sigeps5 sigeps6 sigeps7 sigeps8 sigeps9 sigeps10 sigeps11 sigeps12 sigeps13 sigeps14 sigeps15 sigeps16 theta;
 
 % Parameter values
 alph = 0.86 ;
@@ -20,22 +20,22 @@ RH = 2 ;
 p1bar = 1 ;
 p2bar = 1 ;
 BT = 0.99 ;
-rho1 = 0.995 ;
+rho1 = 0.94 ;
 rho2 = 0 ;
 rho3 = 0 ;
 rho4 = 0 ;
 rho5 = 0 ;
-rho6 = 0.995 ;
+rho6 = 0.94 ;
 rho7 = 0 ;
 rho8 = 0 ;
 rho9 = 0 ;
 rho10 = 0 ;
-rho11 = 0.995 ;
+rho11 = 0.9 ;
 rho12 = 0 ;
 rho13 = 0 ;
 rho14 = 0 ;
 rho15 = 0 ;
-rho16 = 0.995 ;
+rho16 = 0.9 ;
 sigeps1 = 1.6e-05 ;
 sigeps2 = 0 ;
 sigeps3 = 0 ;
@@ -46,14 +46,16 @@ sigeps7 = 0 ;
 sigeps8 = 0 ;
 sigeps9 = 0 ;
 sigeps10 = 0 ;
-sigeps11 = 4e-06 ;
+sigeps11 = 3.1e-05 ;
 sigeps12 = 0 ;
 sigeps13 = 0 ;
 sigeps14 = 0 ;
 sigeps15 = 0 ;
-sigeps16 = 4e-06 ;
-eta = 3 ;
-theta = 0 ;
+sigeps16 = 3.1e-05 ;
+eta = 2.5 ;
+theta = 0.05 ;
+mu = 0.55 ;
+xi = 0.44 ;
 dr={'rb1','rb2'};                  
 
 parameters af1;
@@ -72,26 +74,49 @@ cd = C1 - C2 - Q / RH ;
 cg = (1/2)*(C1 + C2);
     % Defines the excess return
 
-A1 = rho1 * A1(-1) + rho2 * A2(-1) + rho3 * P11(-1) + rho4 * P22(-1) + ep1 ;
-A2 = rho5 * A1(-1) + rho6 * A2(-1) + rho7 * P11(-1) + rho8 * P22(-1) + ep2 ;
-P11 = rho9 * A1(-1) + rho10 * A2(-1) + rho11 * P11(-1) + rho12 * P22(-1) + ep3 ;
-P22 = rho13 * A1(-1) + rho14 * A2(-1) + rho15 * P11(-1) + rho16 * P22(-1) + ep4 ;
+%A1 = rho1 * A1(-1) + rho2 * A2(-1) + rho3 * P11(-1) + rho4 * P22(-1) + ep1 ;
+%A2 = rho5 * A1(-1) + rho6 * A2(-1) + rho7 * P11(-1) + rho8 * P22(-1) + ep2 ;
+shk1 = rho1 * shk1(-1) + rho2 * shk2(-1) + rho3 * P11(-1) + rho4 * P22(-1) + ep1 ;
+shk2 = rho5 * shk1(-1) + rho6 * shk2(-1) + rho7 * P11(-1) + rho8 * P22(-1) + ep2 ;
+P11 = rho9 * shk1(-1) + rho10 * shk2(-1) + rho11 * P11(-1) + rho12 * P22(-1) + ep3 ;
+P22 = rho13 * shk1(-1) + rho14 * shk2(-1) + rho15 * P11(-1) + rho16 * P22(-1) + ep4 ;
+
+A1 = shk1 + log(mu) ;
+A2 = shk2 + log(mu) ;
+    % Realized endowments 
  
-exp(Y1) = exp(A1) * exp(P11) / exp(P1) ;
-exp(Y2) = exp(A2) * exp(P22) / exp(P2) ;
+exp(Y1) = exp(A1) * exp(P11) / exp(P1) + exp(CN1) * exp(PN1)/ exp(P1);
+exp(Y2) = exp(A2) * exp(P22) / exp(P2) + exp(CN2) * exp(PN2)/ exp(P2);
 
 exp(A1) = exp(X11) + exp(X21) ;
 exp(A2) = exp(X22) + exp(X12) ;
 
-exp(C1) = ( alph ^ ( 1 / eta ) * exp(X11) ^ ( ( eta - 1 ) / eta ) + 
-             ( 1 - alph ) ^ ( 1 / eta ) * exp(X12) ^ ( ( eta - 1 ) / eta ) ) ^ ( eta / ( eta - 1 ) ) ;
-exp(C2) = ( alph ^ ( 1 / eta ) * exp(X22) ^ ( ( eta - 1 ) / eta ) + 
-             ( 1 - alph ) ^ ( 1 / eta ) * exp(X21) ^ ( ( eta - 1 ) / eta ) ) ^ ( eta / ( eta - 1 ) ) ;
+exp(CT1) = ( alph ^ ( 1 / eta ) * exp(X11) ^ ( ( eta - 1 ) / eta ) + 
+             ( 1 - alph ) ^ ( 1 / eta ) * exp(X12) ^ ( ( eta - 1 ) / eta ) ) ^ 
+                ( eta / ( eta - 1 ) ) ;
+exp(CT2) = ( alph ^ ( 1 / eta ) * exp(X22) ^ ( ( eta - 1 ) / eta ) + 
+             ( 1 - alph ) ^ ( 1 / eta ) * exp(X21) ^ ( ( eta - 1 ) / eta ) ) ^ 
+                ( eta / ( eta - 1 ) ) ;
+			 
+exp(C1) = ( mu ^ ( 1 / xi ) * exp(CT1) ^ ( ( xi - 1 ) / xi ) + 
+             ( 1 - mu ) ^ ( 1 / xi ) * exp(CN1) ^ ( ( xi - 1 ) / xi ) ) ^ 
+                ( xi / ( xi - 1 ) ) ;
+exp(C2) = ( mu ^ ( 1 / xi ) * exp(CT2) ^ ( ( xi - 1 ) / xi ) + 
+             ( 1 - mu ) ^ ( 1 / xi ) * exp(CN2) ^ ( ( xi - 1 ) / xi ) ) ^ 
+                ( xi / ( xi - 1 ) ) ;
 
-alph * exp(C1) / exp(X11) = ( exp(P11) / exp(P1) ) ^ eta ;
-alph * exp(C2) / exp(X22) = ( exp(P22) / exp(P2) ) ^ eta ;
-(1-alph) * exp(C1) / exp(X12) = ( exp(P12) / exp(P1) ) ^ eta ;
-(1-alph) * exp(C2) / exp(X21) = ( exp(P21) / exp(P2) ) ^ eta ;
+alph * exp(CT1) / exp(X11) = ( exp(P11) / exp(PT1) ) ^ eta ;
+alph * exp(CT2) / exp(X22) = ( exp(P22) / exp(PT2) ) ^ eta ;
+(1-alph) * exp(CT1) / exp(X12) = ( exp(P12) / exp(PT1) ) ^ eta ;
+(1-alph) * exp(CT2) / exp(X21) = ( exp(P21) / exp(PT2) ) ^ eta ;
+
+mu * exp(C1) / exp(CT1) = ( exp(PT1) / exp(P1) ) ^ xi ;
+mu * exp(C2) / exp(CT2) = ( exp(PT2) / exp(P2) ) ^ xi ;
+(1-mu) * exp(C1) / exp(CN1) = ( exp(PN1) / exp(P1) ) ^ xi ;
+(1-mu) * exp(C2) / exp(CN2) = ( exp(PN2) / exp(P2) ) ^ xi ;
+
+CN1 = log(1-mu);
+CN2 = log(1-mu);
 
 E = P11 - P21 ;
 E = P12 - P22 ;
@@ -121,24 +146,34 @@ cg = 0;
 NFA = 0;
 Y1 = 0;
 Y2 = 0;
-A1 = 0;
-A2 = 0;
+shk1 = 0;
+shk2 = 0;
+A1 = log(mu);
+A2 = log(mu);
+CT1 = log(mu);
+CT2 = log(mu);
+CN1 = log(1-mu);
+CN2 = log(1-mu);
 C1 = 0;
 C2 = 0;
-P1 = 0; % log(p1bar);
-P2 = 0; %log(p2bar);
+P1 = 0; %log(p1bar);
+P2 = 0;  %log(p2bar);
 P11 = 0 ;
 P22 = 0 ;
 P12 = 0 ;
 P21 = 0 ;
+PN1 = 0;
+PN2 = 0;
+PT1 = 0;
+PT2 = 0;
 rb1 = log(1/BT);
 rb2 = log(1/BT);
 R_1 = log(1/BT);
 R_2 = log(1/BT);
-X11 = log(alph) ;
-X22 = log(alph) ;
-X12 = log(1-alph) ;
-X21 = log(1-alph) ;
+X11 = log(mu*alph) ;
+X22 = log(mu*alph) ;
+X12 = log(mu*(1-alph)) ;
+X21 = log(mu*(1-alph)) ;
 Q = 0 ;
 E = 0 ;
 end; 

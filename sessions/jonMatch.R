@@ -1,8 +1,8 @@
 ## Parameters
-rho <- diag(c(.96,.96,.9,.9))
-sig <- diag(c(.004 ^ 2,.004 ^ 2,.002 ^ 2,.002 ^ 2))
+rho <- diag(c(.94,.94,.9,.9))
+sig <- diag(c(.000016, .000016, .000031, .000031))
 params <- list( share = .86, gamma = 2, P1.bar=1, P2.bar=1, betta=.99,
-                rho=rho, sig.eps=sig, eta=3, theta=0.01 )
+                rho=rho, sig.eps=sig, eta=2.5, theta=0.05, mu=.55, xi=.44 )
 baseline <- mod.gen(params, check=FALSE ) #, err.deets = TRUE )
 
 ## Convert to R-style solution object
