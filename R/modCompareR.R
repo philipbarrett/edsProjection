@@ -1,4 +1,4 @@
-mod.eval <- function( params, opt.lim=NULL, n.sim=100000 ){
+mod.eval <- function( params, opt.lim=NULL, n.sim=100000, return.sims.err=FALSE ){
 # Evaluates the model for the DS, linear and quadratic solutions and with theta=0
   
   #### 1. SET UP ####
@@ -130,19 +130,18 @@ mod.eval <- function( params, opt.lim=NULL, n.sim=100000 ){
   err.abs.sumy <- sapply( l.err, function(x) apply(abs(x), 2, mean) )
   alpha.tilde <- sapply( l.sol, function(sol) mean(sol$coeff[1,]) )
   
-  return( list( bs.log=bs.log, bs.level=bs.level, uip.coeff=uip.coeff,
-                err.ave.sumy=err.ave.sumy, err.abs.sumy=err.abs.sumy,
-                alpha.tilde=alpha.tilde ) )
+  if(!return.sims.err){
+    return( list( bs.log=bs.log, bs.level=bs.level, uip.coeff=uip.coeff,
+                  err.ave.sumy=err.ave.sumy, err.abs.sumy=err.abs.sumy,
+                  alpha.tilde=alpha.tilde ) )
+  }else{
+    return( list( bs.log=bs.log, bs.level=bs.level, uip.coeff=uip.coeff,
+                  err.ave.sumy=err.ave.sumy, err.abs.sumy=err.abs.sumy,
+                  alpha.tilde=alpha.tilde, l.sol=l.sol,
+                  l.sim=l.sim, l.err=l.err ) )
+  }
+  
+  
   
 }
-
-
-
-
-### NOW
-# 1. PACKAGE AS FUNCTION
-# 2. TRIAL FOR EASY CASES
-# 3. ADD AUTOMATIC OF ITER
-# 2. SET TO LOOP  (By Sunday)
-# 3. Start to write up something qulaitative
 

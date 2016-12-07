@@ -1,6 +1,6 @@
 ## Parameters
 rho <- diag(c(.96,.96,.9,.9))
-sig <- diag(c(1,1,.5,.5)) * .004 ^ 2
+sig <- diag(c(.004 ^ 2,.004 ^ 2,.002 ^ 2,.002 ^ 2))
 params <- list( share = .86, gamma = 2, P1.bar=1, P2.bar=1, betta=.99,
                 rho=rho, sig.eps=sig, eta=3, theta=0.01 )
 baseline <- mod.gen(params, check=FALSE ) #, err.deets = TRUE )

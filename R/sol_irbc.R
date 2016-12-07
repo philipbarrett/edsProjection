@@ -306,6 +306,8 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init,
                                         matrix(0,1,1), TRUE, n.quad, model, mono )
         # The forward-looking variables
     err <- pred - X.cont[,contemp.select]
+    bias.old <- if(exists('bias')) bias else Inf
+    aad.old <- if(exists('aad')) aad else Inf
     bias <- mean(err)
     aad <- mean(abs(err))
     max.abs.var.err <- apply( abs( err ), 2, mean )
@@ -333,10 +335,16 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init,
       par(mfrow=c(1,1))
     }
         # Charting
-    coeff.cont <- coeff.c
-    coeff <- coeff.n
-    coeff.old <- coeff
-        # Update coefficients
+    
+    if( abs(bias) > abs(bias.old) & aad > aad.old ){
+      message('Increasing absolute bias and aad.  Aborting iteration (try reducing n.gain?).')
+      break
+    }else{
+      coeff.cont <- coeff.c
+      coeff <- coeff.n
+      coeff.old <- coeff
+          # Update coefficients
+    }
   }
   
   out <- list( coeff=coeff )
