@@ -14,10 +14,11 @@ n.exog <- nrow(baseline$ds.sol$coeff) - n.endog - 1
 n.cont <- ncol(baseline$ds.sol$coeff.cont)
 endog.init <- tail(baseline$ds.sol$ys, n.endog)
 
-exog.names <- c('A1','A2', 'P11', 'P22')
+exog.names <- c('shk1','shk2', 'P11', 'P22')
 endog.names <- c( 'B11', 'B22' )
 cont.names <- c( 'C1', 'C2', 'R_1', 'R_2', 'X11', 'X22', 'X12', 'X21', 
-                 'P1', 'P2', 'P12', 'P21', 'E', 'Q' )
+                 'P1', 'P2', 'P12', 'P21', 'E', 'Q', 'A1', 'A2', 'PN1', 'PN2', 
+                 'PT1', 'PT2', 'CN1', 'CN2', 'CT1', 'CT2 ' )
 fwd.vars <- c('B11', 'E', 'R_1', 'R_2')
 
 # Set global solution options

@@ -136,6 +136,8 @@ arma::rowvec contemp_eqns_irbc(
   double log_alpha = std::log(alpha) ;
   double log_1_alpha = std::log(1-alpha) ;
   double eta = params["eta"] ;
+  double mu = params["mu"] ;
+  double xi = params["xi"] ;
   double alphahat = pow( alpha, 1 / eta )  ;
   double alphahat_1 = pow( 1 - alpha, 1 / eta )  ;
   double log_alphahat = std::log( alphahat ) ;
@@ -145,8 +147,8 @@ arma::rowvec contemp_eqns_irbc(
       // Initialize the output vector.  Defines the equations for:
       //   c_1, c_2, r_1, r_2, x_11, x_22, x_12, x_21, p_1, p_2, p_12, p_21, e_12
 
-  double A_1 = exp( exog(0,0) ) ;
-  double A_2 = exp( exog(0,1) ) ;
+  double A_1 = mu * exp( exog(0,0) ) ;
+  double A_2 = mu * exp( exog(0,1) ) ;
   double p_11 = exog(0,2) ;
   double p_22 = exog(0,3) ;
       
@@ -162,6 +164,8 @@ arma::rowvec contemp_eqns_irbc(
   double x_21 = cont(7) ;
   double e_12 = cont(12) ;
       // Extract the controls
+  
+  // NEED TO WRITE OUT THE MODEL CAREFULLY //
   
   double x_11= std::log( std::max( A_1 - std::exp( x_21 ), 1e-08 ) ) ;
   double x_22 = std::log( std::max( A_2 - std::exp( x_12 ), 1e-08 ) ) ;
