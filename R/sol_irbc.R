@@ -147,25 +147,25 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init,
       
       message('  Contemporaneous block complete.\n    Iterations = ', i.c,  
               '\n    Difference = ', round( c.diff, 5 ),
-              '\n    Adaptive gain = ', round( c.gain, 5 ) )
+              '\n    c.gain = ', round( c.gain, 5 ) )
       
       
       ### 2.4 Update the comtemporaneous rules and grid values ###
       for(i in 1:n.endog){
         if( !( endog.names[i] %in% fwd.vars ) ){
           # coeff[,i] <- (1-n.gain) * coeff[,i] + n.gain *
-          #                   coeff_reg( contemp[,i], X[, state.select], 
+          #                   coeff_reg( contemp[,i], X[, state.select],
           #                                       N, lower, upper, cheby )
-          coeff[,i] <- coeff_reg( contemp[,i], X[, state.select], 
+          coeff[,i] <- coeff_reg( contemp[,i], X[, state.select],
                                   N, lower, upper, cheby )
         }
       }   # Update the endogenous state coefficients which are not forward-looking
       for(i in 1:n.cont){
         if( !( cont.names[i] %in% fwd.vars ) ){
           # coeff.cont[,i] <- (1-n.gain) * coeff.cont[,i] + n.gain *
-          #                     coeff_reg( contemp[,n.endog+i], X[, state.select], 
+          #                     coeff_reg( contemp[,n.endog+i], X[, state.select],
           #                                           N, lower, upper, cheby )
-          coeff.cont[,i] <- coeff_reg( contemp[,n.endog+i], X[, state.select], 
+          coeff.cont[,i] <- coeff_reg( contemp[,n.endog+i], X[, state.select],
                                           N, lower, upper, cheby )
         }
       }
@@ -245,7 +245,7 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init,
       
       message('      ...complete.\n        Iterations = ', i.k,  
               '\n        Difference = ', round( k.diff, 5 ),
-              '\n        Adaptive gain = ', round( k.gain, 5 ) )
+              '\n        k.gain = ', round( k.gain, 5 ) )
       message('      Updating rules...')
       
       ### 3.3 Compute the error-minimizing coefficients for the forward-looking variables ###
@@ -273,9 +273,9 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init,
       coeff.n <- n.gain * coeff.n.new + ( 1 - n.gain ) * coeff.n
       coeff.c <- n.gain * coeff.c.new + ( 1 - n.gain ) * coeff.c
           # Update the rules
-      # if( adapt.gain ) n.gain <- max( exp( - adapt.exp * n.diff ), n.gain )
-      #     # Update the adaptive gain
-          # Turn off for this.
+      if( adapt.gain ) n.gain <- max( exp( - 100 * adapt.exp * n.diff ), n.gain )
+          # Update the adaptive gain
+#          # Turn off for this.
       if( sym.reg ){
         coeff.n <- m.sym.ave.pair( coeff.n, l.sym.ave, l.pairs )
         coeff.c <- m.sym.ave.pair( coeff.c, l.sym.ave, l.pairs.cont )
@@ -289,7 +289,7 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init,
           # Re-create X      
       
       message('      ...complete.\n        Difference    = ', round( n.diff, 5 ),
-              '\n        Adaptive gain = ', round( n.gain, 5 ) )
+              '\n        n.gain = ', round( n.gain, 5 ) )
     }
 
     ###### 4. MEASURE THE CHANGES IN THE STATE VARIABLE COEFFICIENTS ######

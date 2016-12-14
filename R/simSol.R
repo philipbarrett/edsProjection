@@ -40,12 +40,12 @@ sim.err <- function( sim, sol, extra.args=NULL, params=NULL ){
   pred <- contemp_eqns_irbc_grid( sim, opt$lags, params, opt$n.exog, 
                                   opt$n.endog, opt$n.cont, extra.args, opt$model )
   colnames(pred) <- c( opt$endog.names, opt$cont.names )
-  pred[,fwd.vars] <- 
+  pred[,opt$fwd.vars] <- 
     euler_hat_grid( sol$coeff, sol$coeff.cont, sim, opt$lags, params, 
                     opt$n.exog, opt$n.endog, opt$n.cont, opt$n.fwd, params$rho, 
                     params$sig.eps, 0, opt$N, opt$upper, opt$lower, opt$cheby, 
                     matrix(0,1,1), TRUE, opt$n.quad, opt$model, opt$mono )
-  err <- sim[,c( endog.names, cont.names )] - pred
+  err <- sim[,c( opt$endog.names, opt$cont.names )] - pred
   return(err)
 }
 

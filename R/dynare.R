@@ -103,7 +103,7 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE,
   message("****** Mean home asset holding = ", round( mod$alpha.tilde, 4 ), " ******" )
       # Screen updating
   
-  y1.idx <- which( unlist( mod$varo ) == "Y1 " ) - 1
+  y1.idx <- which( trimws(unlist( mod$varo ) ) == "Y1" ) - 1
       # The location of Y1
   sim <- stoch_simDS( mod, params$sig.eps, params$betta, nsim, burn, y1.idx )
       # The simulation
@@ -127,13 +127,10 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE,
   
   exog.order <- c('shk1','shk2', 'P11', 'P22')
   endog.order <- c( 'B11', 'B22' )
-  cont.order <- c( 'A1', 'A2', 'C1', 'C2', 'R_1', 'R_2',
-                   'X11', 'X22', 'X12', 'X21', 
-                   'P1', 'P2', 'P12', 'P21', 
-                   'PN1', 'PN2', 'PT1', 'PT2',
-                   'CN1', 'CN2', 'CT1', 'CT2',
-                   'E', 'Q', 'Y1', 'Y2' )
-      # Variable names for the DS-style solution
+  cont.order <- c( 'C1', 'C2', 'R_1', 'R_2', 'X11', 'X22', 'X12', 'X21', 
+                   'P1', 'P2', 'P12', 'P21', 'E', 'Q', 'A1', 'A2', 'PN1', 'PN2', 
+                   'PT1', 'PT2', 'CN1', 'CN2', 'CT1', 'CT2' )
+      # Variable names for the solution
   fwd.order <- c( 'B11', 'E', 'R_1', 'R_2')
       # The forward-looking equation variables
   sim.exog <- sim[, exog.order]
@@ -158,10 +155,12 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE,
     sim.e.app <- diff(sim.cont[,'E'])
     uip.coeffs <- lm(sim.e.app~sim.rdiff[-length(sim.rdiff)])$coeff
     sim.uip.err <- sim.e.app - sim.rdiff[-length(sim.rdiff)]
-    uip.nfa <- lm( sim.uip.err ~ sim.endog[,'NFA'][-nrow(sim.endog)])$coeff 
+    # uip.nfa <- lm( sim.uip.err ~ sim.endog[,'NFA'][-nrow(sim.endog)])$coeff 
         # The UIP coefficients
-    out <- c( mod$alpha.tilde, bs.basic, bs.soph, bs.level, uip.coeffs[2], uip.nfa[2] )
-    names(out) <- c('alpha.tilde', 'bs.basic', 'bs.soph', 'bs.level', 'uip.coeff', 'uip.nfa' )
+    b11.sd <- sd(sim.endog[,'B11'])
+    b22.sd <- sd(sim.endog[,'B22'])
+    out <- c( mod$alpha.tilde, bs.basic, bs.soph, bs.level, uip.coeffs[2], b11.sd, b22.sd ) #, uip.nfa[2] )
+    names(out) <- c('alpha.tilde', 'bs.basic', 'bs.soph', 'bs.level', 'uip.coeff', 'b11.sd', 'b22.sd' ) #, 'uip.nfa' )
     return( out )
   }
 

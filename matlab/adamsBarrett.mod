@@ -1,6 +1,6 @@
 %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 % AUTO-GENERATED CODE FROM DYNARE.R 
-% CREATED  2016-12-06-223043 
+% CREATED  2016-12-13-000244 
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% 
 
 % Dynare code for the Adams-Barrett model.
@@ -16,16 +16,16 @@ parameters BT RH mu xi rho1 rho2 rho3 rho4 rho5 rho6 rho7 rho8 rho9 rho10 rho11 
 
 % Parameter values
 alph = 0.86 ;
-RH = 2 ;
+RH = 1.5 ;
 p1bar = 1 ;
 p2bar = 1 ;
 BT = 0.99 ;
-rho1 = 0.94 ;
+rho1 = 0.95 ;
 rho2 = 0 ;
 rho3 = 0 ;
 rho4 = 0 ;
 rho5 = 0 ;
-rho6 = 0.94 ;
+rho6 = 0.95 ;
 rho7 = 0 ;
 rho8 = 0 ;
 rho9 = 0 ;
@@ -52,8 +52,8 @@ sigeps13 = 0 ;
 sigeps14 = 0 ;
 sigeps15 = 0 ;
 sigeps16 = 3.1e-05 ;
-eta = 2.5 ;
-theta = 0.05 ;
+eta = 3.5 ;
+theta = 0.000173415299158326 ;
 mu = 0.55 ;
 xi = 0.44 ;
 dr={'rb1','rb2'};                  

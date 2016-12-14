@@ -137,11 +137,13 @@ arma::rowvec contemp_eqns_irbc(
   double log_1_alpha = std::log(1-alpha) ;
   double eta = params["eta"] ;
   double mu = params["mu"] ;
+  double log_mu = std::log(mu) ;
+  double log_1_mu = std::log(1-mu) ;
   double xi = params["xi"] ;
   double alphahat = pow( alpha, 1 / eta )  ;
   double alphahat_1 = pow( 1 - alpha, 1 / eta )  ;
-  double log_alphahat = std::log( alphahat ) ;
-  double log_1_alphahat = std::log( 1 - alphahat ) ;
+  double mu_hat = pow( mu, 1 / xi )  ;
+  double mu_1_hat = pow( 1 - mu, 1 / xi )  ;
 
   rowvec out( cont.n_elem + endog.n_cols ) ;
       // Initialize the output vector.  Defines the equations for:
@@ -149,58 +151,79 @@ arma::rowvec contemp_eqns_irbc(
 
   double A_1 = mu * exp( exog(0,0) ) ;
   double A_2 = mu * exp( exog(0,1) ) ;
+      // Because the shock is mean-zero
+  double log_A_1 = std::log( A_1 ) ;
+  double log_A_2 = std::log( A_2 ) ; 
+      // The log of the level of the shock
   double p_11 = exog(0,2) ;
   double p_22 = exog(0,3) ;
       
   double B_11 = endog(0,0) ;
-  // double B_22 = endog(0,1) ;
-      // B_22 is to be found from the law of motion
+      // The edogenous state solved from the forward-looking equations
   double B_11_lag = endog(1,0) ;
   double B_22_lag = endog(1,1) ;
-      // Extract the states
+      // The lagged states
   double r_1 = cont(2) ;
   double r_2 = cont(3) ;
+  double e_12 = cont(12) ;
+      // The controls in the foward-looking part of the model
   double x_12 = cont(6) ;
   double x_21 = cont(7) ;
-  double e_12 = cont(12) ;
-      // Extract the controls
+      // The hyopthesized controls (drives the conetmporaneous block)
   
-  // NEED TO WRITE OUT THE MODEL CAREFULLY //
-  
+  double cn_1 = std::log( 1 - mu ) ;
+  double cn_2 = std::log( 1 - mu ) ;
   double x_11= std::log( std::max( A_1 - std::exp( x_21 ), 1e-08 ) ) ;
   double x_22 = std::log( std::max( A_2 - std::exp( x_12 ), 1e-08 ) ) ;
       // Goods market clearing.  Guards to make sure that logs don't fail here.
-  double c_1, c_2 ;
+  double ct_1, ct_2 ;
   if( eta == 1.0 ){
-    c_1 = alphahat * x_11 + ( 1 - alphahat ) * x_12 ;
-    c_2 = alphahat * x_22 + ( 1 - alphahat ) * x_21 ;
+    ct_1 = alphahat * x_11 + alphahat_1 * x_12 ;
+    ct_2 = alphahat * x_22 + alphahat_1 * x_21 ;
   }else{
-    c_1 = eta / ( eta - 1 ) * std::log( alphahat * std::exp( ( 1 - 1 / eta ) * x_11 ) +
-              alphahat_1 * std::exp( ( 1 - 1 / eta ) * x_12 ) ) ;
-    c_2 = eta / ( eta - 1 ) * std::log( alphahat * std::exp( ( 1 - 1 / eta ) * x_22 ) +
-              alphahat_1 * std::exp( ( 1 - 1 / eta ) * x_21 ) ) ;
+    ct_1 = eta / ( eta - 1 ) * std::log( alphahat * std::exp( ( 1 - 1 / eta ) * x_11 ) +
+      alphahat_1 * std::exp( ( 1 - 1 / eta ) * x_12 ) ) ;
+    ct_2 = eta / ( eta - 1 ) * std::log( alphahat * std::exp( ( 1 - 1 / eta ) * x_22 ) +
+      alphahat_1 * std::exp( ( 1 - 1 / eta ) * x_21 ) ) ;
   }
-      // Consumption aggregators
+      // Tradeable goods consumption aggregators
+  double c_1, c_2 ;
+  if( xi == 1.0 ){
+    c_1 = mu_hat * x_11 + mu_1_hat * x_12 ;
+    c_2 = mu_hat * x_22 + mu_1_hat * x_21 ;
+  }else{
+    c_1 = xi / ( xi - 1 ) * std::log( mu_hat * std::exp( ( 1 - 1 / xi ) * ct_1 ) +
+      mu_1_hat * std::exp( ( 1 - 1 / xi ) * cn_1 ) ) ;
+    c_2 = xi / ( xi - 1 ) * std::log( mu_hat * std::exp( ( 1 - 1 / xi ) * ct_2 ) +
+      mu_1_hat * std::exp( ( 1 - 1 / xi ) * cn_2 ) ) ;
+  }
+      // Final goods consumption aggregators
 
-  double p_1 = p_11 - 1 / eta * ( log_alpha + c_1 - x_11 ) ;
-  double p_2 = p_22 - 1 / eta * ( log_alpha + c_2 - x_22 ) ;
-      // Aggregate price levels, from factor demands
+  double pt_1 = p_11 - 1 / eta * ( log_alpha + ct_1 - x_11 ) ;
+  double pt_2 = p_22 - 1 / eta * ( log_alpha + ct_2 - x_22 ) ;
+  double p_1 = pt_1 - 1 / xi * ( log_mu + c_1 - ct_1 ) ;
+  double p_2 = pt_2 - 1 / xi * ( log_mu + c_2 - ct_2 ) ;
+  double pn_1 = p_1 + 1 / xi * ( log_1_mu + c_1 - cn_1 ) ;
+  double pn_2 = p_2 + 1 / xi * ( log_1_mu + c_2 - cn_2 ) ;
+      // Tradeables price levels, from factor demands
   double q_12 = e_12 - p_1 + p_2 ;
       // The real exchange rate
   double p_12 = p_22 + e_12 ;
   double p_21 = p_11 - e_12 ;
       // Imported goods prices
   double B_22 = std::exp( r_2 ) * ( 
-            + B_22_lag - std::exp( - e_12 ) * ( A_1 * exp( p_11 ) - 
+            + B_22_lag - std::exp( - e_12 ) * ( A_1 * exp( p_11 ) + exp( cn_1 + pn_1 ) - 
               B_11 * std::exp( - r_1 ) + B_11_lag - std::exp( c_1 + p_1 ) ) ) ;
       // Debt in country 2
-  double x_12_new = c_1 + log_1_alpha + eta * ( p_1 - p_12 ) ;
-  double x_21_new = c_2 + log_1_alpha + eta * ( p_2 - p_21 ) ;
+  double x_12_new = ct_1 + log_1_alpha - eta * ( p_12 - pt_1 ) ;
+  double x_21_new = ct_2 + log_1_alpha - eta * ( p_21 - pt_2 ) ;
       // The resulting factor demands from the remaining optimality condition
   out << B_11 << B_22 <<
           c_1 << c_2 << r_1 << r_2 << x_11 << x_22 << x_12_new << x_21_new <<
-          p_1 << p_2 << p_12 << p_21 << e_12 << q_12 << endr ;
+          p_1 << p_2 << p_12 << p_21 << e_12 << q_12 << log_A_1 << log_A_2 <<
+          pn_1 << pn_2 << pt_1 << pt_2 << cn_1 << cn_2 << ct_1 << ct_2 << endr ;
       // The output vector    
+      
   return( out ) ;
 }
 
