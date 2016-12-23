@@ -13,7 +13,8 @@ AA <- mod.eval(params, opt.lim=opt.lim, return.sims.err = TRUE, n.sim = 200000 )
 # BB <- mod.eval(params.b, opt.lim=opt.lim, return.sims.err = TRUE, n.sim = 200000 )
 
 par(mfrow=c(1,3))
-plot( apply(AA$err.abs.sumy[fwd.vars,],2,mean), apply(AA$err.ave.sumy[fwd.vars,],2,mean), 
+plot( apply(AA$err.abs.sumy[AA$l.sol$local$opt$fwd.vars,],2,mean), 
+      apply(AA$err.ave.sumy[AA$l.sol$local$opt$fwd.vars,],2,mean), 
       pch=1:5, cex=2, xlab='Average absolute error', ylab='Average error',
       main='Euler equation')
 legend( 'topright', 

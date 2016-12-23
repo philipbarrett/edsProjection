@@ -171,8 +171,6 @@ sol.irbc.iterate <- function( coeff.init, opt, params, coeff.cont.init,
       }
           # Update the coefficients on the non-forward-looking variables in line
           # with the predictors from the conemporanneous block
-      # TEST: Enforcing 100% update here
-      
       if( sym.reg ) coeff.cont <- m.sym.ave.pair( coeff.cont, l.sym.ave, l.pairs.cont )
           # Symmetry regularization
     }

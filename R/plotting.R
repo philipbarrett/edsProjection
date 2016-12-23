@@ -58,3 +58,41 @@ paper.charts <- function( sol, rep.data,
   # dev.off()
 
 }
+
+pol.fn.plot <- function( sol, var, state, dta=FALSE ){
+# Plots the variable named in var against the state named in state
+
+  n.pts <- 41
+  
+  ## Isolate the coefficients
+  if( var %in% sol$op$endog.names ){
+    coeff <- sol$coeff[,sol$opt$endog.names == var]
+  }else{
+    coeff <- sol$coeff.cont[,sol$opt$cont.names == var]
+  }
+  
+  ## Create the plot variables
+  ys.state <- sol$opt$ys[ c( sol$opt$exog.names, sol$opt$endog.names ) ]
+      # The (ordered) steady states
+  X <- matrix( ys.state, n.pts, length(ys.state), byrow = TRUE )
+      # Initialize the cloud of points for evaluation
+  colnames(X) <- names(ys.state)
+      # Edit the variable names for X
+  X[,state] <- seq( sol$opt$lower[state], sol$opt$upper[state], length.out=n.pts )
+      # Change the state to be varied
+  y <- poly_eval( coeff, X, sol$opt$N, sol$opt$lower, sol$opt$upper, sol$opt$cheby )
+      # The y axis values
+  
+  if( dta ){
+    return( cbind( X[,state], y ) )
+  }
+  
+  ## Create the plot
+  plot( X[,state], y, type='l', lwd=2, xlab=state, ylab=var )
+  
+}
+
+
+
+
+

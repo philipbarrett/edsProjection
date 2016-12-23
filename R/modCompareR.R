@@ -9,9 +9,13 @@ mod.eval <- function( params, opt.lim=NULL, n.sim=100000, return.sims.err=FALSE 
   #### 2. BASELINE SOLUTION ####
   message("**** Creating DS solutions ****")
   message("** theta > 0 **")
-  baseline <- mod.gen(params, check=FALSE ) #, err.deets = TRUE )
+  baseline <- mod.gen(params, check=FALSE, sym.reg=opt.lim$sym.reg, 
+                      l.pairs=opt.lim$l.pairs[[1]], l.pairs.cont=opt.lim$l.pairs.cont[[1]],
+                      l.sym.ave=opt.lim$l.sym.ave[[1]] ) #, err.deets = TRUE )
   message("** theta = 0 **")
-  baseline.0 <- mod.gen(params.0, check=FALSE ) #, err.deets = TRUE )
+  baseline.0 <- mod.gen(params.0, check=FALSE, sym.reg=opt.lim$sym.reg, 
+                      l.pairs=opt.lim$l.pairs[[1]], l.pairs.cont=opt.lim$l.pairs.cont[[1]],
+                      l.sym.ave=opt.lim$l.sym.ave[[1]] ) #, err.deets = TRUE )
       # The DS solutions
   
   #### 3. SET UP OPTIONS ####
@@ -58,7 +62,7 @@ mod.eval <- function( params, opt.lim=NULL, n.sim=100000, return.sims.err=FALSE 
   sol.idx <- 1
   if(!is.null(opt.lim)){
     for( nn in names(opt.lim) )
-      opt[[nn]] <- opt.lim[[nn]][min(length(opt.lim[[nn]]),sol.idx)]
+      opt[[nn]] <- opt.lim[[nn]][[min(length(opt.lim[[nn]]),sol.idx)]]
     # Paste the limited options over the top of the defaults
   }
   sol.1 <- sol.irbc.iterate( baseline$ds.sol$coeff, opt, params, 

@@ -72,7 +72,8 @@ mod.read <- function(){
 }
 
 mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE, 
-                    n.nodes=3, err.deets=FALSE, sim.stats=FALSE, return.sim=FALSE ){
+                    n.nodes=3, err.deets=FALSE, sim.stats=FALSE, return.sim=FALSE,
+                    sym.reg=FALSE, l.pairs=NULL, l.pairs.cont=NULL, l.sym.ave=NULL ){
 # Generates the coefficient matrices and vector of equation errors
   
   ### 0. Hard-coding ###
@@ -122,7 +123,7 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE,
   sim <- cbind( sim, B11, B22 )
       # Append B11, B22 to simulation
   varo <- c( varo, 'B11', 'B22' )
-  ys <- c( ys, B11=mean(B11), B22=mean(B22) )
+  ys <- c( ys, B11=mean(c(B11,B22)), B22=mean(c(B11,B22)) )
       # Assign names
   
   exog.order <- c('shk1','shk2', 'P11', 'P22')
@@ -189,14 +190,15 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE,
   var.x <- solve( diag(n.exog) - params$rho %*% params$rho, params$sig.eps )
   sd.x <- sqrt(diag(var.x))
       # The standard deviation of the exogenous state
+  sd.endog <- mean(apply(sim.endog,2,sd))
   
   # var.x <- var(sim.exog)
   # var.check <- max(abs(var(sim.exog) - var.x))
   # message( "Simulated and analytical exogenous variance differ by at most ", 
   #          round(var.check,8) )
   
-  upper <- c(   3 * apply(sim.exog,2,sd), ys[endog.order] + 3 * apply(sim.endog,2,sd) )
-  lower <- c( - 3 * apply(sim.exog,2,sd), ys[endog.order] - 3 * apply(sim.endog,2,sd) )
+  upper <- c(   3 * sd.x, ys[endog.order] + 3 * rep(sd.endog,n.endog) )
+  lower <- c( - 3 * sd.x, ys[endog.order] - 3 * rep(sd.endog,n.endog) )
       # The bounds of the states
   n.X <- 1 + length(endog.order) + length(exog.order) 
       # The number of X variables is the number of states plus one (the constant
@@ -211,6 +213,11 @@ mod.gen <- function(params, nsim=1e6, burn=1e4, cheby=FALSE, check=TRUE,
   for(i in 1:n.cont) coeff.cont[,i] <- coeff_reg( sim.cont[,i][-1], X, N, 
                                                   lower, upper, cheby )
       # Populate the coefficient matrices
+  if( sym.reg){
+    coeff <- m.sym.ave.pair( coeff, l.sym.ave, l.pairs )
+    coeff.cont <- m.sym.ave.pair( coeff.cont, l.sym.ave, l.pairs.cont )
+  }
+  
 # browser()
   if(check){
     message('Verifying dynare solution conversion')
